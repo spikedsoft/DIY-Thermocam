@@ -1,0 +1,1 @@
+srec_cat DIY-Thermocam.hex -Intel MassStorage.hex -Intel -Output Firmware.hex -Intel

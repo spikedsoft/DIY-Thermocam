@@ -1,0 +1,645 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Resource Files\GUI">
+      <UniqueIdentifier>{d7e74962-a1f5-4473-b419-012d32bca3d3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Hardware">
+      <UniqueIdentifier>{2779e073-8f19-4549-9dbf-3909c59bfe15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\General">
+      <UniqueIdentifier>{139c0d50-c8a0-41f7-ad71-73e79e8b3728}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\Thermal">
+      <UniqueIdentifier>{a7aa3d52-a09c-4ac5-b506-29b4c52f6340}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_core">
+      <UniqueIdentifier>{b87de104-16ff-40dc-b953-397897031ab0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_core\avr">
+      <UniqueIdentifier>{96882a90-e766-42c1-895d-f64a42f365c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_core\util">
+      <UniqueIdentifier>{44a09f2e-e584-479a-91ad-351103f5deed}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries">
+      <UniqueIdentifier>{ec3f4858-adf2-4852-9e30-51f3bd913141}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\Bounce">
+      <UniqueIdentifier>{3f92deb4-389c-48c0-b1e6-cab6a4b189cc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\Camera">
+      <UniqueIdentifier>{e63f202a-566a-40fd-bc5e-ef8a5a0bcf05}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\EEPROM">
+      <UniqueIdentifier>{4e76df6e-c93e-444b-99ab-38fe66d61d7d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\i2c_t3">
+      <UniqueIdentifier>{fa014aa3-0dc8-4ad6-ba22-249d1a3aed97}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\SdFat">
+      <UniqueIdentifier>{46e8f7fe-9297-4f3b-940d-80f627e64c55}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\SdFat\utility">
+      <UniqueIdentifier>{e32497ad-0a51-49ca-9c98-2a20e489efdd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\SPI">
+      <UniqueIdentifier>{a5c4bbc2-1f9e-45ee-9185-e36241e89c41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\Time">
+      <UniqueIdentifier>{11c05024-16bd-4ebb-ab53-9e0d1c6fbfe7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\UTFT">
+      <UniqueIdentifier>{f084b848-0aa1-4d57-82f6-35dd2e558ffb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\UTFT_Buttons">
+      <UniqueIdentifier>{11080de3-7c3f-4a33-b30d-7aaa33bd88bb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\XPT2046_Touchscreen">
+      <UniqueIdentifier>{4e0121c1-b0c9-40de-b373-eeb6f011e9ec}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="DIY-Thermocam.ino" />
+    <None Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\memcpy-armv7m.S">
+      <Filter>_core</Filter>
+    </None>
+    <None Include="README.MD" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Display.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\Arduino.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\arm_common_tables.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\arm_math.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\AudioStream.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr_emulation.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr_functions.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\binary.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\Client.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\core_cm4.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\core_cm4_simd.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\core_cmInstr.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\core_id.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\core_pins.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\DMAChannel.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\elapsedMillis.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\HardwareSerial.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\IntervalTimer.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\IPAddress.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\keylayouts.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\kinetis.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\math_helper.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\mk20dx128.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\new.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\pins_arduino.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\Print.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\Printable.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\Server.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\ser_print.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\SPIFIFO.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\Stream.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\Udp.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_desc.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_dev.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_flightsim.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_joystick.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_keyboard.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_mem.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_midi.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_mouse.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_names.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_rawhid.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_seremu.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_serial.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_undef.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\WCharacter.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\WConstants.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\wiring.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\wiring_private.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\WProgram.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\WString.h">
+      <Filter>_core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr\eeprom.h">
+      <Filter>_core\avr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr\interrupt.h">
+      <Filter>_core\avr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr\io.h">
+      <Filter>_core\avr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr\pgmspace.h">
+      <Filter>_core\avr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr\power.h">
+      <Filter>_core\avr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr\sleep.h">
+      <Filter>_core\avr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr\wdt.h">
+      <Filter>_core\avr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util\atomic.h">
+      <Filter>_core\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util\crc16.h">
+      <Filter>_core\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util\delay.h">
+      <Filter>_core\util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util\parity.h">
+      <Filter>_core\util</Filter>
+    </ClInclude>
+    <ClInclude Include="__vm\.DIY-Thermocam.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="General\ColorSchemes.h">
+      <Filter>Resource Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="General\GlobalItems.h">
+      <Filter>Resource Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\Bounce\Bounce.h">
+      <Filter>_libraries\Bounce</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\Camera\Camera.h">
+      <Filter>_libraries\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\EEPROM\EEPROM.h">
+      <Filter>_libraries\EEPROM</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\i2c_t3\i2c_t3.h">
+      <Filter>_libraries\i2c_t3</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\MinimumSerial.h">
+      <Filter>_libraries\SdFat</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\SdFat.h">
+      <Filter>_libraries\SdFat</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\SdFatConfig.h">
+      <Filter>_libraries\SdFat</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\SdFatmainpage.h">
+      <Filter>_libraries\SdFat</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\SdFatUtil.h">
+      <Filter>_libraries\SdFat</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\SdInfo.h">
+      <Filter>_libraries\SdFat</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\SdSpi.h">
+      <Filter>_libraries\SdFat</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\SdSpiCard.h">
+      <Filter>_libraries\SdFat</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\SdVolume.h">
+      <Filter>_libraries\SdFat</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\ArduinoFiles.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\ArduinoStream.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\bufstream.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\DigitalPin.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\FatApiConstants.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\FatFile.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\FatFileSystem.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\FatLib.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\FatLibConfig.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\FatStructs.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\FatVolume.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\FmtNumber.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\fstream.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\ios.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\iostream.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\istream.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\ostream.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\SoftSPI.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SdFat\utility\StdioStream.h">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\SPI\SPI.h">
+      <Filter>_libraries\SPI</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\Time\Time.h">
+      <Filter>_libraries\Time</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\UTFT\UTFT.h">
+      <Filter>_libraries\UTFT</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\UTFT_Buttons\UTFT_Buttons.h">
+      <Filter>_libraries\UTFT_Buttons</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\XPT2046_Touchscreen\XPT2046_Touchscreen.h">
+      <Filter>_libraries\XPT2046_Touchscreen</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\ConMenu.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\FirstStart.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\GUI.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\LiveMenu.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\LoadMenu.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\SettingsMenu.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\VideoMenu.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\Battery.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\Cam.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\Hardware.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\Lepton.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\MLX90614.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\Storage.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Thermal\Create.h">
+      <Filter>Resource Files\Thermal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thermal\Display.h">
+      <Filter>Resource Files\Thermal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thermal\Load.h">
+      <Filter>Resource Files\Thermal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thermal\Save.h">
+      <Filter>Resource Files\Thermal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thermal\Thermal.h">
+      <Filter>Resource Files\Thermal</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\analog.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\AudioStream.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr_emulation.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\DMAChannel.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\eeprom.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\HardwareSerial1.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\HardwareSerial2.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\HardwareSerial3.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\IntervalTimer.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\IPAddress.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\keylayouts.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\main.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\math_helper.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\mk20dx128.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\new.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\nonstd.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\pins_teensy.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\Print.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\serial1.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\serial2.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\serial3.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\ser_print.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\Stream.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\Tone.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\touch.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_desc.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_dev.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_flightsim.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_inst.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_joystick.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_keyboard.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_mem.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_midi.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_mouse.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_rawhid.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_seremu.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_serial.c">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\WMath.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\WString.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\yield.cpp">
+      <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\Bounce\Bounce.cpp">
+      <Filter>_libraries\Bounce</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\Camera\Camera.cpp">
+      <Filter>_libraries\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\EEPROM\EEPROM.cpp">
+      <Filter>_libraries\EEPROM</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\i2c_t3\i2c_t3.cpp">
+      <Filter>_libraries\i2c_t3</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\MinimumSerial.cpp">
+      <Filter>_libraries\SdFat</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\SdFatBase.cpp">
+      <Filter>_libraries\SdFat</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\SdFatUtil.cpp">
+      <Filter>_libraries\SdFat</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\SdSpiCard.cpp">
+      <Filter>_libraries\SdFat</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\SdSpiSAM3X.cpp">
+      <Filter>_libraries\SdFat</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\SdSpiSTM32F1.cpp">
+      <Filter>_libraries\SdFat</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\SdSpiTeensy3.cpp">
+      <Filter>_libraries\SdFat</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\utility\FatFile.cpp">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\utility\FatFileLFN.cpp">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\utility\FatFilePrint.cpp">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\utility\FatFileSFN.cpp">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\utility\FatVolume.cpp">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\utility\FmtNumber.cpp">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\utility\fstream.cpp">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\utility\istream.cpp">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\utility\ostream.cpp">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SdFat\utility\StdioStream.cpp">
+      <Filter>_libraries\SdFat\utility</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\SPI\SPI.cpp">
+      <Filter>_libraries\SPI</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\Time\DateStrings.cpp">
+      <Filter>_libraries\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\Time\Time.cpp">
+      <Filter>_libraries\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\UTFT\DefaultFonts.c">
+      <Filter>_libraries\UTFT</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\UTFT\UTFT.cpp">
+      <Filter>_libraries\UTFT</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\UTFT_Buttons\UTFT_Buttons.cpp">
+      <Filter>_libraries\UTFT_Buttons</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\XPT2046_Touchscreen\XPT2046_Touchscreen.cpp">
+      <Filter>_libraries\XPT2046_Touchscreen</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
