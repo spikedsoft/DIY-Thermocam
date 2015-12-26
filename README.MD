@@ -2,7 +2,7 @@ DIY-Thermocam Firmware Development
 
 www.diy-thermocam.net
 
-Install and download the following programs:
+Download and install the following programs:
 
 1. Arduino 1.6.6: https://www.arduino.cc/en/Main/OldSoftwareReleases#previous
 2. Teensyduino 1.26: https://www.pjrc.com/teensy/td_download.html
