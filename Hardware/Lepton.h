@@ -181,7 +181,11 @@ void leptonCheckVersion() {
 	Wire.write(0x04);
 	Wire.write(0x48);
 	Wire.write(0x1C);
-	Wire.endTransmission();
+	byte error = Wire.endTransmission();
+	if (error != 0) {
+		drawMessage((char*) "FLIR Lepton I2C error!");
+		while (1);
+	}
 	while (leptonReadReg(0x2) & 0x01);
 	Wire.requestFrom(0x2A, leptonReadReg(0x6));
 	char leptonhw[33];
@@ -208,23 +212,23 @@ void leptonCheckSPI() {
 	byte leptonError = 0;
 	//Begin SPI Transmission
 	beginLeptonSPI();
-		leptonError = 0;
-		for (byte line = 0; line < 60; line++) {
-			//Reset if the expected line does not match the answer
-			if (!leptonReadFrame(line, 0)) {
-				//Reset line to -1, will be zero in the next cycle
-				line = -1;
-				//Raise Error count
-				leptonError++;
-				//Little delay
-				delay(1);
-				//If the Error count is too high, show error message
-				if (leptonError > 100) {
-					drawMessage((char*) "FLIR Lepton SPI error!");
-					while (1);
-				}
+	leptonError = 0;
+	for (byte line = 0; line < 60; line++) {
+		//Reset if the expected line does not match the answer
+		if (!leptonReadFrame(line, 0)) {
+			//Reset line to -1, will be zero in the next cycle
+			line = -1;
+			//Raise Error count
+			leptonError++;
+			//Little delay
+			delay(1);
+			//If the Error count is too high, show error message
+			if (leptonError > 100) {
+				drawMessage((char*) "FLIR Lepton SPI error!");
+				while (1);
 			}
 		}
+	}
 	//End Lepton SPI
 	endLeptonSPI();
 }
