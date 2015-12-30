@@ -101,16 +101,28 @@ void loadRawData(char* filename) {
 	tempFormat = sdFile.read();
 	//Read spot enabled
 	spotEnabled = sdFile.read();
+	//Read colorbar enabled
+	colorbarEnabled = sdFile.read();
 	//Read calibration done
 	calibrationDone = sdFile.read();
-	//Read calibration slope
-	for (int i = 0; i < 4; i++)
-		farray[i] = sdFile.read();
-	calSlope = bytesToFloat(farray);
-	//Read calibration offset
-	for (int i = 0; i < 4; i++)
-		farray[i] = sdFile.read();
-	calOffset = bytesToFloat(farray);
+	//Read calibration slope if calibration is done
+	if (calibrationDone) {
+		for (int i = 0; i < 4; i++)
+			farray[i] = sdFile.read();
+		calSlope = bytesToFloat(farray);
+	}
+	//Read calibration offset if calibration is done
+	if (calibrationDone) {
+		for (int i = 0; i < 4; i++)
+			farray[i] = sdFile.read();
+		calOffset = bytesToFloat(farray);
+	}
+	//Read quick calibration offset if calibration is not done
+	if (!calibrationDone) {
+		for (int i = 0; i < 4; i++)
+			farray[i] = sdFile.read();
+		quickCalOffset = bytesToFloat(farray);
+	}
 	//Close data file
 	sdFile.close();
 	//Draw thermal image on screen
@@ -486,7 +498,7 @@ bool findFile(char* filename, bool next, bool restart, int* position = 0, char* 
 	while (sdFile.openNext(sd.vwd(), O_READ)) {
 		//Either folder for video or file with specific size for single image
 		if (sdFile.isDir()
-			|| (sdFile.isFile() && ((sdFile.fileSize() == 9620) || (sdFile.fileSize() == 38420)))) {
+			|| (sdFile.isFile() && ((sdFile.fileSize() == 9621) || (sdFile.fileSize() == 38421)))) {
 			//Save filename into the buffer
 			sdFile.getName(filename, 19);
 			//Extract the time and date components into extra buffer
@@ -571,7 +583,7 @@ void searchFiles() {
 	while (imgCount < 500 && sdFile.openNext(sd.vwd(), O_READ)) {
 		//Either folder for video or file with specific size for single image
 		if (sdFile.isDir()
-			|| (sdFile.isFile() && ((sdFile.fileSize() == 9620) || (sdFile.fileSize() == 38420)))) {
+			|| (sdFile.isFile() && ((sdFile.fileSize() == 9621) || (sdFile.fileSize() == 38421)))) {
 			//Save filename into the buffer
 			sdFile.getName(filename, 19);
 			//Extract the time and date components into extra buffer
@@ -789,9 +801,11 @@ void loadThermal() {
 	byte old_colorScheme = colorScheme;
 	byte old_tempFormat = tempFormat;
 	bool old_spotEnabled = spotEnabled;
+	bool old_colorbarEnabled = colorbarEnabled;
 	bool old_calibrationDone = calibrationDone;
 	double old_calSlope = calSlope;
 	double old_calOffset = calOffset;
+	float old_quickCalOffset = quickCalOffset;
 	//Load message
 	drawMessage((char*) "Please wait..");
 	//Alloc space
@@ -889,8 +903,10 @@ void loadThermal() {
 	tempFormat = old_tempFormat;
 	spotEnabled = old_spotEnabled;
 	calibrationDone = old_calibrationDone;
+	colorbarEnabled = old_colorbarEnabled;
 	calSlope = old_calSlope;
 	calOffset = old_calOffset;
+	quickCalOffset = old_quickCalOffset;
 	//Return to the main menu
 	mainMenu();
 }

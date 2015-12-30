@@ -87,7 +87,7 @@ void updateInfos(bool refresh) {
 		//Early-Bird #1 - Display Version
 		if(mlx90614Version == 0)
 			display.print((char*) Version, 200, 228);
-		//Early-Bird #2 or Batch #1 - Display free space on internal storage
+		//All other - Display free space on internal storage
 		else
 			display.print(sdInfo, 220, 228);
 	}

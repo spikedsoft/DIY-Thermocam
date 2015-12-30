@@ -21,7 +21,7 @@ void displayRawData() {
 	if (spotEnabled)
 		showSpot(true);
 	//Show the color bar
-	if (calibrationDone)
+	if(colorbarEnabled)
 		showColorBar();
 }
 
@@ -169,10 +169,6 @@ void deleteImage(char* filename) {
 				strcpy(&filename[14], ".BMP");
 				if ((imagesFormat == 1) && (sd.exists(filename)))
 					sd.remove(filename);
-				//Delete .TXT file
-				strcpy(&filename[14], ".TXT");
-				if ((calibrationDone) && (sd.exists(filename)))
-					sd.remove(filename);
 				endAltClockline();
 				drawMessage((char*) "Image deleted!");
 				delay(1000);
@@ -251,7 +247,7 @@ void convertImage(char* filename) {
 	if (spotEnabled)
 		showSpot(true);
 	//Show the color bar
-	if (calibrationDone)
+	if(colorbarEnabled)
 		showColorBar();
 	//Save image
 	saveThermalImage(filename);

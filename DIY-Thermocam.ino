@@ -1,14 +1,16 @@
 /*
+*
 * DIY-Thermocam Firmware
 *
-* 2015 by Max Ritter
+* 2014-2016 by Max Ritter
 *
-* www.diy-thermocam.net
+* http://www.diy-thermocam.net
+* https://github.com/maxritter/DIY-Thermocam
 *
 */
 
 /* Current firmware version */
-#define Version "FW Verson 1.01"
+#define Version "FW Verson 1.02"
 
 /* Libraries */
 #include <i2c_t3.h>
@@ -25,12 +27,15 @@
 /* General Includes */
 #include "General/ColorSchemes.h"
 #include "General/GlobalItems.h"
+#include "General/MethodDefines.h"
 
 /* Modules */
 #include "Hardware/Hardware.h"
 #include "GUI/GUI.h"
 #include "Thermal/Thermal.h"
 
+
+/* Main Entry point */
 void setup()
 {
 	//Init Hardware
@@ -46,7 +51,9 @@ void setup()
 		liveMode();
 }
 
+/* Loop forever */
 void loop()
 {
+	//Main Menu Handler
 	mainMenuHandler();
 }

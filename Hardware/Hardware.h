@@ -5,8 +5,8 @@
 /* Includes */
 #include "Battery.h"
 #include "Cam.h"
-#include "Lepton.h"
 #include "MLX90614.h"
+#include "Lepton.h"
 #include "Storage.h"
 
 
@@ -142,7 +142,7 @@ bool checkSDCard() {
 			return true;
 		endAltClockline();
 	}
-	//Early-Bird #2
+	//All other do not need the check
 	else
 		return true;
 }
@@ -176,6 +176,18 @@ bool checkEEPROM() {
 		read = EEPROM.read(eeprom_videosType);
 		if ((read == 0) || (read == 1))
 			videosType = read;
+		//Spot Enabled
+		read = EEPROM.read(eeprom_spotEnabled);
+		if ((read == 0) || (read == 1))
+			spotEnabled = read;
+		//Filter Enabled
+		read = EEPROM.read(eeprom_filterEnabled);
+		if ((read == 0) || (read == 1))
+			filterEnabled = read;
+		//Colorbar Enabled
+		read = EEPROM.read(eeprom_colorbarEnabled);
+		if ((read == 0) || (read == 1))
+			colorbarEnabled = read;
 		//Return from Mass Storage reboot
 		read = EEPROM.read(eeprom_massStorage);
 		if (read == eeprom_setValue) {

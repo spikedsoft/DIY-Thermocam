@@ -60,7 +60,7 @@ void refreshFreeSpace() {
 
 /* Initializes the SD card */
 void initSD() {
-	//Early-Bird #2 or Batch #1
+	//Init the SD Card except for Early-Bird #1
 	if (mlx90614Version == 1) {
 		startAltClockline();
 		if (!sd.begin(pin_sd_cs, SPI_FULL_SPEED)) {

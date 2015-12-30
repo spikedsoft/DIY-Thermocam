@@ -140,7 +140,7 @@ void refreshCapture() {
 	if (spotEnabled)
 		showSpot(true);
 	//Show the color bar
-	if (calibrationDone)
+	if(colorbarEnabled)
 		showColorBar();
 	//Display title
 	display.setFont(bigFont);

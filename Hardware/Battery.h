@@ -75,7 +75,7 @@ void drawBatteryStat() {
 /* Measure the battery voltage and convert it to percent */
 void checkBattery(bool start = false) {
 	//Read battery voltage
-	float vBat = ((1195 * 1.47 * analogRead(23)) / analogRead(39) / 1000.0);
+	float vBat = ((1195 * 1.47 * analogRead(23)) / analogRead(39) / 1000.0) + 0.15;
 	//Check if the USB is connected
 	float vUSB = ((1195 * 1.47 * analogRead(A14)) / analogRead(39) / 1000.0);
 	if (vUSB <= 4.0) {

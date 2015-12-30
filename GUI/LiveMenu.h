@@ -44,19 +44,13 @@ void hotColdChooserHandler() {
 		display.setFont(smallFont);
 		scale = 255.0 / (maxTemp - minTemp);
 		value = (grayscaleLevel / scale) + minTemp;
-		//If the calibration is done, display temps
-		if (calibrationDone) {
-			temp = (int)calFunction(value);
-			if (!tempFormat) {
-				sprintf(margin, "Margin: %dC", temp);
-			}
-			else {
-				sprintf(margin, "Margin: %dF", temp);
-			}
+		temp = (int)calFunction(value);
+		//Display Fahrenheit or Celcius
+		if (!tempFormat) {
+			sprintf(margin, "Margin: %dC", temp);
 		}
-		//Otherwise display raw values
 		else {
-			sprintf(margin, "Margin: %d", value);
+			sprintf(margin, "Margin: %dF", temp);
 		}
 		display.print(margin, CENTER, 145);
 		display.setFont(bigFont);
@@ -74,32 +68,16 @@ void hotColdChooserHandler() {
 			}
 			//MINUS
 			else if (pressedButton == 2) {
-				//Adjust with temperatures
-				if (calibrationDone) {
-					while ((((int)calFunction(value)) > (temp - 1)) && (grayscaleLevel > 1)) {
-						grayscaleLevel -= 1;
-						value = (grayscaleLevel / scale) + minTemp;
-					}
-				}
-				//Adjust with raw value
-				else {
-					if (grayscaleLevel >= 5)
-						grayscaleLevel -= 5;
+				while ((((int)calFunction(value)) > (temp - 1)) && (grayscaleLevel > 1)) {
+					grayscaleLevel -= 1;
+					value = (grayscaleLevel / scale) + minTemp;
 				}
 			}
 			//PLUS
 			else if (pressedButton == 3) {
-				//Adjust with temperatures
-				if (calibrationDone) {
-					while ((((int)calFunction(value)) < (temp + 1)) && (grayscaleLevel < 255)) {
-						grayscaleLevel += 1;
-						value = (grayscaleLevel / scale) + minTemp;
-					}
-				}
-				//Adjust with raw value
-				else {
-					if (grayscaleLevel <= 250)
-						grayscaleLevel += 5;
+				while ((((int)calFunction(value)) < (temp + 1)) && (grayscaleLevel < 255)) {
+					grayscaleLevel += 1;
+					value = (grayscaleLevel / scale) + minTemp;
 				}
 			}
 			//Prepare the preview image
@@ -149,26 +127,17 @@ void limitChooserHandler() {
 	//Touch handler
 	while (1) {
 		display.setFont(smallFont);
-		//If the calibration is done, display temps
-		if (calibrationDone) {
-			min = (int)calFunction(minTemp);
-			max = (int)calFunction(maxTemp);
-			if (!tempFormat) {
-				sprintf(minC, "Min:%dC", min);
-				sprintf(maxC, "Max:%dC", max);
-			}
-			else {
-				sprintf(minC, "Min:%dF", min);
-				sprintf(maxC, "Max:%dF", max);
-			}
-			display.print(maxC, 180, 145);
+		min = (int)calFunction(minTemp);
+		max = (int)calFunction(maxTemp);
+		if (!tempFormat) {
+			sprintf(minC, "Min:%dC", min);
+			sprintf(maxC, "Max:%dC", max);
 		}
-		//Otherwise display raw values
 		else {
-			sprintf(minC, "Min:%d", minTemp);
-			sprintf(maxC, "Max:%d", maxTemp);
-			display.print(maxC, 165, 145);
+			sprintf(minC, "Min:%dF", min);
+			sprintf(maxC, "Max:%dF", max);
 		}
+		display.print(maxC, 180, 145);
 		display.print(minC, 85, 145);
 		display.setFont(bigFont);
 		//If touch pressed
@@ -215,19 +184,11 @@ void limitChooserHandler() {
 			else if (pressedButton == 2) {
 				//In minimum change mode - decrease minimum temp
 				if ((minChange == true) && (maxChange == false)) {
-					//Adjust temperatures
-					if (calibrationDone) {
-						currentVal = (int)calFunction(minTemp);
-						//Check if minimum temp is not already too low
-						if (currentVal > -69.00) {
-							while (((int)calFunction(minTemp)) > (currentVal - 1))
-								minTemp = minTemp - 1;
-						}
-					}
-					//Adjust raw values
-					else {
-						if (minTemp > 10)
-							minTemp -= 10;
+					currentVal = (int)calFunction(minTemp);
+					//Check if minimum temp is not already too low
+					if (currentVal > -69.00) {
+						while (((int)calFunction(minTemp)) > (currentVal - 1))
+							minTemp = minTemp - 1;
 					}
 				}
 				//Enter minimum change mode
@@ -239,19 +200,11 @@ void limitChooserHandler() {
 				}
 				//in maximum change mode - decrease maximum temp
 				else if ((minChange == false) && (maxChange == true)) {
-					//Adjust temperatures
-					if (calibrationDone) {
-						currentVal = (int)calFunction(maxTemp);
-						//Check of maximum temp is still biggerer than minimum temp
-						if (currentVal > ((int)calFunction(minTemp) + 1)) {
-							while (((int)calFunction(maxTemp)) > (currentVal - 1))
-								maxTemp = maxTemp - 1;
-						}
-					}
-					//Adjust raw values
-					else {
-						if (maxTemp > (minTemp + 10))
-							maxTemp -= 10;
+					currentVal = (int)calFunction(maxTemp);
+					//Check of maximum temp is still biggerer than minimum temp
+					if (currentVal > ((int)calFunction(minTemp) + 1)) {
+						while (((int)calFunction(maxTemp)) > (currentVal - 1))
+							maxTemp = maxTemp - 1;
 					}
 				}
 			}
@@ -259,19 +212,11 @@ void limitChooserHandler() {
 			else if (pressedButton == 3) {
 				//In maximum change mode - increase maximum temp
 				if ((minChange == false) && (maxChange == true)) {
-					//Adjust temperatures
-					if (calibrationDone) {
-						currentVal = (int)calFunction(maxTemp);
-						//Check if maximum temp is not already too high
-						if (currentVal < 379.00) {
-							while (((int)calFunction(maxTemp)) < (currentVal + 1))
-								maxTemp = maxTemp + 1;
-						}
-					}
-					//Adjust raw values
-					else {
-						if (maxTemp < 16374)
-							maxTemp += 10;
+					currentVal = (int)calFunction(maxTemp);
+					//Check if maximum temp is not already too high
+					if (currentVal < 379.00) {
+						while (((int)calFunction(maxTemp)) < (currentVal + 1))
+							maxTemp = maxTemp + 1;
 					}
 				}
 				//Enter maximum change mode
@@ -284,19 +229,12 @@ void limitChooserHandler() {
 				}
 				//In minimum change mode - increase minimum temp
 				else if ((minChange == true) && (maxChange == false)) {
-					//Adjust temperatures
-					if (calibrationDone) {
-						currentVal = (int)calFunction(minTemp);
-						//Check if minimum temp is still smaller than maximum temp
-						if (currentVal < ((int)calFunction(maxTemp) - 1)) {
-							while (((int)calFunction(minTemp)) < (currentVal + 1))
-								minTemp = minTemp + 1;
-						}
-					}
-					//Adjust raw values
-					else {
-						if (minTemp < (maxTemp - 10))
-							minTemp += 10;
+					//Adjust temperatures from normal calibration
+					currentVal = (int)calFunction(minTemp);
+					//Check if minimum temp is still smaller than maximum temp
+					if (currentVal < ((int)calFunction(maxTemp) - 1)) {
+						while (((int)calFunction(minTemp)) < (currentVal + 1))
+							minTemp = minTemp + 1;
 					}
 				}
 			}
@@ -361,7 +299,7 @@ bool tempLimits() {
 				return true;
 			}
 			//BACK
-			else if (pressedButton == 2) 
+			else if (pressedButton == 2)
 				return false;
 		}
 	}
@@ -493,19 +431,26 @@ void liveMenuMainString(int pos) {
 		else
 			text = (char*) "Show Spot";
 		break;
-		//Filter On/Off
+		//Show/Hide Colorbar
 	case 5:
+		if (colorbarEnabled)
+			text = (char*) "Hide Bar";
+		else
+			text = (char*) "Show Bar";
+		break;
+		//Filter On/Off
+	case 6:
 		if (filterEnabled)
 			text = (char*) "Filter Off";
 		else
 			text = (char*) "Filter On";
 		break;
-		//Trigger Shutter
-	case 6:
-		text = (char*) "Shutter";
+		//Remove Noise
+	case 7:
+		text = (char*) "Rem. Noise";
 		break;
 		//Turn Display off
-	case 7:
+	case 8:
 		text = (char*) "Display Off";
 		break;
 	}
@@ -534,42 +479,6 @@ void liveMenuColorString(int pos) {
 		break;
 	}
 	liveMenuSelection(text);
-}
-
-/* Change the color scheme for the thermal image */
-void changeColorScheme(int pos) {
-	switch (pos) {
-		//Rainbow
-	case 0:
-		colorScheme = 0;
-		EEPROM.write(eeprom_colorScheme, 0);
-		break;
-		//Ironblack
-	case 1:
-		colorScheme = 1;
-		EEPROM.write(eeprom_colorScheme, 1);
-		break;
-		//Grayscale
-	case 2:
-		colorScheme = 2;
-		EEPROM.write(eeprom_colorScheme, 2);
-		break;
-		//Hot
-	case 3:
-		colorScheme = 3;
-		EEPROM.write(eeprom_colorScheme, 3);
-		break;
-		//Cold
-	case 4:
-		colorScheme = 4;
-		EEPROM.write(eeprom_colorScheme, 4);
-		break;
-	}
-	//Map to the right color scheme
-	selectColorScheme();
-	//Choose limits for hot and cold mode
-	if ((colorScheme == 3) || (colorScheme == 4))
-		hotColdChooser();
 }
 
 /* Choose the applied color scale */
@@ -643,16 +552,20 @@ bool liveMenuSelect(int pos) {
 	case 4:
 		toggleSpot();
 		break;
-		//Filter On/Off
+		//Show/Hide Colorbar
 	case 5:
+		toggleColorbar();
+		break;
+		//Filter On/Off
+	case 6:
 		toggleFilter();
 		break;
-		//Trigger Shutter
-	case 6:
+		//Remove noise
+	case 7:
 		leptonRunFFC();
 		break;
 		//Display off
-	case 7:
+	case 8:
 		displayOff(false);
 		//Wait for touch press
 		while (!touch.touched());
@@ -719,13 +632,13 @@ bool liveMenuHandler() {
 				if (pos > 0)
 					pos--;
 				else if (pos == 0)
-					pos = 7;
+					pos = 8;
 			}
 			//FORWARD
 			else if (pressedButton == 1) {
-				if (pos < 7)
+				if (pos < 8)
 					pos++;
-				else if (pos == 7)
+				else if (pos == 8)
 					pos = 0;
 			}
 			//Change the menu name

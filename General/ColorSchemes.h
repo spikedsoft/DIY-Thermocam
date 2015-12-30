@@ -1,5 +1,5 @@
 /*
-* This file contains the three different color Schemes to display the thermal image
+* This file contains the three different color schemes to display the thermal image
 */
 
 /* Rainbow */

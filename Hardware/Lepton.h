@@ -9,7 +9,7 @@ byte leptonFrame[164];
 /* Methods */
 
 /* Start Lepton SPI Transmission */
-void beginLeptonSPI() {
+void leptonBeginSPI() {
 	int clockspeed;
 	//Lepton3 - 30 Mhz minimum
 	if (leptonVersion == 1)
@@ -17,7 +17,7 @@ void beginLeptonSPI() {
 	//Lepton2 - 20 Mhz maximum
 	else if (leptonVersion == 0)
 		clockspeed = 20000000;
-	//Early-Bird #2 or Batch #1
+	//Start alternative clock line expcept for Early-Bird #1
 	if (mlx90614Version == 1)
 		startAltClockline();
 	//Begin SPI Transaction on alternative Clock
@@ -27,12 +27,12 @@ void beginLeptonSPI() {
 }
 
 /* End Lepton SPI Transmission */
-void endLeptonSPI() {
+void leptonEndSPI() {
 	//End transfer - CS HIGH
 	digitalWriteFast(15, HIGH);
 	//End SPI Transaction
 	SPI.endTransaction();
-	//Early-Bird #2 or Early-Bird #1
+	//End alternative clock line except for Early-Bird #2
 	if (mlx90614Version == 1)
 		endAltClockline();
 }
@@ -174,6 +174,7 @@ void leptonRadSet(bool enable)
 	Wire.endTransmission();
 }
 
+/* Checks the Lepton hardware revision */
 void leptonCheckVersion() {
 	//Get AGC Command
 	Wire.beginTransmission(0x2A);
@@ -208,10 +209,11 @@ void leptonCheckVersion() {
 	}
 }
 
+/* Checks if the Lepton transmits packages over SPI correctly */
 void leptonCheckSPI() {
 	byte leptonError = 0;
 	//Begin SPI Transmission
-	beginLeptonSPI();
+	leptonBeginSPI();
 	leptonError = 0;
 	for (byte line = 0; line < 60; line++) {
 		//Reset if the expected line does not match the answer
@@ -230,7 +232,7 @@ void leptonCheckSPI() {
 		}
 	}
 	//End Lepton SPI
-	endLeptonSPI();
+	leptonEndSPI();
 }
 
 /* Check which hardware revision of the FLIR Lepton is connected */
@@ -247,4 +249,6 @@ void initLepton() {
 	leptonRunFFC();
 	//Check if Lepton SPI works
 	leptonCheckSPI();
+	//Do a quick calibration
+	quickCalibration();
 }

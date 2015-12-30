@@ -53,17 +53,17 @@ void gaussianBlur(unsigned short *img, long width, long height, float sigma,
 }
 
 /* Get one image from the Lepton module */
-void getTemperatures(bool save = false) {
+void getTemperatures(bool save) {
 	byte leptonError = 0;
 	byte line, segmentNumbers;
-	//For Early-Bird #1 and #2, get only one segment per frame
+	//For Lepton2 sensor, get only one segment per frame
 	if (leptonVersion == 0)
 		segmentNumbers = 1;
 	//For Lepton3 sensor, get four packages per frame
 	else
 		segmentNumbers = 4;
 	//Begin SPI Transmission
-	beginLeptonSPI();
+	leptonBeginSPI();
 	//Get number of packages per frame according to the lepton revision
 	for (int segment = 1; segment <= segmentNumbers; segment++) {
 		do {
@@ -82,9 +82,9 @@ void getTemperatures(bool save = false) {
 						//Segment Error
 						segment = 0;
 						//Re-Sync the Lepton
-						endLeptonSPI();
+						leptonEndSPI();
 						delay(186);
-						beginLeptonSPI();
+						leptonBeginSPI();
 						break;
 					}
 				}
@@ -95,7 +95,7 @@ void getTemperatures(bool save = false) {
 						uint16_t result = (uint16_t)(leptonFrame[2 * column + 4] << 8
 							| leptonFrame[2 * column + 5]);
 						//Early-Bird #1
-						if ((mlx90614Version == 0) && (leptonVersion == 0)){
+						if ((mlx90614Version == 0) && (leptonVersion == 0)) {
 							//For saving raw data, use small array
 							if (save) {
 								rawValues[column + (line * 80)] = result;
@@ -107,7 +107,7 @@ void getTemperatures(bool save = false) {
 								image[(line * 2 * 160) + 160 + (column * 2) + 1] = result;
 							}
 						}
-						//Early-Bird #2
+						//All other
 						else if ((mlx90614Version == 1) && (leptonVersion == 0)) {
 							//For saving raw data, use small array
 							if (save) {
@@ -143,7 +143,7 @@ void getTemperatures(bool save = false) {
 		} while ((leptonError > 100) || (line != 60));
 	}
 	//End Lepton SPI
-	endLeptonSPI();
+	leptonEndSPI();
 }
 
 /* Scale the values from 0 - 255 */
@@ -195,73 +195,6 @@ void convertColors() {
 		uint8_t blue = colormap[3 * value + 2];
 		//Convert to RGB565
 		image[i] = (((red & 248) | green >> 5) << 8) | ((green & 28) << 3 | blue >> 3);
-	}
-}
-
-/* Show the current object temperature on screen*/
-void showSpot(bool save) {
-	//Set text color
-	setColor();
-	display.setBackColor(VGA_TRANSPARENT);
-	//Draw the spot circle
-	display.drawCircle(160, 120, 4);
-	//Draw the lines
-	display.drawHLine(150, 120, 6);
-	display.drawHLine(164, 120, 6);
-	display.drawVLine(160, 110, 6);
-	display.drawVLine(160, 124, 6);
-	//Receive object temperature
-	if (!save)
-		mlx90614GetTemp();
-	//Convert to Fahrenheit if needed
-	if (tempFormat == 1)
-		mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
-	//Convert to float with a special method
-	char buffer[10];
-	floatToChar(buffer, mlx90614Temp);
-	display.print(buffer, 145, 140);
-}
-
-/* Show the color bar on screen */
-void showColorBar() {
-	byte red, green, blue;
-	byte count = 0;
-	for (int i = 0; i < 255; i++) {
-		if ((i % 2) == 0) {
-			//Cold
-			if (colorScheme == 3) {
-				if (i < (255 - grayscaleLevel))
-					colormap = colormap_grayscale;
-				else
-					colormap = colormap_rainbow;
-			}
-			//Cold
-			if (colorScheme == 4) {
-				if (i > grayscaleLevel)
-					colormap = colormap_grayscale;
-				else
-					colormap = colormap_rainbow;
-			}
-			red = colormap[i * 3];
-			green = colormap[(i * 3) + 1];
-			blue = colormap[(i * 3) + 2];
-			display.setColor(red, green, blue);
-			display.drawLine(285, 184 - count, 315, 184 - count);
-			count++;
-		}
-	}
-	float min = calFunction(minTemp);
-	float max = calFunction(maxTemp);
-	float step = (max - min) / 4.0;
-	//Set color
-	setColor();
-	display.setBackColor(VGA_TRANSPARENT);
-	//Draw temperatures
-	char buffer[6];
-	for (int i = 0; i < 5; i++) {
-		float temp = max - (i*step);
-		sprintf(buffer, "%d", (int)temp);
-		display.print(buffer, 260, 51 + (i * 32));
 	}
 }
 

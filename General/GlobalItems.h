@@ -35,6 +35,9 @@
 #define eeprom_videosFormat 105
 #define eeprom_videosType 106
 #define eeprom_massStorage 107
+#define eeprom_spotEnabled 108
+#define eeprom_filterEnabled 109
+#define eeprom_colorbarEnabled 110
 #define eeprom_hwRevision 150
 #define eeprom_setValue 200
 
@@ -59,9 +62,9 @@ Camera cam(&Serial1);
 //Battery
 int batPercentage = -1;
 long batRefreshTime;
-//MLX90614 sensor version - 0 = BCI (Early-Bird #1), 1 = DCH (Early-Bird #2)
+//MLX90614 sensor version - 0 = BCI (Early-Bird #1), 1 = DCH (All other)
 bool mlx90614Version;
-//FLIR Lepton sensor version - 0 = Lepton2 (Early-Bird #1 & Early-Bird #2), 1 = Lepton3 (Batch #1)
+//FLIR Lepton sensor version - 0 = Lepton2, 1 = Lepton3
 bool leptonVersion;
 //Temperature format - 0 = dec, 1 = fahrenheit
 bool tempFormat = 0;
@@ -98,6 +101,10 @@ bool filterEnabled = false;
 bool laserEnabled = false;
 //Show spot
 bool spotEnabled = true;
+//Show colorbar
+bool colorbarEnabled = true;
+//Quick calibration offset
+float quickCalOffset;
 //Calibration formula
 double calSlope;
 double calOffset;
@@ -109,55 +116,3 @@ volatile bool showMenu = false;
 volatile bool videoSave = false;
 //Video save interval in seconds
 int16_t videoInterval;
-
-/* Abstract Methods */
-void drawMessage(char*);
-void firstStart();
-bool calibrate();
-void startAltClockline(bool sdStart = false);
-void endAltClockline();
-bool tempLimits();
-float calFunction(uint16_t rawValue);
-void createThermalImg(bool menu = false);
-void calibrationProccess();
-void floatToChar(char* buffer, float val);
-void showSpot(bool save = false);
-void showColorBar();
-void toggleSpot();
-void toggleFilter();
-void settingsMenu();
-void timeMenu(bool firstStart = false);
-void dateMenu(bool firstStart = false);
-void limitValues();
-void timeAndDateMenu(bool firstStart = false);
-void saveRawData(bool image, char* name, uint16_t framesCaptured = 0);
-void proccessVideoFrames(uint16_t framesCaptured, char* dirname);
-void createVideoFolder(char* dirname);
-void buttonIRQ();
-void touchIRQ();
-void fillImageArray();
-void gaussianBlur(unsigned short *img, long width, long height, float sigma,
-	int numsteps);
-void convertColors();
-void scaleValues();
-void saveVisualFrame(uint16_t count, char* dirname);
-void bootScreen();
-void imagesStorageMenu(bool firstStart = false);
-void imagesStorageMenuHandler(bool firstStart = false);
-void videosStorageMenu(bool firstStart = false);
-void videosStorageMenuHandler(bool firstStart = false);
-void storageMenu();
-float bytesToFloat(uint8_t* farray);
-float celciusToFahrenheit(float Tc);
-void frameFilename(char* filename, uint16_t count);
-void liveMode();
-void loadThermal();
-void loadRawData(char* filename);
-void settingsMenuHandler();
-void connectionMenu();
-void connectionMenuHandler();
-void saveThermalImage(char* filename);
-uint16_t getVideoFrameNumber(char* dirname);
-bool checkSDCard();
-void liveModeHelper();
-void selectColorScheme();

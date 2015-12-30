@@ -6,179 +6,7 @@
 #include "Create.h"
 #include "Load.h"
 #include "Save.h"
-
-/* Variables */
-float weightArray[] = {
-	0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
-	0.25, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.25,
-	0.25, 0.50, 0.75, 0.75, 0.75, 0.75, 0.50, 0.25,
-	0.25, 0.50, 0.75, 1.00, 1.00, 0.75, 0.50, 0.25,
-	0.25, 0.50, 0.75, 1.00, 1.00, 0.75, 0.50, 0.25,
-	0.25, 0.50, 0.75, 0.75, 0.75, 0.75, 0.50, 0.25,
-	0.25, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.25,
-	0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
-};
-
-/* Methods */
-
-/* Converts a given Temperature in Celcius to Fahrenheit */
-float celciusToFahrenheit(float Tc) {
-	float Tf = ((float) 9.0 / 5.0) * Tc + 32.0;
-	return (Tf);
-}
-
-/* Function to calculate temperature out of Lepton value */
-float calFunction(uint16_t rawValue) {
-	//Calc out of the formula
-	//float result = calSlope * rawValue + calOffset;
-	float result = 1428.0 / log((calSlope / (rawValue - calOffset)) + 1.0);
-	//Convert Kelvin to Celcius
-	result -= 273.15;
-	//Convert to Fahrenheit if needed
-	if (tempFormat)
-		result = celciusToFahrenheit(result);
-	return result;
-}
-
-/* Calculates the average of the 64 pixels in the middle */
-uint16_t calcAverage() {
-	float sum = 0.0;
-	for (byte vert = 0; vert < 8; vert++) {
-		for (byte horiz = 0; horiz < 8; horiz++) {
-			uint16_t val = image[((vert + 26) * 160) + (horiz + 36) * 2];
-			//If one of the values contains hotter or colder values than the lepton can handle
-			if ((val == 16383) || (val == 0))
-				//Do not use that calibration set!
-				return 0;
-			sum = sum + (val * weightArray[(vert * 8) + horiz]);
-		}
-	}
-	sum = sum / 30.0;
-	uint16_t avg = (uint16_t)(sum + 0.5);
-	return avg;
-}
-
-/* Help function for least suqare fit */
-inline static double sqr(double x) {
-	return x*x;
-}
-
-/* Least square fit */
-int linreg(int n, const double x[], const double y[], double* m, double* b, double* r)
-{
-	double   sumx = 0.0;
-	double   sumx2 = 0.0;
-	double   sumxy = 0.0;
-	double   sumy = 0.0;
-	double   sumy2 = 0.0;
-	for (int i = 0; i < n; i++)
-	{
-		sumx += x[i];
-		sumx2 += sqr(x[i]);
-		sumxy += x[i] * y[i];
-		sumy += y[i];
-		sumy2 += sqr(y[i]);
-	}
-	double denom = (n * sumx2 - sqr(sumx));
-	if (denom == 0) {
-		//singular matrix. can't solve the problem.
-		*m = 0;
-		*b = 0;
-		*r = 0;
-		return 1;
-	}
-	*m = (n * sumxy - sumx * sumy) / denom;
-	*b = (sumy * sumx2 - sumx * sumxy) / denom;
-	if (r != NULL) {
-		*r = (sumxy - sumx * sumy / n) /
-			sqrt((sumx2 - sqr(sumx) / n) *
-				(sumy2 - sqr(sumy) / n));
-	}
-	return 0;
-}
-
-/* Calibration Proccess */
-void calibrationProccess() {
-	//Variable declaration
-	double cal_Correlation;
-	double cal_MLX90614[100];
-	double cal_Lepton[100];
-	uint16_t average;
-	uint16_t average_old = 0;
-	float mlx90614_old = 0;
-	maxTemp = 0;
-	minTemp = 65535;
-	do {
-		//Show the screen
-		calibrateScreen();
-		int counter = 0;
-		//Perform FFC
-		leptonRunFFC();
-		//Get 100 different calibration samples
-		while (counter < 100) {
-			long timeElapsed = millis();
-			do {
-				getTemperatures();
-				average = calcAverage();
-			} while ((average == average_old) || (average == 0));
-			average_old = average;
-			//If the temperature changes too much, do not take that measurement
-			if (abs(mlx90614GetTemp() - mlx90614_old) < 10) {
-				//Convert Object temp to Fahrenheit if needed
-				if (tempFormat == 1)
-					mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
-				//Store values
-				cal_Lepton[counter] = average;
-				cal_MLX90614[counter] = 1.0 / (exp(1428.0 / (mlx90614Temp + 273.15)) - 1.0);
-				//Find minimum and maximum value
-				if (average > maxTemp)
-					maxTemp = average;
-				if (average < minTemp)
-					minTemp = average;
-				if ((counter % 10) == 0) {
-					char buffer[4];
-					sprintf(buffer, "Status: %2d%%", counter);
-					display.print(buffer, CENTER, 140);
-				}
-				counter++;
-			}
-			mlx90614_old = mlx90614Temp;
-			//wait at least 111ms between two measurements (9Hz)
-			while ((millis() - timeElapsed) < 111);
-			//If the user wants to abort
-			if (touch.touched() == true) {
-				int pressedButton = touchButtons.checkButtons(true);
-				//Abort
-				if (pressedButton == 0) {
-					return;
-				}
-			}
-		}
-		//Calculate the calibration formula
-		linreg(100, cal_MLX90614, cal_Lepton, &calSlope, &calOffset, &cal_Correlation);
-		//Show error message if calibration was not good
-		if (cal_Correlation < 0.5) {
-			if (!calibrationRepeat())
-				return;
-		}
-	} while (cal_Correlation < 0.5);
-	//Set calibration to done
-	calibrationDone = true;
-	//Restore old font
-	display.setFont(smallFont);
-}
-
-/* Calibration */
-bool calibrate() {
-	//If there is a calibration
-	if (calibrationDone)
-		return calibrationChooser();
-	//If there is none, do a new one
-	else {
-		calibrationProccess();
-		return true;
-	}
-}
+#include "Calibration.h"
 
 /* If the touch has been pressed, enable menu */
 void touchIRQ() {
@@ -239,6 +67,86 @@ void buttonIRQ() {
 	}
 }
 
+/* Show the color bar on screen */
+void showColorBar() {
+	byte red, green, blue;
+	byte count = 0;
+	for (int i = 0; i < 255; i++) {
+		if ((i % 2) == 0) {
+			//Cold
+			if (colorScheme == 3) {
+				if (i < (255 - grayscaleLevel))
+					colormap = colormap_grayscale;
+				else
+					colormap = colormap_rainbow;
+			}
+			//Cold
+			if (colorScheme == 4) {
+				if (i > grayscaleLevel)
+					colormap = colormap_grayscale;
+				else
+					colormap = colormap_rainbow;
+			}
+			red = colormap[i * 3];
+			green = colormap[(i * 3) + 1];
+			blue = colormap[(i * 3) + 2];
+			display.setColor(red, green, blue);
+			display.drawLine(285, 184 - count, 315, 184 - count);
+			count++;
+		}
+	}
+	float min = calFunction(minTemp);
+	float max = calFunction(maxTemp);
+	float step = (max - min) / 4.0;
+	//Set color
+	setColor();
+	display.setBackColor(VGA_TRANSPARENT);
+	//Draw temperatures
+	char buffer[6];
+	for (int i = 0; i < 5; i++) {
+		float temp = max - (i*step);
+		sprintf(buffer, "%d", (int)temp);
+		display.print(buffer, 260, 51 + (i * 32));
+	}
+}
+
+/* Toggles the colorbar */
+void toggleColorbar() {
+	if (colorbarEnabled) {
+		colorbarEnabled = false;
+	}
+	else {
+		colorbarEnabled = true;
+	}
+	EEPROM.write(eeprom_colorbarEnabled, colorbarEnabled);
+}
+
+/* Show the current object temperature on screen*/
+void showSpot(bool save) {
+	//Set text color
+	setColor();
+	display.setBackColor(VGA_TRANSPARENT);
+	//Draw the spot circle
+	display.drawCircle(160, 120, 12);
+	//Draw the lines
+	display.drawHLine(136, 120, 12);
+	display.drawHLine(172, 120, 12);
+	display.drawVLine(160, 96, 12);
+	display.drawVLine(160, 132, 12);
+	//Receive object temperature
+	if (!save) {
+		mlx90614GetTemp();
+		//Convert to Fahrenheit if needed
+		if (tempFormat == 1)
+			mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
+	}
+	//Convert to float with a special method
+	char buffer[10];
+	floatToChar(buffer, mlx90614Temp);
+	display.print(buffer, 145, 150);
+}
+
+
 /* Toggles the spot display */
 void toggleSpot() {
 	if (spotEnabled) {
@@ -247,6 +155,8 @@ void toggleSpot() {
 	else {
 		spotEnabled = true;
 	}
+	//Save to EEPROM
+	EEPROM.write(eeprom_spotEnabled, spotEnabled);
 }
 
 /* Toggles the filter */
@@ -257,6 +167,8 @@ void toggleFilter() {
 	else {
 		filterEnabled = true;
 	}
+	//Save to EEPROM
+	EEPROM.write(eeprom_filterEnabled, filterEnabled);
 }
 
 /* Map to the right color scheme */
@@ -270,17 +182,60 @@ void selectColorScheme() {
 		colormap = colormap_grayscale;
 }
 
+/* Change the color scheme for the thermal image */
+void changeColorScheme(int pos) {
+	switch (pos) {
+		//Rainbow
+	case 0:
+		colorScheme = 0;
+		break;
+		//Ironblack
+	case 1:
+		colorScheme = 1;
+		break;
+		//Grayscale
+	case 2:
+		colorScheme = 2;
+		break;
+		//Hot
+	case 3:
+		colorScheme = 3;
+		break;
+		//Cold
+	case 4:
+		colorScheme = 4;
+		break;
+	}
+	//Map to the right color scheme
+	selectColorScheme();
+	//Choose limits for hot and cold mode
+	if ((colorScheme == 3) || (colorScheme == 4))
+		hotColdChooser();
+	//Save to EEPROM
+	EEPROM.write(eeprom_colorScheme, colorScheme);
+}
+
 /* Init procedure for the live mode */
 void liveModeInit() {
+	//Activate laser if enabled
+	if (laserEnabled)
+		digitalWrite(pin_laser, HIGH);
 	//Select color scheme
 	selectColorScheme();
 	//Attach the interrupts
 	attachInterrupts();
+	//Allocate space
+	image = (unsigned short*)calloc(19200, sizeof(unsigned short));
 }
 
 void liveModeExit() {
+	//Deactivate laser if enabled
+	if (laserEnabled)
+		digitalWrite(pin_laser, LOW);
 	//Detach the interrupts
 	detachInterrupts();
+	//Deallocate space
+	free(image);
 	//Open the main menu
 	mainMenu();
 }
@@ -289,8 +244,6 @@ void liveModeExit() {
 void liveMode() {
 	//Init
 	liveModeInit();
-	//Allocate space
-	image = (unsigned short*)calloc(19200, sizeof(unsigned short));
 	//Main Loop
 	while (true) {
 		//If touch IRQ has been triggered, open menu
@@ -311,10 +264,10 @@ void liveMode() {
 		if (spotEnabled)
 			showSpot();
 		//Show the color bar
-		if (calibrationDone)
+		if (colorbarEnabled)
 			showColorBar();
 		//Save the image
-		if (imgSave == 1) {
+		if (imgSave) {
 			//Detach the interrupts
 			detachInterrupts();
 			saveImage();
@@ -323,7 +276,7 @@ void liveMode() {
 			attachInterrupts();
 		}
 		//Start the video
-		if (videoSave == 1) {
+		if (videoSave) {
 			//Ask user for the video interval
 			if (videoIntervalChooser())
 				videoCapture();
@@ -336,8 +289,6 @@ void liveMode() {
 		//Save screenshot if serial command is send
 		//saveScreenshot();
 	}
-	//Deallocate space
-	free(image);
 	//Exit
 	liveModeExit();
 }

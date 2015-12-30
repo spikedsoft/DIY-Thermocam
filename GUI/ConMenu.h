@@ -103,7 +103,7 @@ void massStorage() {
 		//Go back
 		connectionMenu();
 	}
-	//Early-Bird #2 or Batch #1
+	//Other
 	else {
 		drawMessage((char*) "Disconnect USB cable to return !");
 		delay(1500);

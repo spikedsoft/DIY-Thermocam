@@ -1,6 +1,6 @@
 DIY-Thermocam Firmware Development 
 
-www.diy-thermocam.net
+http://www.diy-thermocam.net
 
 Download and install the following programs:
 

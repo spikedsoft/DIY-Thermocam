@@ -193,8 +193,12 @@ void saveImage() {
 	//Show Message on screen
 	if (imagesType == 1)
 		showMsg((char*) "All saved!", true);
-	else
-		showMsg((char*) "Thermal saved!");
+	else {
+		if(imagesFormat == 0)
+			showMsg((char*) "Thermal saved!", true);
+		else
+			showMsg((char*) "Thermal saved!");
+	}
 	delay(500);
 }
 
@@ -399,7 +403,7 @@ void proccessVideoFrames(uint16_t framesCaptured, char* dirname) {
 		if (spotEnabled)
 			showSpot(true);
 		//Show the color bar
-		if (calibrationDone)
+		if(colorbarEnabled)
 			showColorBar();
 		//Show the image number
 		sprintf(buffer, "%5d / %-5d", count + 1, framesCaptured);
@@ -482,16 +486,31 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	sdFile.write(tempFormat);
 	//Write the show spot attribute
 	sdFile.write(spotEnabled);
+	//Write the show colorbar attribute
+	sdFile.write(colorbarEnabled);
 	//Write the calibration done attribute
 	sdFile.write(calibrationDone);
-	//Write Calibration slope
-	floatToBytes(farray, (float)calSlope);
-	for (int i = 0; i < 4; i++)
-		sdFile.write(farray[i]);
-	//Write Calibration offset
-	floatToBytes(farray, (float)calOffset);
-	for (int i = 0; i < 4; i++)
-		sdFile.write(farray[i]);
+	//Write Calibration slope if calibration is done
+	if (calibrationDone) {
+		floatToBytes(farray, (float)calSlope);
+		for (int i = 0; i < 4; i++)
+			sdFile.write(farray[i]);
+	}
+	//Write Calibration offset if calibration is done
+	if (calibrationDone) {
+		floatToBytes(farray, (float)calOffset);
+		for (int i = 0; i < 4; i++)
+			sdFile.write(farray[i]);
+	}
+	//Write quick Calibration offset if calibration is not done
+	if (!calibrationDone) {
+		floatToBytes(farray, (float)quickCalOffset);
+		for (int i = 0; i < 4; i++)
+			sdFile.write(farray[i]);
+		//Fill with zeros to match filesize
+		for (int i = 0; i < 4; i++)
+			sdFile.write('0');
+	}
 	//Close the file
 	sdFile.close();
 	//Switch Clock back to Standard
