@@ -49,14 +49,18 @@ void initI2C() {
 		Wire.pinConfigure(I2C_PINS_18_19, I2C_PULLUP_INT);
 }
 
-/* Initializes the Analog-Digital-Converter */
+/* Init the Analog-Digital-Converter for the battery measure */
 void initADC() {
-	analogReference(EXTERNAL);
-	analogReadResolution(12);
-	analogReadAveraging(32);
+	//set number of averages
+	batMeasure->setAveraging(4); 
+	//set bits of resolution
+	batMeasure->setResolution(12); 
+	//change the conversion speed
+	batMeasure->setConversionSpeed(ADC_MED_SPEED);
+	//change the sampling speed
+	batMeasure->setSamplingSpeed(ADC_MED_SPEED); 
+	//set battery pin as input
 	pinMode(pin_bat_measure, INPUT);
-	pinMode(pin_vref, INPUT);
-	pinMode(pin_usb_measure, INPUT);
 }
 
 /* Switch the clockline to the SD card */
@@ -157,10 +161,6 @@ bool checkEEPROM() {
 		if ((read == 0) || (read == 1))
 			tempFormat = read;
 		//Color Scheme
-		read = EEPROM.read(eeprom_colorScheme);
-		if ((read >= 0) && (read <= 4))
-			colorScheme = read;
-		//Images Format
 		read = EEPROM.read(eeprom_imagesFormat);
 		if ((read == 0) || (read == 1))
 			imagesFormat = read;

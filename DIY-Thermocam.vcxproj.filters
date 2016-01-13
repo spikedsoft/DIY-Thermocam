@@ -66,6 +66,9 @@
     <Filter Include="_libraries\XPT2046_Touchscreen">
       <UniqueIdentifier>{4e0121c1-b0c9-40de-b373-eeb6f011e9ec}</UniqueIdentifier>
     </Filter>
+    <Filter Include="_libraries\ADC">
+      <UniqueIdentifier>{ba31bcce-0086-4994-9508-e519b139113d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DIY-Thermocam.ino" />
@@ -435,6 +438,12 @@
     <ClInclude Include="General\MethodDefines.h">
       <Filter>Resource Files\General</Filter>
     </ClInclude>
+    <ClInclude Include="libraries\ADC\ADC.h">
+      <Filter>_libraries\ADC</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\ADC\ADC_Module.h">
+      <Filter>_libraries\ADC</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\analog.c">
@@ -640,6 +649,12 @@
     </ClCompile>
     <ClCompile Include="libraries\XPT2046_Touchscreen\XPT2046_Touchscreen.cpp">
       <Filter>_libraries\XPT2046_Touchscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\ADC\ADC.cpp">
+      <Filter>_libraries\ADC</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\ADC\ADC_Module.cpp">
+      <Filter>_libraries\ADC</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -24,7 +24,6 @@
 #define pin_lcd_backlight 22
 #define pin_bat_measure 23
 #define pin_usb_measure A14
-#define pin_vref 39
 
 /* EEPROM defines */
 #define eeprom_firstStart 100
@@ -46,6 +45,8 @@
 UTFT display;
 //Touch Controller
 XPT2046_Touchscreen touch(9);
+//ADC
+ADC *batMeasure = new ADC();
 //Buttons
 UTFT_Buttons touchButtons(&display, &touch);
 //Button Debouncer
@@ -96,7 +97,7 @@ bool agcEnabled = true;
 //Calibration done
 bool calibrationDone = false;
 //Filter image
-bool filterEnabled = false;
+bool filterEnabled = true;
 //Laser state
 bool laserEnabled = false;
 //Show spot

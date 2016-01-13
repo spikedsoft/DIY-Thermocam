@@ -15,7 +15,12 @@ void gaussianBlur(unsigned short *img, long width, long height, float sigma,
 	dnu = (1.0 + 2.0 * lambda - sqrt(1.0 + 4.0 * lambda)) / (2.0 * lambda);
 	nu = (float)dnu;
 	boundaryscale = (float)(1.0 / (1.0 - dnu));
-	postscale = (float)(pow(dnu / lambda, 2 * numsteps));
+	//For Lepton2 sensor
+	if (leptonVersion == 0)
+		postscale = (float)(pow(dnu / lambda, 2 * numsteps));
+	//For Lepton3 sensor
+	else
+		postscale = (float)(pow(dnu / lambda, numsteps));
 	//Filter horizontally along each row
 	for (y = 0; y < height; y++) {
 		for (step = 0; step < numsteps; step++) {
@@ -24,10 +29,13 @@ void gaussianBlur(unsigned short *img, long width, long height, float sigma,
 			//Filter rightwards
 			for (x = 1; x < width; x++)
 				ptr[x] += nu * ptr[x - 1];
-			ptr[x = width - 1] *= boundaryscale;
-			//Filter leftwards
-			for (; x > 0; x--)
-				ptr[x - 1] += nu * ptr[x];
+			//For Lepton2 sensor
+			if (leptonVersion == 0) {
+				ptr[x = width - 1] *= boundaryscale;
+				//Filter leftwards
+				for (; x > 0; x--)
+					ptr[x - 1] += nu * ptr[x];
+			}
 		}
 	}
 	//Filter vertically along each column
@@ -38,10 +46,13 @@ void gaussianBlur(unsigned short *img, long width, long height, float sigma,
 			//Filter downwards
 			for (i = width; i < numpixels; i += width)
 				ptr[i] += nu * ptr[i - width];
-			ptr[i = numpixels - width] *= boundaryscale;
-			//Filter upwards
-			for (; i > 0; i -= width)
-				ptr[i - width] += nu * ptr[i];
+			//For Lepton2 sensor
+			if (leptonVersion == 0) {
+				ptr[i = numpixels - width] *= boundaryscale;
+				//Filter upwards
+				for (; i > 0; i -= width)
+					ptr[i - width] += nu * ptr[i];
+			}
 		}
 	}
 	for (i = 0; i < numpixels; i++) {

@@ -267,7 +267,7 @@ void liveMode() {
 		if (colorbarEnabled)
 			showColorBar();
 		//Save the image
-		if (imgSave) {
+		if (imgSave == 1) {
 			//Detach the interrupts
 			detachInterrupts();
 			saveImage();
@@ -276,7 +276,7 @@ void liveMode() {
 			attachInterrupts();
 		}
 		//Start the video
-		if (videoSave) {
+		if (videoSave == 1) {
 			//Ask user for the video interval
 			if (videoIntervalChooser())
 				videoCapture();

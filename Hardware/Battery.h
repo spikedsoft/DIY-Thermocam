@@ -50,37 +50,15 @@ int getLipoPerc(float vol) {
 		return -1;
 }
 
-/* Draws the battery status on the screen */
-void drawBatteryStat() {
-	//Corner
-	display.drawRoundRect(282, 0, 317, 10);
-	//Fill background
-	display.setColor(127, 127, 127);
-	display.fillRoundRect(283, 1, 316, 9);
-	display.setColor(VGA_WHITE);
-	//Full
-	if (batPercentage >= 80)
-		display.fillRect(309, 2, 315, 9);
-	// 3/4 Full
-	if (batPercentage >= 60)
-		display.fillRect(301, 2, 307, 9);
-	// 1/2 Full
-	if (batPercentage >= 40)
-		display.fillRect(293, 2, 299, 9);
-	//1/4 Full
-	if (batPercentage >= 20)
-		display.fillRect(285, 2, 291, 9);
-}
-
 /* Measure the battery voltage and convert it to percent */
 void checkBattery(bool start = false) {
 	//Read battery voltage
-	float vBat = ((1195 * 1.47 * analogRead(23)) / analogRead(39) / 1000.0) + 0.15;
+	float vBat = (batMeasure->analogRead(pin_bat_measure) * 1.47 * 3.3) / batMeasure->getMaxValue(ADC_0) + 0.25;
 	//Check if the USB is connected
-	float vUSB = ((1195 * 1.47 * analogRead(A14)) / analogRead(39) / 1000.0);
-	if (vUSB <= 4.0) {
-		vBat += 0.08;
-	}
+	float vUSB = (batMeasure->analogRead(pin_usb_measure) * 1.47 * 3.3) / batMeasure->getMaxValue(ADC_0);
+	//If not connected, add some value to correct it
+	if (vUSB <= 4.0)
+		vBat += 0.1;
 	//Calculate the percentage
 	batPercentage = getLipoPerc(vBat);
 	//Set the timestamp

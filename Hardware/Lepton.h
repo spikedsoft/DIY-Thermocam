@@ -194,14 +194,11 @@ void leptonCheckVersion() {
 	//Detected Lepton2 HW Version
 	if (strstr(leptonhw, "05-060950-") != NULL) {
 		leptonVersion = 0;
-		//Enable Gaussian Blur
-		filterEnabled = true;
 	}
 	//Detected Lepton3 HW Version
 	else if (strstr(leptonhw, "05-070530-") != NULL) {
 		leptonVersion = 1;
-		//Disable Gaussian Blur by default, can be turned on
-		filterEnabled = false;
+		colorbarEnabled = false;
 	}
 	else {
 		drawMessage((char*) "FLIR Lepton I2C error!");
@@ -249,6 +246,7 @@ void initLepton() {
 	leptonRunFFC();
 	//Check if Lepton SPI works
 	leptonCheckSPI();
-	//Do a quick calibration
-	quickCalibration();
+	//Do a quick calibration for Lepton2 sensor
+	if(leptonVersion == 0)
+		quickCalibration();
 }

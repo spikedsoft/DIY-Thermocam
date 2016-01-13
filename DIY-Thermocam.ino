@@ -13,6 +13,7 @@
 #define Version "FW Verson 1.02"
 
 /* Libraries */
+#include <ADC.h>
 #include <i2c_t3.h>
 #include <SdFat.h>
 #include <SPI.h>

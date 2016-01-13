@@ -77,7 +77,8 @@ void updateInfos(bool refresh) {
 		checkBattery();
 	if(refresh){
 		//Display battery status on screen
-		drawBatteryStat();
+		display.printNumI(batPercentage, 280, 0, 3, ' ');
+		display.printChar('%', 310, 0);
 		//Display date
 		display.printNumI(day(), 5, 0, 2, '0');
 		display.print((char*) ".", 20, 0);
