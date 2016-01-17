@@ -10,7 +10,7 @@
 */
 
 /* Current firmware version */
-#define Version "FW Verson 1.02"
+#define Version "FW Verson 1.03"
 
 /* Libraries */
 #include <ADC.h>

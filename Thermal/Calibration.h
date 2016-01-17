@@ -141,6 +141,8 @@ void calibrationProccess() {
 		int counter = 0;
 		//Perform FFC
 		leptonRunFFC();
+		//Short delay
+		delay(1000);
 		//Get 100 different calibration samples
 		while (counter < 100) {
 			long timeElapsed = millis();
@@ -151,9 +153,6 @@ void calibrationProccess() {
 			average_old = average;
 			//If the temperature changes too much, do not take that measurement
 			if (abs(mlx90614GetTemp() - mlx90614_old) < 10) {
-				//Convert Object temp to Fahrenheit if needed
-				if (tempFormat == 1)
-					mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
 				//Store values
 				cal_Lepton[counter] = average;
 				cal_MLX90614[counter] = 1.0 / (exp(1428.0 / (mlx90614Temp + 273.15)) - 1.0);
