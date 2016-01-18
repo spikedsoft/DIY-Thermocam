@@ -21,7 +21,7 @@ void leptonBeginSPI() {
 	if (mlx90614Version == 1)
 		startAltClockline();
 	//Begin SPI Transaction on alternative Clock
-	SPI.beginTransaction(SPISettings(clockspeed, MSBFIRST, SPI_MODE0));
+	SPI.beginTransaction(SPISettings(clockspeed, MSBFIRST, SPI_MODE1));
 	//Start transfer  - CS LOW
 	digitalWriteFast(15, LOW);
 }
@@ -43,7 +43,7 @@ boolean leptonReadFrame(uint8_t line, uint8_t seg) {
 	//Receive one frame over SPI
 	do {
 		SPI.transfer(leptonFrame, 164);
-	} 
+	}
 	//Repeat as long as the frame is not valid, equals sync
 	while ((leptonFrame[0] & 0x0F) == 0x0F);
 	//Check if the line number matches the expected line
@@ -206,32 +206,6 @@ void leptonCheckVersion() {
 	}
 }
 
-/* Checks if the Lepton transmits packages over SPI correctly */
-void leptonCheckSPI() {
-	byte leptonError = 0;
-	//Begin SPI Transmission
-	leptonBeginSPI();
-	leptonError = 0;
-	for (byte line = 0; line < 60; line++) {
-		//Reset if the expected line does not match the answer
-		if (!leptonReadFrame(line, 0)) {
-			//Reset line to -1, will be zero in the next cycle
-			line = -1;
-			//Raise Error count
-			leptonError++;
-			//Little delay
-			delay(1);
-			//If the Error count is too high, show error message
-			if (leptonError > 100) {
-				drawMessage((char*) "FLIR Lepton SPI error!");
-				while (1);
-			}
-		}
-	}
-	//End Lepton SPI
-	leptonEndSPI();
-}
-
 /* Check which hardware revision of the FLIR Lepton is connected */
 void initLepton() {
 	//Short delay to ensure FFC is performed
@@ -243,10 +217,8 @@ void initLepton() {
 	//Activate Radiometry mode on the Lepton
 	leptonRadSet(true);
 	//Run the RAD FFC if a shutter is attached
-	if(leptonVersion != 2)
+	if (leptonVersion != 2)
 		leptonRunFFC();
-	//Check if Lepton SPI works
-	leptonCheckSPI();
 	//Do a quick calibration
 	quickCalibration();
 }
