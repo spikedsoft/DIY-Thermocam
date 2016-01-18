@@ -7,7 +7,7 @@ void displayRawData() {
 	//Select Color Scheme
 	selectColorScheme();
 	//Fill image array for Lepton2 sensor
-	if (leptonVersion == 0)
+	if (leptonVersion != 1)
 		fillImageArray();
 	//Scale values
 	scaleValues();

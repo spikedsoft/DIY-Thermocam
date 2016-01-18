@@ -65,7 +65,7 @@ int batPercentage = -1;
 long batRefreshTime;
 //MLX90614 sensor version - 0 = BCI (Early-Bird #1), 1 = DCH (All other)
 bool mlx90614Version;
-//FLIR Lepton sensor version - 0 = Lepton2, 1 = Lepton3
+//FLIR Lepton sensor version - 0 = Lepton2 Shuttered, 1 = Lepton3 Shuttered, 2 = Lepton2 No-Shutter 
 bool leptonVersion;
 //Temperature format - 0 = dec, 1 = fahrenheit
 bool tempFormat = 0;

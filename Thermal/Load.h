@@ -63,7 +63,7 @@ void loadRawData(char* filename) {
 	uint16_t valueCount;
 	unsigned short* valueArray;
 	//For the Lepton2 sensor, use 4800 raw values
-	if (leptonVersion == 0) {
+	if (leptonVersion != 1) {
 		valueCount = 4800;
 		valueArray = rawValues;
 	}

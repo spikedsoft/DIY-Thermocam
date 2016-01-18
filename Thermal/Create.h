@@ -16,7 +16,7 @@ void gaussianBlur(unsigned short *img, long width, long height, float sigma,
 	nu = (float)dnu;
 	boundaryscale = (float)(1.0 / (1.0 - dnu));
 	//For Lepton2 sensor
-	if (leptonVersion == 0)
+	if (leptonVersion != 1)
 		postscale = (float)(pow(dnu / lambda, 2 * numsteps));
 	//For Lepton3 sensor
 	else
@@ -30,7 +30,7 @@ void gaussianBlur(unsigned short *img, long width, long height, float sigma,
 			for (x = 1; x < width; x++)
 				ptr[x] += nu * ptr[x - 1];
 			//For Lepton2 sensor
-			if (leptonVersion == 0) {
+			if (leptonVersion != 1) {
 				ptr[x = width - 1] *= boundaryscale;
 				//Filter leftwards
 				for (; x > 0; x--)
@@ -47,7 +47,7 @@ void gaussianBlur(unsigned short *img, long width, long height, float sigma,
 			for (i = width; i < numpixels; i += width)
 				ptr[i] += nu * ptr[i - width];
 			//For Lepton2 sensor
-			if (leptonVersion == 0) {
+			if (leptonVersion != 1) {
 				ptr[i = numpixels - width] *= boundaryscale;
 				//Filter upwards
 				for (; i > 0; i -= width)
@@ -68,7 +68,7 @@ void getTemperatures(bool save) {
 	byte leptonError = 0;
 	byte line, segmentNumbers;
 	//For Lepton2 sensor, get only one segment per frame
-	if (leptonVersion == 0)
+	if (leptonVersion != 1)
 		segmentNumbers = 1;
 	//For Lepton3 sensor, get four packages per frame
 	else
@@ -106,7 +106,7 @@ void getTemperatures(bool save) {
 						uint16_t result = (uint16_t)(leptonFrame[2 * column + 4] << 8
 							| leptonFrame[2 * column + 5]);
 						//Early-Bird #1
-						if ((mlx90614Version == 0) && (leptonVersion == 0)) {
+						if ((mlx90614Version == 0) && (leptonVersion != 1)) {
 							//For saving raw data, use small array
 							if (save) {
 								rawValues[column + (line * 80)] = result;
@@ -119,7 +119,7 @@ void getTemperatures(bool save) {
 							}
 						}
 						//All other
-						else if ((mlx90614Version == 1) && (leptonVersion == 0)) {
+						else if ((mlx90614Version == 1) && (leptonVersion != 1)) {
 							//For saving raw data, use small array
 							if (save) {
 								rawValues[4799 - (column + (line * 80))] = result;
@@ -233,7 +233,7 @@ void displayThermalImg() {
 	//Create the thermal image first
 	createThermalImg();
 	//Draw thermal image on screen
-	if (imgSave != 2) display.writeScreen(image);
+	display.writeScreen(image);
 	//If the image save marker was set
 	if (imgSave == 3)
 		imgSave = 1;

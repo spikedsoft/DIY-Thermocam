@@ -139,23 +139,29 @@ void calibrationProccess() {
 		//Show the screen
 		calibrateScreen();
 		int counter = 0;
-		//Perform FFC
-		leptonRunFFC();
-		//Short delay
-		delay(1000);
+		//Serial.println("142");
+		//Perform FFC if shutter is attached
+		if(leptonVersion != 2)
+			leptonRunFFC();
+		//Serial.println("145");
 		//Get 100 different calibration samples
 		while (counter < 100) {
 			long timeElapsed = millis();
 			do {
+				//Serial.println("150");
 				getTemperatures();
+				//Serial.println("152");
 				average = calcAverage();
+				//Serial.println("154");
 			} while ((average == average_old) || (average == 0));
 			average_old = average;
+			//Serial.println("157");
 			//If the temperature changes too much, do not take that measurement
 			if (abs(mlx90614GetTemp() - mlx90614_old) < 10) {
 				//Store values
 				cal_Lepton[counter] = average;
 				cal_MLX90614[counter] = 1.0 / (exp(1428.0 / (mlx90614Temp + 273.15)) - 1.0);
+				//Serial.println("163");
 				//Find minimum and maximum value
 				if (average > maxTemp)
 					maxTemp = average;
@@ -163,6 +169,7 @@ void calibrationProccess() {
 					minTemp = average;
 				if ((counter % 10) == 0) {
 					char buffer[4];
+					//Serial.println("171");
 					sprintf(buffer, "Status: %2d%%", counter);
 					display.print(buffer, CENTER, 140);
 				}
@@ -171,6 +178,7 @@ void calibrationProccess() {
 			mlx90614_old = mlx90614Temp;
 			//wait at least 111ms between two measurements (9Hz)
 			while ((millis() - timeElapsed) < 111);
+			//Serial.println("180");
 			//If the user wants to abort
 			if (touch.touched() == true) {
 				int pressedButton = touchButtons.checkButtons(true);
@@ -179,6 +187,7 @@ void calibrationProccess() {
 					return;
 				}
 			}
+			//Serial.println("189");
 		}
 		//Calculate the calibration formula
 		linreg(100, cal_MLX90614, cal_Lepton, &calSlope, &calOffset, &cal_Correlation);

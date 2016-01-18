@@ -15,7 +15,7 @@ void leptonBeginSPI() {
 	if (leptonVersion == 1)
 		clockspeed = 30000000;
 	//Lepton2 - 20 Mhz maximum
-	else if (leptonVersion == 0)
+	else
 		clockspeed = 20000000;
 	//Start alternative clock line expcept for Early-Bird #1
 	if (mlx90614Version == 1)
@@ -41,20 +41,21 @@ void leptonEndSPI() {
 boolean leptonReadFrame(uint8_t line, uint8_t seg) {
 	bool success = true;
 	//Receive one frame over SPI
-	SPI.transfer(leptonFrame, 164);
-	//Check for success
-	if ((leptonFrame[0] & 0x0F) == 0x0F) {
+	do {
+		SPI.transfer(leptonFrame, 164);
+	} 
+	//Repeat as long as the frame is not valid, equals sync
+	while ((leptonFrame[0] & 0x0F) == 0x0F);
+	//Check if the line number matches the expected line
+	if (leptonFrame[1] != line) {
 		success = false;
 	}
-	else if (leptonFrame[1] != line) {
-		success = false;
-	}
+	//For the Lepton3, check if the segment number matche
 	if ((line == 20) && (leptonVersion == 1)) {
 		byte segment = (leptonFrame[0] >> 4);
 		if (segment != seg) {
 			success = false;
 		}
-
 	}
 	return success;
 }
@@ -191,18 +192,17 @@ void leptonCheckVersion() {
 	Wire.requestFrom(0x2A, leptonReadReg(0x6));
 	char leptonhw[33];
 	Wire.readBytes(leptonhw, 32);
-	//Detected Lepton2 HW Version
+	//Detected Lepton2 Shuttered
 	if (strstr(leptonhw, "05-060950-") != NULL) {
 		leptonVersion = 0;
 	}
-	//Detected Lepton3 HW Version
+	//Detected Lepton3 Shuttered
 	else if (strstr(leptonhw, "05-070530-") != NULL) {
 		leptonVersion = 1;
-		colorbarEnabled = false;
 	}
+	//Detected Lepton2 No-Shutter
 	else {
-		drawMessage((char*) "FLIR Lepton I2C error!");
-		while (1);
+		leptonVersion = 2;
 	}
 }
 
@@ -235,18 +235,18 @@ void leptonCheckSPI() {
 /* Check which hardware revision of the FLIR Lepton is connected */
 void initLepton() {
 	//Short delay to ensure FFC is performed
-	delay(1000);
+	delay(1500);
 	//Check the Lepton HW Revision
 	leptonCheckVersion();
 	//Set Lepton FFC mode to manual
 	leptonSetFFCManual();
 	//Activate Radiometry mode on the Lepton
 	leptonRadSet(true);
-	//Run the RAD FFC
-	leptonRunFFC();
+	//Run the RAD FFC if a shutter is attached
+	if(leptonVersion != 2)
+		leptonRunFFC();
 	//Check if Lepton SPI works
 	leptonCheckSPI();
-	//Do a quick calibration for Lepton2 sensor
-	if(leptonVersion == 0)
-		quickCalibration();
+	//Do a quick calibration
+	quickCalibration();
 }

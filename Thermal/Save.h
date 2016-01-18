@@ -260,7 +260,7 @@ void readVideoFrame(uint16_t count, char* dirname) {
 	uint16_t valueCount;
 	unsigned short* valueArray;
 	//For the Lepton2 sensor, use 4800 raw values
-	if (leptonVersion == 0) {
+	if (leptonVersion != 1) {
 		valueCount = 4800;
 		valueArray = rawValues;
 	}
@@ -388,7 +388,7 @@ void proccessVideoFrames(uint16_t framesCaptured, char* dirname) {
 		//Read frame
 		readVideoFrame(count, dirname);
 		//Fill image array for Lepton2 sensor
-		if (leptonVersion == 0)
+		if (leptonVersion != 1)
 			fillImageArray();
 		//Scale values
 		scaleValues();
@@ -422,7 +422,7 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	uint16_t valueCount;
 	unsigned short* valueArray;
 	//For the Lepton2 sensor, use 4800 raw values
-	if (leptonVersion == 0) {
+	if (leptonVersion != 1) {
 		valueCount = 4800;
 		valueArray = rawValues;
 	}
