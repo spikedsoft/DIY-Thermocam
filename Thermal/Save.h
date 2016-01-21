@@ -193,12 +193,8 @@ void saveImage() {
 	//Show Message on screen
 	if (imagesType == 1)
 		showMsg((char*) "All saved!", true);
-	else {
-		if(imagesFormat == 0)
-			showMsg((char*) "Thermal saved!", true);
-		else
-			showMsg((char*) "Thermal saved!");
-	}
+	else 
+		showMsg((char*) "Thermal saved!");
 	delay(500);
 }
 

@@ -1,5 +1,5 @@
 /*
-* Pin, Variable and Method definitions that are used firmware-wide
+* Global definitions that are used firmware-wide
 */
 
 /* Pin defines */

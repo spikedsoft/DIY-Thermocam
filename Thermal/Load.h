@@ -62,20 +62,29 @@ void loadRawData(char* filename) {
 	byte msb, lsb;
 	uint16_t valueCount;
 	unsigned short* valueArray;
-	//For the Lepton2 sensor, use 4800 raw values
-	if (leptonVersion != 1) {
-		valueCount = 4800;
-		valueArray = rawValues;
-	}
-	//For the Lepton3 sensor, use 19200 raw values
-	else {
-		valueCount = 19200;
-		valueArray = image;
-	}
 	//Switch Clock to Alternative
 	startAltClockline();
 	// Open the file for reading
 	sdFile.open(filename, O_READ);
+	//For the Lepton2 sensor, use 4800 raw values
+	if (sdFile.fileSize() == 9621) {
+		valueCount = 4800;
+		valueArray = rawValues;
+		leptonVersion = 0;
+	}
+	//For the Lepton3 sensor, use 19200 raw values
+	else if (sdFile.fileSize() == 38421) {
+		valueCount = 19200;
+		valueArray = image;
+		leptonVersion = 1;
+	}
+	//Invalid data
+	else {
+		drawMessage((char*) "Invalid image size !");
+		sdFile.close();
+		endAltClockline();
+		return;
+	}
 	//Read all lepton raw values from file
 	for (int i = 0; i < valueCount; i++) {
 		msb = sdFile.read();
@@ -132,7 +141,7 @@ void loadRawData(char* filename) {
 /* Loads an image from the SDCard and prints it on screen */
 void openImage(char* filename, byte* choice) {
 	//Show message on screen
-	drawMessage((char*) "Please wait, image is loading..");
+	drawMessage((char*) "Please wait, image is loading..");	
 	//Load Raw data
 	loadRawData(filename);
 	//Display Raw Data
@@ -803,6 +812,7 @@ void loadThermal() {
 	bool old_spotEnabled = spotEnabled;
 	bool old_colorbarEnabled = colorbarEnabled;
 	bool old_calibrationDone = calibrationDone;
+	bool old_leptonVersion = leptonVersion;
 	double old_calSlope = calSlope;
 	double old_calOffset = calOffset;
 	float old_quickCalOffset = quickCalOffset;
@@ -903,6 +913,7 @@ void loadThermal() {
 	tempFormat = old_tempFormat;
 	spotEnabled = old_spotEnabled;
 	calibrationDone = old_calibrationDone;
+	leptonVersion = old_leptonVersion;
 	colorbarEnabled = old_colorbarEnabled;
 	calSlope = old_calSlope;
 	calOffset = old_calOffset;

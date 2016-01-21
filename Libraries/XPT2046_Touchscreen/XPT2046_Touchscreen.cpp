@@ -42,6 +42,8 @@ TS_Point XPT2046_Touchscreen::getPoint()
 bool XPT2046_Touchscreen::touched()
 {
 	update();
+	//Prevent double touch
+	delay(20);
 	return (zraw >= Z_THRESHOLD);
 }
 

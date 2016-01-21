@@ -85,9 +85,8 @@ void displayOff(bool save) {
 		delay(1000);
 		display.enterSleepMode();
 	}
+	delay(20);
 	digitalWrite(pin_lcd_backlight, LOW);
-	while (touch.touched());
-	delay(100);
 	attachInterrupt(pin_touch_irq, touchIRQ, FALLING);
 }
 
@@ -100,8 +99,7 @@ void displayOn(bool save) {
 		drawMessage((char*) "Turning display on..");
 		delay(1000);
 	}
-	while (touch.touched());
-	delay(100);
+	delay(20);
 	attachInterrupt(pin_touch_irq, touchIRQ, FALLING);
 }
 
@@ -160,7 +158,11 @@ bool checkEEPROM() {
 		read = EEPROM.read(eeprom_tempFormat);
 		if ((read == 0) || (read == 1))
 			tempFormat = read;
-		//Color Scheme
+		//Color scheme
+		read = EEPROM.read(eeprom_colorScheme);
+		if ((read >= 0) && (read <= 4))
+			colorScheme = read;
+		//Images format
 		read = EEPROM.read(eeprom_imagesFormat);
 		if ((read == 0) || (read == 1))
 			imagesFormat = read;
@@ -180,10 +182,12 @@ bool checkEEPROM() {
 		read = EEPROM.read(eeprom_spotEnabled);
 		if ((read == 0) || (read == 1))
 			spotEnabled = read;
-		//Filter Enabled
-		read = EEPROM.read(eeprom_filterEnabled);
-		if ((read == 0) || (read == 1))
-			filterEnabled = read;
+		//Filter Enabled, only for Lepton2
+		if (leptonVersion != 1) {
+			read = EEPROM.read(eeprom_filterEnabled);
+			if ((read == 0) || (read == 1))
+				filterEnabled = read;
+		}
 		//Colorbar Enabled
 		read = EEPROM.read(eeprom_colorbarEnabled);
 		if ((read == 0) || (read == 1))

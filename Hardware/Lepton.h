@@ -199,6 +199,8 @@ void leptonCheckVersion() {
 	//Detected Lepton3 Shuttered
 	else if (strstr(leptonhw, "05-070530-") != NULL) {
 		leptonVersion = 1;
+		//Disable filter
+		filterEnabled = false;
 	}
 	//Detected Lepton2 No-Shutter
 	else {

@@ -161,8 +161,17 @@ void getTemperatures(bool save) {
 void scaleValues() {
 	//Calculate the scale
 	float scale = 255.0 / (maxTemp - minTemp);
-	for (int i = 0; i < 19200; i++)
+	for (int i = 0; i < 19200; i++) {
+		//Limit values if not in AGC mode
+		if (!agcEnabled) {
+			if (image[i] > maxTemp)
+				image[i] = maxTemp;
+			if (image[i] < minTemp)
+				image[i] = minTemp;
+		}
 		image[i] = (image[i] - minTemp) * scale;
+	}
+		
 }
 
 /* Go through the array of temperatures and find min and max temp */
@@ -233,7 +242,7 @@ void displayThermalImg() {
 	//Create the thermal image first
 	createThermalImg();
 	//Draw thermal image on screen
-	display.writeScreen(image);
+	if (imgSave != 2) display.writeScreen(image);
 	//If the image save marker was set
 	if (imgSave == 3)
 		imgSave = 1;

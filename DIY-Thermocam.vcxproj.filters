@@ -22,62 +22,128 @@
       <UniqueIdentifier>{a7aa3d52-a09c-4ac5-b506-29b4c52f6340}</UniqueIdentifier>
     </Filter>
     <Filter Include="_core">
-      <UniqueIdentifier>{b87de104-16ff-40dc-b953-397897031ab0}</UniqueIdentifier>
+      <UniqueIdentifier>{292b2823-25b0-4954-a5e5-33508ab9bd91}</UniqueIdentifier>
     </Filter>
     <Filter Include="_core\avr">
-      <UniqueIdentifier>{96882a90-e766-42c1-895d-f64a42f365c2}</UniqueIdentifier>
+      <UniqueIdentifier>{8a1c6b73-45ca-485b-aaed-843d7a8fa6a8}</UniqueIdentifier>
     </Filter>
     <Filter Include="_core\util">
-      <UniqueIdentifier>{44a09f2e-e584-479a-91ad-351103f5deed}</UniqueIdentifier>
+      <UniqueIdentifier>{cc809e7f-763f-4d00-a99e-e8738f3f370c}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries">
-      <UniqueIdentifier>{ec3f4858-adf2-4852-9e30-51f3bd913141}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="_libraries\Bounce">
-      <UniqueIdentifier>{3f92deb4-389c-48c0-b1e6-cab6a4b189cc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="_libraries\Camera">
-      <UniqueIdentifier>{e63f202a-566a-40fd-bc5e-ef8a5a0bcf05}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="_libraries\EEPROM">
-      <UniqueIdentifier>{4e76df6e-c93e-444b-99ab-38fe66d61d7d}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="_libraries\i2c_t3">
-      <UniqueIdentifier>{fa014aa3-0dc8-4ad6-ba22-249d1a3aed97}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="_libraries\SdFat">
-      <UniqueIdentifier>{46e8f7fe-9297-4f3b-940d-80f627e64c55}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="_libraries\SdFat\utility">
-      <UniqueIdentifier>{e32497ad-0a51-49ca-9c98-2a20e489efdd}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="_libraries\SPI">
-      <UniqueIdentifier>{a5c4bbc2-1f9e-45ee-9185-e36241e89c41}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="_libraries\Time">
-      <UniqueIdentifier>{11c05024-16bd-4ebb-ab53-9e0d1c6fbfe7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="_libraries\UTFT">
-      <UniqueIdentifier>{f084b848-0aa1-4d57-82f6-35dd2e558ffb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="_libraries\UTFT_Buttons">
-      <UniqueIdentifier>{11080de3-7c3f-4a33-b30d-7aaa33bd88bb}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="_libraries\XPT2046_Touchscreen">
-      <UniqueIdentifier>{4e0121c1-b0c9-40de-b373-eeb6f011e9ec}</UniqueIdentifier>
+      <UniqueIdentifier>{214c0bc6-5c18-4f67-a0b8-44a4e862a064}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\ADC">
-      <UniqueIdentifier>{ba31bcce-0086-4994-9508-e519b139113d}</UniqueIdentifier>
+      <UniqueIdentifier>{20001c58-8ea2-4713-a43a-8a7de560b182}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\Bounce">
+      <UniqueIdentifier>{eb5c8762-ba0a-4f0b-8980-7419ff300f16}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\Camera">
+      <UniqueIdentifier>{6d18be3c-1e92-44dd-911a-75a0d7123a25}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\EEPROM">
+      <UniqueIdentifier>{5b23b914-0316-4ea7-ab33-2f6c212f8e7b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\i2c_t3">
+      <UniqueIdentifier>{72806958-468b-4adb-90b6-4b1c3133fb15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\SdFat">
+      <UniqueIdentifier>{9b6b0e52-6df2-4abd-a564-70a88804234f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\SdFat\utility">
+      <UniqueIdentifier>{9168de60-63fc-4ca5-9162-60c073492d8b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\SPI">
+      <UniqueIdentifier>{6334db1d-1633-48de-b553-45237fadebef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\UTFT">
+      <UniqueIdentifier>{f604aa96-1f9d-4fa4-b96f-6f99d9c8f03d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\UTFT_Buttons">
+      <UniqueIdentifier>{7a5f97ba-e5b7-4135-a1dd-890ced2962dd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\XPT2046_Touchscreen">
+      <UniqueIdentifier>{abdb5847-abf5-42de-82c8-3dc67645adda}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\Time">
+      <UniqueIdentifier>{7a13c517-ce28-4760-a206-9c138d06fc4f}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="DIY-Thermocam.ino" />
+    <None Include="README.MD" />
     <None Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\memcpy-armv7m.S">
       <Filter>_core</Filter>
     </None>
-    <None Include="README.MD" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="__vm\.DIY-Thermocam.vsarduino.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="General\ColorSchemes.h">
+      <Filter>Resource Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="General\GlobalItems.h">
+      <Filter>Resource Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\ConMenu.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\FirstStart.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\GUI.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\LiveMenu.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\LoadMenu.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\SettingsMenu.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\VideoMenu.h">
+      <Filter>Resource Files\GUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\Battery.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\Cam.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\Hardware.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\Lepton.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\MLX90614.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\Storage.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Thermal\Create.h">
+      <Filter>Resource Files\Thermal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thermal\Load.h">
+      <Filter>Resource Files\Thermal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thermal\Save.h">
+      <Filter>Resource Files\Thermal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thermal\Thermal.h">
+      <Filter>Resource Files\Thermal</Filter>
+    </ClInclude>
+    <ClInclude Include="Thermal\Calibration.h">
+      <Filter>Resource Files\Thermal</Filter>
+    </ClInclude>
+    <ClInclude Include="General\MethodDefines.h">
+      <Filter>Resource Files\General</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\Arduino.h">
       <Filter>_core</Filter>
     </ClInclude>
@@ -195,6 +261,9 @@
     <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_mouse.h">
       <Filter>_core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_mtp.h">
+      <Filter>_core</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_names.h">
       <Filter>_core</Filter>
     </ClInclude>
@@ -261,14 +330,11 @@
     <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util\parity.h">
       <Filter>_core\util</Filter>
     </ClInclude>
-    <ClInclude Include="__vm\.DIY-Thermocam.vsarduino.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="libraries\ADC\ADC.h">
+      <Filter>_libraries\ADC</Filter>
     </ClInclude>
-    <ClInclude Include="General\ColorSchemes.h">
-      <Filter>Resource Files\General</Filter>
-    </ClInclude>
-    <ClInclude Include="General\GlobalItems.h">
-      <Filter>Resource Files\General</Filter>
+    <ClInclude Include="libraries\ADC\ADC_Module.h">
+      <Filter>_libraries\ADC</Filter>
     </ClInclude>
     <ClInclude Include="libraries\Bounce\Bounce.h">
       <Filter>_libraries\Bounce</Filter>
@@ -369,9 +435,6 @@
     <ClInclude Include="libraries\SPI\SPI.h">
       <Filter>_libraries\SPI</Filter>
     </ClInclude>
-    <ClInclude Include="libraries\Time\Time.h">
-      <Filter>_libraries\Time</Filter>
-    </ClInclude>
     <ClInclude Include="libraries\UTFT\UTFT.h">
       <Filter>_libraries\UTFT</Filter>
     </ClInclude>
@@ -381,68 +444,8 @@
     <ClInclude Include="libraries\XPT2046_Touchscreen\XPT2046_Touchscreen.h">
       <Filter>_libraries\XPT2046_Touchscreen</Filter>
     </ClInclude>
-    <ClInclude Include="GUI\ConMenu.h">
-      <Filter>Resource Files\GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\FirstStart.h">
-      <Filter>Resource Files\GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\GUI.h">
-      <Filter>Resource Files\GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\LiveMenu.h">
-      <Filter>Resource Files\GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\LoadMenu.h">
-      <Filter>Resource Files\GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\SettingsMenu.h">
-      <Filter>Resource Files\GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="GUI\VideoMenu.h">
-      <Filter>Resource Files\GUI</Filter>
-    </ClInclude>
-    <ClInclude Include="Hardware\Battery.h">
-      <Filter>Resource Files\Hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="Hardware\Cam.h">
-      <Filter>Resource Files\Hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="Hardware\Hardware.h">
-      <Filter>Resource Files\Hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="Hardware\Lepton.h">
-      <Filter>Resource Files\Hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="Hardware\MLX90614.h">
-      <Filter>Resource Files\Hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="Hardware\Storage.h">
-      <Filter>Resource Files\Hardware</Filter>
-    </ClInclude>
-    <ClInclude Include="Thermal\Create.h">
-      <Filter>Resource Files\Thermal</Filter>
-    </ClInclude>
-    <ClInclude Include="Thermal\Load.h">
-      <Filter>Resource Files\Thermal</Filter>
-    </ClInclude>
-    <ClInclude Include="Thermal\Save.h">
-      <Filter>Resource Files\Thermal</Filter>
-    </ClInclude>
-    <ClInclude Include="Thermal\Thermal.h">
-      <Filter>Resource Files\Thermal</Filter>
-    </ClInclude>
-    <ClInclude Include="Thermal\Calibration.h">
-      <Filter>Resource Files\Thermal</Filter>
-    </ClInclude>
-    <ClInclude Include="General\MethodDefines.h">
-      <Filter>Resource Files\General</Filter>
-    </ClInclude>
-    <ClInclude Include="libraries\ADC\ADC.h">
-      <Filter>_libraries\ADC</Filter>
-    </ClInclude>
-    <ClInclude Include="libraries\ADC\ADC_Module.h">
-      <Filter>_libraries\ADC</Filter>
+    <ClInclude Include="libraries\Time\Time.h">
+      <Filter>_libraries\Time</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -548,6 +551,9 @@
     <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_mouse.c">
       <Filter>_core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_mtp.c">
+      <Filter>_core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\usb_rawhid.c">
       <Filter>_core</Filter>
     </ClCompile>
@@ -565,6 +571,12 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\yield.cpp">
       <Filter>_core</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\ADC\ADC.cpp">
+      <Filter>_libraries\ADC</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\ADC\ADC_Module.cpp">
+      <Filter>_libraries\ADC</Filter>
     </ClCompile>
     <ClCompile Include="libraries\Bounce\Bounce.cpp">
       <Filter>_libraries\Bounce</Filter>
@@ -632,12 +644,6 @@
     <ClCompile Include="libraries\SPI\SPI.cpp">
       <Filter>_libraries\SPI</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\Time\DateStrings.cpp">
-      <Filter>_libraries\Time</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\Time\Time.cpp">
-      <Filter>_libraries\Time</Filter>
-    </ClCompile>
     <ClCompile Include="libraries\UTFT\DefaultFonts.c">
       <Filter>_libraries\UTFT</Filter>
     </ClCompile>
@@ -650,11 +656,11 @@
     <ClCompile Include="libraries\XPT2046_Touchscreen\XPT2046_Touchscreen.cpp">
       <Filter>_libraries\XPT2046_Touchscreen</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\ADC\ADC.cpp">
-      <Filter>_libraries\ADC</Filter>
+    <ClCompile Include="libraries\Time\DateStrings.cpp">
+      <Filter>_libraries\Time</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\ADC\ADC_Module.cpp">
-      <Filter>_libraries\ADC</Filter>
+    <ClCompile Include="libraries\Time\Time.cpp">
+      <Filter>_libraries\Time</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
