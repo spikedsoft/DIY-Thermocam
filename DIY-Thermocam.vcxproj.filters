@@ -22,52 +22,52 @@
       <UniqueIdentifier>{a7aa3d52-a09c-4ac5-b506-29b4c52f6340}</UniqueIdentifier>
     </Filter>
     <Filter Include="_core">
-      <UniqueIdentifier>{292b2823-25b0-4954-a5e5-33508ab9bd91}</UniqueIdentifier>
+      <UniqueIdentifier>{84c22ff4-7803-4ec3-b25a-6e701af1fd76}</UniqueIdentifier>
     </Filter>
     <Filter Include="_core\avr">
-      <UniqueIdentifier>{8a1c6b73-45ca-485b-aaed-843d7a8fa6a8}</UniqueIdentifier>
+      <UniqueIdentifier>{bc455056-c032-4f5f-bef3-7e1d461922a6}</UniqueIdentifier>
     </Filter>
     <Filter Include="_core\util">
-      <UniqueIdentifier>{cc809e7f-763f-4d00-a99e-e8738f3f370c}</UniqueIdentifier>
+      <UniqueIdentifier>{33870f18-5b63-4737-84e6-2c41ba6b6e1d}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries">
-      <UniqueIdentifier>{214c0bc6-5c18-4f67-a0b8-44a4e862a064}</UniqueIdentifier>
+      <UniqueIdentifier>{f898460d-177c-4381-8779-cd1314314063}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\ADC">
-      <UniqueIdentifier>{20001c58-8ea2-4713-a43a-8a7de560b182}</UniqueIdentifier>
+      <UniqueIdentifier>{6b0a91b2-c2c4-4477-aaff-fbf261050946}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\Bounce">
-      <UniqueIdentifier>{eb5c8762-ba0a-4f0b-8980-7419ff300f16}</UniqueIdentifier>
+      <UniqueIdentifier>{6eb9e64f-8a2e-4727-9a99-c348f17b8919}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\Camera">
-      <UniqueIdentifier>{6d18be3c-1e92-44dd-911a-75a0d7123a25}</UniqueIdentifier>
+      <UniqueIdentifier>{3c71565d-23e6-42bd-87e7-f5c2b7c410d2}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\EEPROM">
-      <UniqueIdentifier>{5b23b914-0316-4ea7-ab33-2f6c212f8e7b}</UniqueIdentifier>
+      <UniqueIdentifier>{c939631d-9728-41b7-a6ec-b6fdc793e50a}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\i2c_t3">
-      <UniqueIdentifier>{72806958-468b-4adb-90b6-4b1c3133fb15}</UniqueIdentifier>
+      <UniqueIdentifier>{59ef28c7-85d7-4b18-b1a2-185af5e12486}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\SdFat">
-      <UniqueIdentifier>{9b6b0e52-6df2-4abd-a564-70a88804234f}</UniqueIdentifier>
+      <UniqueIdentifier>{f3f46859-7242-4bf9-b01f-2f01f2295a2e}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\SdFat\utility">
-      <UniqueIdentifier>{9168de60-63fc-4ca5-9162-60c073492d8b}</UniqueIdentifier>
+      <UniqueIdentifier>{430c4046-ae39-4bf5-8d56-f4f8d74f5f88}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\SPI">
-      <UniqueIdentifier>{6334db1d-1633-48de-b553-45237fadebef}</UniqueIdentifier>
+      <UniqueIdentifier>{285a749f-8d00-4382-8cfd-e87038367d20}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\UTFT">
-      <UniqueIdentifier>{f604aa96-1f9d-4fa4-b96f-6f99d9c8f03d}</UniqueIdentifier>
+      <UniqueIdentifier>{3d017e8b-b0d7-41aa-ab0e-58338ac80668}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\UTFT_Buttons">
-      <UniqueIdentifier>{7a5f97ba-e5b7-4135-a1dd-890ced2962dd}</UniqueIdentifier>
+      <UniqueIdentifier>{ed32496c-315f-4b8f-bfba-252d81468700}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\XPT2046_Touchscreen">
-      <UniqueIdentifier>{abdb5847-abf5-42de-82c8-3dc67645adda}</UniqueIdentifier>
+      <UniqueIdentifier>{441b5779-d818-498a-8ec1-f028ce0d88ab}</UniqueIdentifier>
     </Filter>
     <Filter Include="_libraries\Time">
-      <UniqueIdentifier>{7a13c517-ce28-4760-a206-9c138d06fc4f}</UniqueIdentifier>
+      <UniqueIdentifier>{f384aee6-7f80-4383-bcad-eed2694438c2}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -445,6 +445,9 @@
       <Filter>_libraries\XPT2046_Touchscreen</Filter>
     </ClInclude>
     <ClInclude Include="libraries\Time\Time.h">
+      <Filter>_libraries\Time</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\Time\TimeLib.h">
       <Filter>_libraries\Time</Filter>
     </ClInclude>
   </ItemGroup>

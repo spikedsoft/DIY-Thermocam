@@ -10,14 +10,14 @@
 */
 
 /* Current firmware version */
-#define Version "FW Verson 1.05"
+#define Version "FW Version 1.05"
 
 /* Libraries */
 #include <ADC.h>
 #include <i2c_t3.h>
 #include <SdFat.h>
 #include <SPI.h>
-#include <Time.h>
+#include <TimeLib.h>
 #include <EEPROM.h>
 #include <Bounce.h>
 #include <XPT2046_Touchscreen.h>

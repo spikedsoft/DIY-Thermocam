@@ -84,13 +84,13 @@ void restartAndJumpToApp(void) {
 
 /* Methods */
 
-/* Reboot the Teensy to update firmware */
-void updateFirmware() {
-	//Display error msg for 1sec
-	drawMessage((char*) "The screen will go black now..");
-	delay(1500);
-	_reboot_Teensyduino_();
-	//If there is no connection
+/* Go into video output mode and wait for connected module */
+void videoOutput() {
+	//To do - implement
+	drawMessage((char*) "Will be added soon !");
+	delay(1000);
+	//Go back
+	connectionMenu();
 }
 
 /* Go into mass storage mode */
@@ -118,9 +118,9 @@ void connectionMenuHandler() {
 		updateInfos(false);
 		if (touch.touched() == true) {
 			int pressedButton = touchButtons.checkButtons();
-			//Update FW
+			//Video output
 			if (pressedButton == 0) {
-				updateFirmware();
+				videoOutput();
 			}
 			//Mass storage
 			else if (pressedButton == 1) {
@@ -137,9 +137,9 @@ void connectionMenuHandler() {
 
 /* Connection Menu */
 void connectionMenu() {
-	drawTitle((char*) "PC Connection");
+	drawTitle((char*) "Connection menu");
 	touchButtons.deleteAllButtons();
-	touchButtons.addButton(20, 60, 130, 70, (char*) "Update FW");
+	touchButtons.addButton(20, 60, 130, 70, (char*) "Video output");
 	touchButtons.addButton(170, 60, 130, 70, (char*) "Mass storage");
 	touchButtons.addButton(20, 150, 280, 70, (char*) "Back");
 	touchButtons.drawButtons();
