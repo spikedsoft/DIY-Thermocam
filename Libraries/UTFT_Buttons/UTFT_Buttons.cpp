@@ -1,8 +1,8 @@
 #include "UTFT_Buttons.h"
 
-UTFT_Buttons::UTFT_Buttons(UTFT *ptrUTFT, XPT2046_Touchscreen *ptrTouch) {
+UTFT_Buttons::UTFT_Buttons(UTFT *ptrUTFT, Touchscreen *ptrTouch) {
 	_UTFT = ptrUTFT;
-	_UTouch = ptrTouch;
+	_Touchscreen = ptrTouch;
 	deleteAllButtons();
 	_color_text = VGA_WHITE;
 	_color_text_inactive = VGA_GRAY;
@@ -177,9 +177,9 @@ void UTFT_Buttons::deleteAllButtons() {
 }
 
 int UTFT_Buttons::checkButtons(bool timeout, bool fast) {
-	TS_Point p = _UTouch->getPoint();
-	int touch_x = p.x;
-	int touch_y = p.y;
+	TS_Point p = _Touchscreen->getPoint();
+	int x = p.x;
+	int y = p.y;
 	int result = -1;
 	word _current_color = _UTFT->getColor();
 	int xpos, ypos, width, height;
@@ -197,10 +197,10 @@ int UTFT_Buttons::checkButtons(bool timeout, bool fast) {
 		if (((buttons[i].flags & BUTTON_UNUSED) == 0)
 			&& ((buttons[i].flags & BUTTON_DISABLED) == 0)
 			&& (result == -1)) {
-			if ((touch_x >= xpos)
-				&& (touch_x <= (xpos + width))
-				&& (touch_y >= ypos)
-				&& (touch_y <= (ypos + height)))
+			if ((x >= xpos)
+				&& (x <= (xpos + width))
+				&& (y >= ypos)
+				&& (y <= (ypos + height)))
 				result = i;
 		}
 	}
@@ -225,18 +225,18 @@ int UTFT_Buttons::checkButtons(bool timeout, bool fast) {
 	}
 	if (fast) {
 		long time = millis();
-		while ((_UTouch->touched() == true)
+		while ((_Touchscreen->touched() == true)
 			&& ((millis() - time) < 50)) {
 		};
 	}
 	else if (timeout) {
 		long time = millis();
-		while ((_UTouch->touched() == true)
+		while ((_Touchscreen->touched() == true)
 			&& ((millis() - time) < 150)) {
 		};
 	}
 	else {
-		while (_UTouch->touched() == true) {
+		while (_Touchscreen->touched() == true) {
 		};
 	}
 	if (result != -1) {

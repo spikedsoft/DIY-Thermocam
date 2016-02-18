@@ -3,10 +3,10 @@
 #define Z_THRESHOLD     400
 #define MSEC_THRESHOLD  3
 
-XPT2046_Touchscreen::XPT2046_Touchscreen(uint8_t cs, uint8_t tirq)
+XPT2046_Touchscreen::XPT2046_Touchscreen()
 {
-	csPin = cs;
-	tirqPin = tirq;
+	csPin = 9;
+	tirqPin = 255;
 	msraw = 0x80000000;
 	xraw = 0;
 	yraw = 0;

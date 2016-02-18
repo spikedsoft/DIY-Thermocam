@@ -211,7 +211,7 @@ bool checkEEPROM() {
 /* Startup procedure for the Hardware */
 void initHardware() {
 	//Serial debugging
-	//Serial.begin(115200);
+	Serial.begin(115200);
 	//Laser off
 	pinMode(pin_laser, OUTPUT);
 	digitalWrite(pin_laser, LOW);
@@ -231,16 +231,16 @@ void initHardware() {
 	pinMode(pin_button, INPUT);
 	//Init ADC
 	initADC();
-	//Init Touch
-	touch.begin();
 	//Init the MLX90614
 	mlx90614Init();
 	//Init Camera module
 	initCamera();
+	//Init Touch screen
+	touch.begin();
 	//Init SD card
 	initSD();
 	//Check battery for the first time
-	checkBattery(true);
+	checkBattery();
 	//Check Lepton HW Revision
 	initLepton();
 }

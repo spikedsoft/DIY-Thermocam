@@ -63,11 +63,11 @@
     <Filter Include="_libraries\UTFT_Buttons">
       <UniqueIdentifier>{ed32496c-315f-4b8f-bfba-252d81468700}</UniqueIdentifier>
     </Filter>
-    <Filter Include="_libraries\XPT2046_Touchscreen">
-      <UniqueIdentifier>{441b5779-d818-498a-8ec1-f028ce0d88ab}</UniqueIdentifier>
-    </Filter>
     <Filter Include="_libraries\Time">
       <UniqueIdentifier>{f384aee6-7f80-4383-bcad-eed2694438c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="_libraries\Touchscreen">
+      <UniqueIdentifier>{9bbc7da4-8866-480e-9944-8b7b8eb8736b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -136,9 +136,6 @@
       <Filter>Resource Files\Thermal</Filter>
     </ClInclude>
     <ClInclude Include="Thermal\Thermal.h">
-      <Filter>Resource Files\Thermal</Filter>
-    </ClInclude>
-    <ClInclude Include="Thermal\Calibration.h">
       <Filter>Resource Files\Thermal</Filter>
     </ClInclude>
     <ClInclude Include="General\MethodDefines.h">
@@ -441,14 +438,23 @@
     <ClInclude Include="libraries\UTFT_Buttons\UTFT_Buttons.h">
       <Filter>_libraries\UTFT_Buttons</Filter>
     </ClInclude>
-    <ClInclude Include="libraries\XPT2046_Touchscreen\XPT2046_Touchscreen.h">
-      <Filter>_libraries\XPT2046_Touchscreen</Filter>
-    </ClInclude>
     <ClInclude Include="libraries\Time\Time.h">
       <Filter>_libraries\Time</Filter>
     </ClInclude>
     <ClInclude Include="libraries\Time\TimeLib.h">
       <Filter>_libraries\Time</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\Touchscreen\FT6206_Touchscreen.h">
+      <Filter>_libraries\Touchscreen</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\Touchscreen\Touchscreen.h">
+      <Filter>_libraries\Touchscreen</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\Touchscreen\XPT2046_Touchscreen.h">
+      <Filter>_libraries\Touchscreen</Filter>
+    </ClInclude>
+    <ClInclude Include="Libraries\Touchscreen\Point.h">
+      <Filter>_libraries\Touchscreen</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -656,14 +662,17 @@
     <ClCompile Include="libraries\UTFT_Buttons\UTFT_Buttons.cpp">
       <Filter>_libraries\UTFT_Buttons</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\XPT2046_Touchscreen\XPT2046_Touchscreen.cpp">
-      <Filter>_libraries\XPT2046_Touchscreen</Filter>
-    </ClCompile>
     <ClCompile Include="libraries\Time\DateStrings.cpp">
       <Filter>_libraries\Time</Filter>
     </ClCompile>
     <ClCompile Include="libraries\Time\Time.cpp">
       <Filter>_libraries\Time</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\Touchscreen\FT6206_Touchscreen.cpp">
+      <Filter>_libraries\Touchscreen</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\Touchscreen\XPT2046_Touchscreen.cpp">
+      <Filter>_libraries\Touchscreen</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

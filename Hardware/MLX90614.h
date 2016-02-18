@@ -137,7 +137,7 @@ void mlx90614CheckMinTemp() {
 	}
 }
 
-/* Check if the filter settings match for fast measurement */
+/* Check if the filter settings match for noise-reduction (50% IIR, max settling time) */
 bool mlx90614CheckFilterTemp() {
 	//Check if the filter settings for the BCI model are correct
 	bool newSettings = false;
@@ -147,19 +147,19 @@ bool mlx90614CheckFilterTemp() {
 	byte MSB, LSB;
 	//MLX90614-BCI with gain factor of 12.5
 	if (mlx90614Version == 0) {
-		filterSettings = 40052;
+		filterSettings = 40816;
 		if (filter != filterSettings)
 			newSettings = true;
-		MSB = 0x74;
-		LSB = 0x9C;
+		MSB = 0x70;
+		LSB = 0x9F;
 	}
 	//MLX90614-DCI or MLX90614-DCH with gain factor of 100
 	else if (mlx90614Version == 1) {
-		filterSettings = 46196;
+		filterSettings = 46960;
 		if (filter != filterSettings)
 			newSettings = true;
-		MSB = 0x74;
-		LSB = 0xB4;
+		MSB = 0x70;
+		LSB = 0xB7;
 	}
 	//Write new filter settings
 	if (newSettings) {
@@ -197,6 +197,44 @@ float mlx90614GetTemp() {
 	return mlx90614Temp;
 }
 
+/* Get the emissivity coefficient */
+float mlx90614GetEmissivity() {
+	uint16_t value = mlx90614Receive(0x24);
+	float emissivity = value / 65535.0;
+	emissivity = ((int)((emissivity * 100) + 0.5)) / 100.0;
+	return emissivity;
+}
+
+/*Set a new emissivity coefficient */
+bool mlx90614SetEmissivity(float emissivity) {
+	if ((emissivity >= 0.01) && (emissivity <= 1.0)) {
+		int value = ((int)(65535.0 * emissivity));
+		byte lsb = (byte)(value & 0xFF);
+		byte msb = (byte)((value >> 8) & 0xFF);
+		bool check;
+		check = true;
+		mlx90614Send(0x24, 0x00, 0x00);
+		delay(100);
+		mlx90614Send(0x24, lsb, msb);
+		delay(100);
+		for (int i = 0; i < 10; i++) {
+			char buf1[10];
+			char buf2[10];
+			floatToChar(buf1, mlx90614GetEmissivity());
+			floatToChar(buf2, emissivity);
+			if (strcmp(buf1, buf2) != 0)
+				check = false;
+			mlx90614Measure(0, &check);
+			delay(10);
+		}
+		if (check)
+			return true;
+		else
+			return false;
+	}
+	return false;
+}
+
 /* Initializes the sensor */
 void mlx90614Init() {
 	//Check if the MLX90614 is connected
@@ -213,7 +251,17 @@ void mlx90614Init() {
 	} while (!check);
 	mlx90614Temp = 0;
 	mlx90614Amb = 0;
+	//Set maximum temp to 380°C if not set
 	mlx90614CheckMaxTemp();
+	//Set minimum temp to -70°C if not set
 	mlx90614CheckMinTemp();
-	mlx90614CheckFilterTemp();
+	//Set emissivity to 0.95 if no already set
+	if (mlx90614GetEmissivity() != 0.95)
+		mlx90614SetEmissivity(0.95);
+	//Set filter settings
+	if (mlx90614CheckFilterTemp()) {
+		drawMessage((char*) "Please reboot the device manually.");
+		display.print((char*) "New filter settings flashed !", CENTER, 80);
+		while (true);
+	}
 }

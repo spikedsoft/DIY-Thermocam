@@ -164,6 +164,7 @@ void saveThermalImage(char* filename) {
 void saveImage() {
 	//Wake camera up if needed and take image
 	if (imagesType == 1)
+		//Capture image command
 		captureVisualImage();
 	//Build filename from the current time & date
 	char filename[20];
@@ -485,28 +486,14 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	//Write the show colorbar attribute
 	sdFile.write(colorbarEnabled);
 	//Write the calibration done attribute
-	sdFile.write(calibrationDone);
-	//Write Calibration slope if calibration is done
-	if (calibrationDone) {
-		floatToBytes(farray, (float)calSlope);
-		for (int i = 0; i < 4; i++)
-			sdFile.write(farray[i]);
-	}
-	//Write Calibration offset if calibration is done
-	if (calibrationDone) {
-		floatToBytes(farray, (float)calOffset);
-		for (int i = 0; i < 4; i++)
-			sdFile.write(farray[i]);
-	}
-	//Write quick Calibration offset if calibration is not done
-	if (!calibrationDone) {
-		floatToBytes(farray, (float)quickCalOffset);
-		for (int i = 0; i < 4; i++)
-			sdFile.write(farray[i]);
-		//Fill with zeros to match filesize
-		for (int i = 0; i < 4; i++)
-			sdFile.write('0');
-	}
+	sdFile.write('0');
+	//Write quick Calibration offset
+	floatToBytes(farray, (float)calOffset);
+	for (int i = 0; i < 4; i++)
+		sdFile.write(farray[i]);
+	//Fill with zeros to match filesize
+	for (int i = 0; i < 4; i++)
+		sdFile.write('0');
 	//Close the file
 	sdFile.close();
 	//Switch Clock back to Standard

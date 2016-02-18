@@ -44,7 +44,7 @@
 //Display Controller
 UTFT display;
 //Touch Controller
-XPT2046_Touchscreen touch(9);
+Touchscreen touch;
 //ADC
 ADC *batMeasure = new ADC();
 //Buttons
@@ -54,6 +54,8 @@ Bounce buttonDebouncer = Bounce(pin_button, 100);
 //Fonts
 extern uint8_t smallFont[];
 extern uint8_t bigFont[];
+//Timer
+long refreshTime;
 //SD
 SdFat sd;
 SdFile sdFile;
@@ -62,7 +64,6 @@ String sdInfo = " - / - MB";
 Camera cam(&Serial1);
 //Battery
 int batPercentage = -1;
-long batRefreshTime;
 //MLX90614 sensor version - 0 = BCI (Early-Bird #1), 1 = DCH (All other)
 bool mlx90614Version;
 //FLIR Lepton sensor version - 0 = Lepton2 Shuttered, 1 = Lepton3 Shuttered, 2 = Lepton2 No-Shutter 
@@ -71,7 +72,7 @@ bool leptonVersion;
 bool tempFormat = 0;
 //Current color scheme - 0 = rainbow, 1 = ironblack, 2 = grayscale, 3 = hot, 4 = cold
 byte colorScheme = 0;
-//Images format - 0 = raw only, 1 = raw + bitmap
+//Images format - 0 = raw onbatRefreshTimely, 1 = raw + bitmap
 bool imagesFormat = 0;
 //Images type - 0 = thermal only, 1 = thermal + visual
 bool imagesType = 0;
@@ -92,10 +93,8 @@ uint16_t minTemp;
 byte grayscaleLevel = 85;
 //Live Menu position
 byte liveMenuPos = 0;
-//Automatic gain control
+//Automatic gain controlquickCalOffset
 bool agcEnabled = true;
-//Calibration done
-bool calibrationDone = false;
 //Filter image
 bool filterEnabled = true;
 //Laser state
@@ -104,11 +103,9 @@ bool laserEnabled = false;
 bool spotEnabled = true;
 //Show colorbar
 bool colorbarEnabled = true;
-//Quick calibration offset
-float quickCalOffset;
-//Calibration formula
-double calSlope;
-double calOffset;
+//Calibration offset
+float calOffset;
+float calOffset_old;
 //Save Image in the next cycle
 volatile byte imgSave = false;
 //Show Live Mode Menu in the next cycle

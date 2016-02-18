@@ -113,25 +113,11 @@ void loadRawData(char* filename) {
 	//Read colorbar enabled
 	colorbarEnabled = sdFile.read();
 	//Read calibration done
-	calibrationDone = sdFile.read();
-	//Read calibration slope if calibration is done
-	if (calibrationDone) {
-		for (int i = 0; i < 4; i++)
+	sdFile.read();
+	//Read quick calibration offset
+	for (int i = 0; i < 4; i++)
 			farray[i] = sdFile.read();
-		calSlope = bytesToFloat(farray);
-	}
-	//Read calibration offset if calibration is done
-	if (calibrationDone) {
-		for (int i = 0; i < 4; i++)
-			farray[i] = sdFile.read();
-		calOffset = bytesToFloat(farray);
-	}
-	//Read quick calibration offset if calibration is not done
-	if (!calibrationDone) {
-		for (int i = 0; i < 4; i++)
-			farray[i] = sdFile.read();
-		quickCalOffset = bytesToFloat(farray);
-	}
+	calOffset = bytesToFloat(farray);
 	//Close data file
 	sdFile.close();
 	//Draw thermal image on screen
@@ -811,11 +797,8 @@ void loadThermal() {
 	byte old_tempFormat = tempFormat;
 	bool old_spotEnabled = spotEnabled;
 	bool old_colorbarEnabled = colorbarEnabled;
-	bool old_calibrationDone = calibrationDone;
 	bool old_leptonVersion = leptonVersion;
-	double old_calSlope = calSlope;
-	double old_calOffset = calOffset;
-	float old_quickCalOffset = quickCalOffset;
+	float old_quickCalOffset = calOffset;
 	//Load message
 	drawMessage((char*) "Please wait..");
 	//Alloc space
@@ -912,12 +895,9 @@ void loadThermal() {
 	colorScheme = old_colorScheme;
 	tempFormat = old_tempFormat;
 	spotEnabled = old_spotEnabled;
-	calibrationDone = old_calibrationDone;
 	leptonVersion = old_leptonVersion;
 	colorbarEnabled = old_colorbarEnabled;
-	calSlope = old_calSlope;
-	calOffset = old_calOffset;
-	quickCalOffset = old_quickCalOffset;
+	calOffset = old_quickCalOffset;
 	//Return to the main menu
 	mainMenu();
 }

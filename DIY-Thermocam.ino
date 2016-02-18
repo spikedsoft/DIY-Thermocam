@@ -10,7 +10,7 @@
 */
 
 /* Current firmware version */
-#define Version "FW Version 1.05"
+#define Version "FW Version 1.06"
 
 /* Libraries */
 #include <ADC.h>
@@ -20,9 +20,9 @@
 #include <TimeLib.h>
 #include <EEPROM.h>
 #include <Bounce.h>
-#include <XPT2046_Touchscreen.h>
 #include <UTFT_Buttons.h>
 #include <UTFT.h>
+#include <Touchscreen.h>
 #include <Camera.h>
 
 /* General Includes */

@@ -2,9 +2,8 @@
 #define UTFT_Buttons_h
 
 #include "Arduino.h"
-
 #include "../UTFT/UTFT.h"
-#include "../XPT2046_Touchscreen/XPT2046_Touchscreen.h"
+#include "../Touchscreen/Touchscreen.h"
 
 #define MAX_BUTTONS	20	// Maximum number of buttons available at one time
 
@@ -25,7 +24,7 @@ typedef struct {
 
 class UTFT_Buttons {
 public:
-	UTFT_Buttons(UTFT *ptrUTFT, XPT2046_Touchscreen *ptrTouch);
+	UTFT_Buttons(UTFT *ptrUTFT, Touchscreen *ptrTouch);
 
 	int addButton(uint16_t x, uint16_t y, uint16_t width, uint16_t height,
 			char *label, uint16_t flags = 0, bool largetouch = false);
@@ -48,7 +47,7 @@ public:
 
 		protected:
 			UTFT *_UTFT;
-			XPT2046_Touchscreen *_UTouch;
+			Touchscreen *_Touchscreen;
 			button_type buttons[MAX_BUTTONS];
 			word _color_text, _color_text_inactive, _color_background, _color_border, _color_hilite;
 			uint8_t *_font_text, *_font_symbol;

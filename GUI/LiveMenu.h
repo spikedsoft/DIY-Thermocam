@@ -239,6 +239,7 @@ void limitChooserHandler() {
 				}
 			}
 			//Prepare the preview image
+			delay(10);
 			createThermalImg(true);
 			//Display the preview image
 			display.drawBitmap(80, 40, 160, 120, image, 1);
@@ -260,6 +261,7 @@ void limitChooser() {
 	touchButtons.addButton(250, 48, 55, 120, (char*) "Max");
 	touchButtons.drawButtons();
 	//Prepare the preview image
+	delay(10);
 	createThermalImg(true);
 	//Display the preview image
 	display.drawBitmap(80, 40, 160, 120, image, 1);
@@ -303,102 +305,6 @@ bool tempLimits() {
 				return false;
 		}
 	}
-}
-
-/* Calibration*/
-void calibrateScreen() {
-	//Title & Background
-	liveMenuBackground();
-	liveMenuTitle((char*)"Calibrating..");
-	display.setColor(VGA_WHITE);
-	display.setBackColor(153, 162, 163);
-	display.setFont(smallFont);
-	display.print((char*)"Point the camera to different", CENTER, 63);
-	display.print((char*)"hot and cold object in the area.", CENTER, 96);
-	touchButtons.deleteAllButtons();
-	touchButtons.setTextFont(bigFont);
-	touchButtons.addButton(90, 188, 140, 40, (char*) "Abort");
-	touchButtons.drawButtons();
-	display.setFont(bigFont);
-	display.print((char*) "Status:  0%", CENTER, 140);
-}
-
-
-/* Calibration Repeat Choose */
-bool calibrationRepeat() {
-	//Title & Background
-	liveMenuBackground();
-	liveMenuTitle((char*)"Bad Calibration");
-	display.setColor(VGA_WHITE);
-	display.setFont(bigFont);
-	display.setBackColor(153, 162, 163);
-	display.print((char*)"Try again ?", CENTER, 66);
-	display.setFont(smallFont);
-	display.setBackColor(127, 127, 127);
-	display.print((char*)"Use different calibration objects !", CENTER, 201);
-	//Draw the buttons
-	touchButtons.deleteAllButtons();
-	touchButtons.setTextFont(bigFont);
-	touchButtons.addButton(15, 106, 140, 55, (char*) "No");
-	touchButtons.addButton(165, 106, 140, 55, (char*) "Yes");
-	touchButtons.drawButtons();
-	//Touch handler
-	while (true) {
-		//If touch pressed
-		if (touch.touched() == true) {
-			int pressedButton = touchButtons.checkButtons(true);
-			//YES
-			if (pressedButton == 1) {
-				return true;
-				break;
-			}
-			//NO
-			else if (pressedButton == 0) {
-				return false;
-				break;
-			}
-		}
-	}
-	return true;
-}
-
-/* Calibration Chooser */
-bool calibrationChooser() {
-	//Title & Background
-	liveMenuBackground();
-	liveMenuTitle((char*)"Calibration");
-	//Draw the buttons
-	touchButtons.deleteAllButtons();
-	touchButtons.setTextFont(bigFont);
-	touchButtons.addButton(15, 47, 140, 120, (char*) "New");
-	touchButtons.addButton(165, 47, 140, 120, (char*) "Delete");
-	touchButtons.addButton(15, 188, 140, 40, (char*) "Back");
-	touchButtons.drawButtons();
-	//Touch handler
-	while (true) {
-		//If touch pressed
-		if (touch.touched() == true) {
-			int pressedButton = touchButtons.checkButtons(true);
-			//NEW
-			if (pressedButton == 0) {
-				calibrationProccess();
-				return true;
-				break;
-			}
-			//DELETE
-			else if (pressedButton == 1) {
-				calSlope = 0;
-				calOffset = 0;
-				calibrationDone = false;
-				return true;
-				break;
-			}
-			//BACK
-			else if (pressedButton == 2)
-				return false;
-		}
-	}
-	return true;
 }
 
 /* Switch the current menu item */
@@ -445,12 +351,8 @@ void liveMenuMainString(int pos) {
 		else
 			text = (char*) "Filter On";
 		break;
-		//Remove Noise
-	case 7:
-		text = (char*) "Rem. Noise";
-		break;
 		//Turn Display off
-	case 8:
+	case 7:
 		text = (char*) "Display Off";
 		break;
 	}
@@ -542,7 +444,7 @@ bool liveMenuSelect(int pos) {
 		break;
 		//Calibration
 	case 2:
-		return calibrate();
+		leptonRunCalibration();
 		break;
 		//Laser On/Off
 	case 3:
@@ -560,12 +462,8 @@ bool liveMenuSelect(int pos) {
 	case 6:
 		toggleFilter();
 		break;
-		//Remove noise
-	case 7:
-		leptonRunFFC();
-		break;
 		//Display off
-	case 8:
+	case 7:
 		displayOff(false);
 		//Wait for touch press
 		while (!touch.touched());
@@ -632,13 +530,13 @@ bool liveMenuHandler() {
 				if (pos > 0)
 					pos--;
 				else if (pos == 0)
-					pos = 8;
+					pos = 7;
 			}
 			//FORWARD
 			else if (pressedButton == 1) {
-				if (pos < 8)
+				if (pos < 7)
 					pos++;
-				else if (pos == 8)
+				else if (pos == 7)
 					pos = 0;
 			}
 			//Change the menu name

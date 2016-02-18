@@ -6,7 +6,6 @@
 #include "Create.h"
 #include "Load.h"
 #include "Save.h"
-#include "Calibration.h"
 
 /* If the touch has been pressed, enable menu */
 void touchIRQ() {
@@ -65,6 +64,31 @@ void buttonIRQ() {
 			videoSave = true;
 		}
 	}
+}
+
+/* Converts a given Temperature in Celcius to Fahrenheit */
+float celciusToFahrenheit(float Tc) {
+	float Tf = ((float) 9.0 / 5.0) * Tc + 32.0;
+	return (Tf);
+}
+
+/* Function to calculate temperature out of Lepton value */
+float calFunction(uint16_t rawValue) {
+	float temp;
+	//Refresh offset after 20 seconds in case ambient temp changed
+	if ((millis() - refreshTime) > 20000) {
+		calOffset = mlx90614GetAmb();
+		//If ambient temp changed more than 5 degress, trigger calibration
+		if (abs(calOffset - calOffset_old) > 5.0)
+			leptonRunCalibration();
+		calOffset_old = calOffset;
+		refreshTime = millis();
+	}
+	temp = (0.025 * (rawValue - 8192)) + calOffset;
+	//Convert to Fahrenheit if needed
+	if (tempFormat)
+		temp = celciusToFahrenheit(temp);
+	return temp;
 }
 
 /* Show the color bar on screen */

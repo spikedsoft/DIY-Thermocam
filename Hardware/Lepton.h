@@ -60,8 +60,8 @@ boolean leptonReadFrame(uint8_t line, uint8_t seg) {
 	return success;
 }
 
-/* Trigger a RAD FFC on the Lepton */
-void leptonRunFFC() {
+/* Trigger a flat-field-correction on the Lepton */
+void leptonRunCalibration() {
 	byte error;
 	byte errorCounter = 0;
 	bool showError = false;
@@ -69,8 +69,8 @@ void leptonRunFFC() {
 		Wire.beginTransmission(0x2A);
 		Wire.write(0x00);
 		Wire.write(0x04);
-		Wire.write(0x4E);
-		Wire.write(0x2E);
+		Wire.write(0x02);
+		Wire.write(0x42);
 		error = Wire.endTransmission();
 		if (error) {
 			errorCounter++;
@@ -103,76 +103,6 @@ int leptonReadReg(byte reg) {
 	reading = reading << 8;
 	reading |= Wire.read();
 	return reading;
-}
-
-/* Set the shutter operation to manual */
-void leptonSetFFCManual()
-{
-	//Read command
-	Wire.beginTransmission(0x2A);
-	Wire.write(0x00);
-	Wire.write(0x04);
-	Wire.write(0x02);
-	Wire.write(((0x3C) & 0xfc) | ((0x3C >> 2) & 0x3));
-	//Read old FFC package first
-	while (leptonReadReg(0x2) & 0x01);
-	int payload_length = leptonReadReg(0x6);
-	Wire.requestFrom(0x2A, payload_length);
-	byte package[32];
-	for (byte i = 0; i < payload_length; i++)
-	{
-		package[i] = Wire.read();
-	}
-	//Alter the second bit to set FFC to manual
-	package[1] = 0x00;
-	//Transmit the new package
-	Wire.beginTransmission(0x2A);
-	Wire.write(0x00);
-	Wire.write(0x08);
-	for (int i = 0; i < 32; i++) {
-		Wire.write(package[i]);
-	}
-	Wire.endTransmission();
-	//Package length, use 4 here
-	Wire.beginTransmission(0x2A);
-	Wire.write(0x00);
-	Wire.write(0x06);
-	Wire.write(0x00);
-	Wire.write(0x04);
-	Wire.endTransmission();
-	//Module and command ID
-	Wire.beginTransmission(0x2A);
-	Wire.write(0x00);
-	Wire.write(0x04);
-	Wire.write(0x02);
-	Wire.write(0x3D);
-	Wire.endTransmission();
-}
-
-/* Set the Radiometry Mode over I2C */
-void leptonRadSet(bool enable)
-{
-	//Enable or disable radiometry
-	Wire.beginTransmission(0x2A);
-	Wire.write(0x00);
-	Wire.write(0x08);
-	Wire.write(0x00);
-	Wire.write(enable);
-	Wire.endTransmission();
-	//Data length
-	Wire.beginTransmission(0x2A);
-	Wire.write(0x00);
-	Wire.write(0x06);
-	Wire.write(0x00);
-	Wire.write(0x02);
-	Wire.endTransmission();
-	//RAD module with OEM bit and command
-	Wire.beginTransmission(0x2A);
-	Wire.write(0x00);
-	Wire.write(0x04);
-	Wire.write(0x4E);
-	Wire.write(0x11);
-	Wire.endTransmission();
 }
 
 /* Checks the Lepton hardware revision */
@@ -208,19 +138,34 @@ void leptonCheckVersion() {
 	}
 }
 
+/* Reads the lepton focal plane array temp*/
+float leptonGetFPATemp() {
+	//Get AGC Command
+	Wire.beginTransmission(0x2A);
+	Wire.write(0x00);
+	Wire.write(0x04);
+	Wire.write(0x02);
+	Wire.write(0x14);
+	Wire.endTransmission();
+	while (leptonReadReg(0x2) & 0x01);
+	int  payload_length = leptonReadReg(0x6);
+	Wire.requestFrom(0x2A, payload_length);
+	int data = Wire.read() << 8;
+	data |= Wire.read();
+	float temp = (data / 100.0) - 273.15;
+	return temp;
+}
+
 /* Check which hardware revision of the FLIR Lepton is connected */
 void initLepton() {
-	//Short delay to ensure FFC is performed
-	delay(1500);
+	//Wait 5 seconds
+	delay(5000);
 	//Check the Lepton HW Revision
 	leptonCheckVersion();
-	//Set Lepton FFC mode to manual
-	leptonSetFFCManual();
-	//Activate Radiometry mode on the Lepton
-	leptonRadSet(true);
-	//Run the RAD FFC if a shutter is attached
+	//Run the FFC if a shutter is attached
 	if (leptonVersion != 2)
-		leptonRunFFC();
-	//Do a quick calibration
-	quickCalibration();
+		leptonRunCalibration();
+	//Get Offset
+	calOffset = mlx90614GetAmb();
+	calOffset_old = calOffset;
 }

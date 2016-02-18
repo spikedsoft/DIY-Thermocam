@@ -4,13 +4,11 @@
 
 void drawMessage(char*);
 void firstStart();
-bool calibrate();
 void startAltClockline(bool sdStart = false);
 void endAltClockline();
 bool tempLimits();
 float calFunction(uint16_t rawValue);
 void createThermalImg(bool menu = false);
-void calibrationProccess();
 void floatToChar(char* buffer, float val);
 void showSpot(bool save = false);
 void showColorBar();
@@ -52,8 +50,6 @@ uint16_t getVideoFrameNumber(char* dirname);
 bool checkSDCard();
 void getTemperatures(bool save = false);
 void liveModeHelper();
-uint16_t calcAverage();
-void quickCalibration();
 void selectColorScheme();
 void changeColorScheme(int pos);
 void toggleColorbar();

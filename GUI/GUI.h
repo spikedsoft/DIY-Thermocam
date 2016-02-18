@@ -61,7 +61,7 @@ void bootScreen() {
 	display.setFont(bigFont);
 	display.setBackColor(127, 127, 127);
 	display.setColor(VGA_WHITE);
-	display.print((char*) "Booting..", CENTER, 110);
+	display.print((char*) "Please wait..", CENTER, 110);
 	display.setFont(smallFont);
 	display.print((char*)"DIY-Thermocam", CENTER, 10);
 	display.print((char*)Version, CENTER, 220);
@@ -73,7 +73,7 @@ void updateInfos(bool refresh) {
 	display.setColor(VGA_WHITE);
 	display.setBackColor(127, 127, 127);
 	//Update battery stats and every 60s
-	if ((millis() - batRefreshTime) > 60000)
+	if ((millis() - refreshTime) > 60000)
 		checkBattery();
 	if(refresh){
 		//Display battery status on screen
