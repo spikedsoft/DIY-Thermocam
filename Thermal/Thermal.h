@@ -75,11 +75,11 @@ float celciusToFahrenheit(float Tc) {
 /* Function to calculate temperature out of Lepton value */
 float calFunction(uint16_t rawValue) {
 	float temp;
-	//Refresh offset after 20 seconds in case ambient temp changed
-	if ((millis() - refreshTime) > 20000) {
+	//Refresh offset after 10 seconds in case ambient temp changed
+	if ((millis() - refreshTime) > 10000) {
 		calOffset = mlx90614GetAmb();
-		//If ambient temp changed more than 5 degress, trigger calibration
-		if (abs(calOffset - calOffset_old) > 5.0)
+		//If ambient temp changed more than 3 degress, trigger calibration
+		if (abs(calOffset - calOffset_old) > 3.0)
 			leptonRunCalibration();
 		calOffset_old = calOffset;
 		refreshTime = millis();

@@ -210,7 +210,6 @@ bool checkEEPROM() {
 
 /* Startup procedure for the Hardware */
 void initHardware() {
-	//Serial debugging
 	Serial.begin(115200);
 	//Laser off
 	pinMode(pin_laser, OUTPUT);

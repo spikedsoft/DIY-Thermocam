@@ -145,7 +145,7 @@ float leptonGetFPATemp() {
 	Wire.write(0x00);
 	Wire.write(0x04);
 	Wire.write(0x02);
-	Wire.write(0x14);
+	Wire.write(0x10);
 	Wire.endTransmission();
 	while (leptonReadReg(0x2) & 0x01);
 	int  payload_length = leptonReadReg(0x6);

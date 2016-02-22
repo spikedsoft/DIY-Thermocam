@@ -239,8 +239,9 @@ void limitChooserHandler() {
 				}
 			}
 			//Prepare the preview image
-			delay(10);
+			delay(20);
 			createThermalImg(true);
+			delay(20);
 			//Display the preview image
 			display.drawBitmap(80, 40, 160, 120, image, 1);
 		}
@@ -261,8 +262,9 @@ void limitChooser() {
 	touchButtons.addButton(250, 48, 55, 120, (char*) "Max");
 	touchButtons.drawButtons();
 	//Prepare the preview image
-	delay(10);
+	delay(20);
 	createThermalImg(true);
+	delay(20);
 	//Display the preview image
 	display.drawBitmap(80, 40, 160, 120, image, 1);
 	//Draw the border for the preview image

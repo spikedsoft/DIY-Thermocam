@@ -84,10 +84,41 @@ void restartAndJumpToApp(void) {
 
 /* Methods */
 
+void serialFlush() {
+	while (Serial.available() > 0) {
+		char t = Serial.read();
+	}
+}
+
 /* Go into video output mode and wait for connected module */
 void videoOutput() {
-	//To do - implement
-	drawMessage((char*) "Will be added soon !");
+	byte MSB, LSB;
+	drawMessage((char*) "Waiting for thermal viewer..");
+	rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
+	while (!Serial.available());
+	Serial.read();
+	drawMessage((char*) "Sending data to the viewer..");
+	delay(100);
+	while (true) {
+		while (!Serial.available());
+		char input = Serial.read();
+		serialFlush();
+		if (input == 'q')
+			break;
+		else {
+			getTemperatures(true);
+			for (int i = 0; i < 4800; i++) {
+				MSB = (byte)(rawValues[i] & 0xff);
+				LSB = (byte)((rawValues[i] >> 8) & 0xff);
+				Serial.write(LSB);
+				Serial.write(MSB);
+			}
+		}
+		delay(100);
+	}
+	drawMessage((char*) "Connection ended, return..");
+	Serial.read();
+	free(rawValues);
 	delay(1000);
 	//Go back
 	connectionMenu();

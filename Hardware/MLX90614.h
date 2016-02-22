@@ -256,8 +256,8 @@ void mlx90614Init() {
 	//Set minimum temp to -70°C if not set
 	mlx90614CheckMinTemp();
 	//Set emissivity to 0.95 if no already set
-	if (mlx90614GetEmissivity() != 0.95)
-		mlx90614SetEmissivity(0.95);
+	if (mlx90614GetEmissivity() != 0.93)
+		mlx90614SetEmissivity(0.93);
 	//Set filter settings
 	if (mlx90614CheckFilterTemp()) {
 		drawMessage((char*) "Please reboot the device manually.");
