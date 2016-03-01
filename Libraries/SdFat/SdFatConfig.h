@@ -100,7 +100,7 @@ uint8_t const SOFT_SPI_SCK_PIN = 13;
  *
  * Set USE_SD_CRC to 2 to used a larger faster table driven CRC-CCITT function.
  */
-#define USE_SD_CRC 2
+#define USE_SD_CRC 0
 //------------------------------------------------------------------------------
 /**
  * Set ENABLE_SPI_TRANSACTION nonzero to enable the SPI transaction feature

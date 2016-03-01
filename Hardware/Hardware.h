@@ -77,32 +77,6 @@ void endAltClockline() {
 	CORE_PIN14_CONFIG = PORT_PCR_MUX(1);
 }
 
-/* Turn display off*/
-void displayOff(bool save) {
-	detachInterrupt(pin_touch_irq);
-	if (!save) {
-		drawMessage((char*) "Press touch to reactivate display!");
-		delay(1000);
-		display.enterSleepMode();
-	}
-	delay(20);
-	digitalWrite(pin_lcd_backlight, LOW);
-	attachInterrupt(pin_touch_irq, touchIRQ, FALLING);
-}
-
-/* Turn display on*/
-void displayOn(bool save) {
-	detachInterrupt(pin_touch_irq);
-	digitalWrite(pin_lcd_backlight, HIGH);
-	if (!save) {
-		display.exitSleepMode();
-		drawMessage((char*) "Turning display on..");
-		delay(1000);
-	}
-	delay(20);
-	attachInterrupt(pin_touch_irq, touchIRQ, FALLING);
-}
-
 /* Attach both interrupts */
 void attachInterrupts() {
 	//Attach the Button interrupt
@@ -120,6 +94,14 @@ void detachInterrupts() {
 	//Detach the Touch interrupt
 	detachInterrupt(pin_touch_irq);
 }
+
+/* A method to check if the touch screen is pressed */
+bool touchScreenPressed() {
+	//Check button status with debounce
+	touchDebouncer.update();
+	return touchDebouncer.read();
+}
+
 
 /* A method to check if the external button is pressed */
 bool extButtonPressed() {
@@ -150,7 +132,7 @@ bool checkSDCard() {
 }
 
 /* Reads the old settings from EEPROM */
-bool checkEEPROM() {
+bool readEEPROM() {
 	byte read;
 	//Read settings if first start is done
 	if ((EEPROM.read(eeprom_firstStart) == eeprom_setValue) || (EEPROM.read(eeprom_firstStart) == 100)) {
@@ -160,24 +142,36 @@ bool checkEEPROM() {
 			tempFormat = read;
 		//Color scheme
 		read = EEPROM.read(eeprom_colorScheme);
-		if ((read >= 0) && (read <= 4))
+		if ((read >= 0) && (read <= 17))
 			colorScheme = read;
-		//Images format
-		read = EEPROM.read(eeprom_imagesFormat);
+		//Convert Enabled
+		read = EEPROM.read(eeprom_convertEnabled);
 		if ((read == 0) || (read == 1))
-			imagesFormat = read;
-		//Images Type
-		read = EEPROM.read(eeprom_imagesType);
+			convertEnabled = read;
+		//Visual Enabled
+		read = EEPROM.read(eeprom_visualEnabled);
 		if ((read == 0) || (read == 1))
-			imagesType = read;
-		//Videos Format
-		read = EEPROM.read(eeprom_videosFormat);
+			visualEnabled = read;
+		//Battery Enabled
+		read = EEPROM.read(eeprom_batteryEnabled);
 		if ((read == 0) || (read == 1))
-			videosFormat = read;
-		//Videos Type
-		read = EEPROM.read(eeprom_videosType);
+			batteryEnabled = read;
+		//Time Enabled
+		read = EEPROM.read(eeprom_timeEnabled);
 		if ((read == 0) || (read == 1))
-			videosType = read;
+			timeEnabled = read;
+		//Date Enabled
+		read = EEPROM.read(eeprom_dateEnabled);
+		if ((read == 0) || (read == 1))
+			dateEnabled = read;
+		//Points Enabled
+		read = EEPROM.read(eeprom_pointsEnabled);
+		if ((read == 0) || (read == 1))
+			pointsEnabled = read;
+		//Storage Enabled
+		read = EEPROM.read(eeprom_storageEnabled);
+		if ((read == 0) || (read == 1))
+			storageEnabled = read;
 		//Spot Enabled
 		read = EEPROM.read(eeprom_spotEnabled);
 		if ((read == 0) || (read == 1))

@@ -30,19 +30,6 @@ void drawCenterElement(int element) {
 	display.setFont(smallFont);
 }
 
-/* Sets the color according to the selected color scheme */
-void setColor() {
-	//Rainbow, display white text
-	if (colorScheme == 0)
-		display.setColor(VGA_WHITE);
-	//Ironblack, display black text
-	else if (colorScheme == 1)
-		display.setColor(VGA_BLUE);
-	//For hot & cold
-	else
-		display.setColor(VGA_GREEN);
-}
-
 /* Converts a given float to char array */
 void floatToChar(char* buffer, float val) {
 	int units = val;
@@ -61,10 +48,56 @@ void bootScreen() {
 	display.setFont(bigFont);
 	display.setBackColor(127, 127, 127);
 	display.setColor(VGA_WHITE);
-	display.print((char*) "Please wait..", CENTER, 110);
+	display.print((char*) "Booting..", CENTER, 110);
 	display.setFont(smallFont);
 	display.print((char*)"DIY-Thermocam", CENTER, 10);
 	display.print((char*)Version, CENTER, 220);
+}
+
+/* Display the warmup message on screen*/
+void displayWarmup() {
+	display.setBackColor(VGA_TRANSPARENT);
+	display.setColor(VGA_WHITE);
+	char buffer[25];
+	sprintf(buffer, "Sensor warmup, %2ds left", (int)abs(60 - ((millis() - calTimer) / 1000)));
+	display.print(buffer, CENTER, 210);
+}
+
+/* Display battery status in percentage */
+void displayBatteryStatus() {
+	//Check battery status
+	checkBattery();
+	//Display it
+	display.printNumI(batPercentage, 280, 0, 3, ' ');
+	display.printChar('%', 310, 0);
+}
+
+/* Display the date on screen */
+void displayDate() {
+	display.printNumI(day(), 5, 0, 2, '0');
+	display.print((char*) ".", 20, 0);
+	display.printNumI(month(), 27, 0, 2, '0');
+	display.print((char*) ".", 42, 0);
+	display.printNumI(year(), 49, 0, 4);
+}
+
+/* Display free space on screen*/
+void displayFreeSpace() {
+	//Early-Bird #1 - Display Version
+	if (mlx90614Version == 0)
+		display.print((char*)Version, 200, 228);
+	//All other - Display free space on internal storage
+	else
+		display.print(sdInfo, 220, 228);
+}
+
+/* Display the current time on the screen*/
+void displayTime() {
+	display.printNumI(hour(), 5, 228, 2, '0');
+	display.print((char*) ":", 20, 228);
+	display.printNumI(minute(), 27, 228, 2, '0');
+	display.print((char*) ":", 42, 228);
+	display.printNumI(second(), 49, 228, 2, '0');
 }
 
 /* Updates the additional information on the screen */
@@ -72,32 +105,16 @@ void updateInfos(bool refresh) {
 	//Set Text Color
 	display.setColor(VGA_WHITE);
 	display.setBackColor(127, 127, 127);
-	//Update battery stats and every 60s
-	if ((millis() - refreshTime) > 60000)
-		checkBattery();
-	if(refresh){
+	if (refresh) {
 		//Display battery status on screen
-		display.printNumI(batPercentage, 280, 0, 3, ' ');
-		display.printChar('%', 310, 0);
+		displayBatteryStatus();
 		//Display date
-		display.printNumI(day(), 5, 0, 2, '0');
-		display.print((char*) ".", 20, 0);
-		display.printNumI(month(), 27, 0, 2, '0');
-		display.print((char*) ".", 42, 0);
-		display.printNumI(year(), 49, 0, 4);
-		//Early-Bird #1 - Display Version
-		if(mlx90614Version == 0)
-			display.print((char*) Version, 200, 228);
-		//All other - Display free space on internal storage
-		else
-			display.print(sdInfo, 220, 228);
+		displayDate();
+		//Display free space
+		displayFreeSpace();
 	}
 	//Display time
-	display.printNumI(hour(), 5, 228, 2, '0');
-	display.print((char*) ":", 20, 228);
-	display.printNumI(minute(), 27, 228, 2, '0');
-	display.print((char*) ":", 42, 228);
-	display.printNumI(second(), 49, 228, 2, '0');
+	displayTime();
 }
 
 /* Touch handler for the main menu */

@@ -138,34 +138,15 @@ void leptonCheckVersion() {
 	}
 }
 
-/* Reads the lepton focal plane array temp*/
-float leptonGetFPATemp() {
-	//Get AGC Command
-	Wire.beginTransmission(0x2A);
-	Wire.write(0x00);
-	Wire.write(0x04);
-	Wire.write(0x02);
-	Wire.write(0x10);
-	Wire.endTransmission();
-	while (leptonReadReg(0x2) & 0x01);
-	int  payload_length = leptonReadReg(0x6);
-	Wire.requestFrom(0x2A, payload_length);
-	int data = Wire.read() << 8;
-	data |= Wire.read();
-	float temp = (data / 100.0) - 273.15;
-	return temp;
-}
-
 /* Check which hardware revision of the FLIR Lepton is connected */
 void initLepton() {
-	//Wait 5 seconds
-	delay(5000);
+	//Short delay
+	delay(1500);
 	//Check the Lepton HW Revision
 	leptonCheckVersion();
-	//Run the FFC if a shutter is attached
-	if (leptonVersion != 2)
+	//Perform FFC if shutter is attached
+	if (leptonVersion != 2) 
 		leptonRunCalibration();
-	//Get Offset
-	calOffset = mlx90614GetAmb();
-	calOffset_old = calOffset;
+	//Set the calibration timer
+	calTimer = millis();
 }

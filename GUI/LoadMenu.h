@@ -17,38 +17,32 @@ void displayRawData() {
 	convertColors();
 	//Display on screen
 	display.writeScreen(image);
-	//Show the spot in the middle
-	if (spotEnabled)
-		showSpot(true);
-	//Show the color bar
-	if(colorbarEnabled)
-		showColorBar();
+	//Display additional information
+	displayInfos();
 }
 
-void displayGUI(char* filename, int imgCount, char* dirname = NULL) {
+void displayGUI(int imgCount, char* infoText) {
 	//Set text color
-	setColor();
+	display.setColor(VGA_WHITE);
 	//set Background transparent
 	display.setBackColor(VGA_TRANSPARENT);
-	//For videos
-	if (dirname != NULL)
-		display.print(dirname, CENTER, 12);
-	//For images
-	else {
-		filename[14] = '\0';
-		display.print(filename, CENTER, 12);
-		filename[14] = '.';
-	}
 	display.setFont(bigFont);
+	//Exit to main menu
 	display.print((char*) "Exit", 250, 10);
+	//Find image by time and date
+	display.print((char*) "Find", 5, 10);
+	//Display prev/next if there is more than one image
 	if (imgCount != 1) {
-		display.print((char*) "Find", 5, 10);
 		display.print((char*) "<", 10, 110);
 		display.print((char*) ">", 295, 110);
 	}
+	//Convert image to bitmap
 	display.print((char*) "Convert", 5, 210);
+	//Delete image from internal 
 	display.print((char*) "Delete", 220, 210);
 	display.setFont(smallFont);
+	//Display either frame number or image date and time
+	display.print(infoText, CENTER, 12);
 }
 
 /* Asks the user if he wants to delete the video */
@@ -163,11 +157,11 @@ void deleteImage(char* filename) {
 				sd.remove(filename);
 				//Delete .JPG file
 				strcpy(&filename[14], ".JPG");
-				if ((imagesType == 1) && (sd.exists(filename)))
+				if ((visualEnabled == 1) && (sd.exists(filename)))
 					sd.remove(filename);
 				//Delete .BMP file
 				strcpy(&filename[14], ".BMP");
-				if ((imagesFormat == 1) && (sd.exists(filename)))
+				if ((convertEnabled == 1) && (sd.exists(filename)))
 					sd.remove(filename);
 				endAltClockline();
 				drawMessage((char*) "Image deleted!");
@@ -183,37 +177,39 @@ void deleteImage(char* filename) {
 }
 
 /* Asks the user if he really wants to convert the image/video */
-bool convertPrompt() {
+bool convertPrompt(bool infosHidden = false) {
 	//Title & Background
 	drawTitle((char*) "Conversion Prompt");
 	display.setColor(VGA_WHITE);
 	display.setFont(smallFont);
 	display.setBackColor(127, 127, 127);
-	display.print((char*)"Convert this image / video ?", CENTER, 66);
+	display.print((char*)"Do you want to convert ?", CENTER, 66);
 	display.print((char*)"That proccess will create", CENTER, 105);
 	display.print((char*)"bitmap(s) out of the raw data.", CENTER, 125);
 	//Draw the buttons
 	touchButtons.deleteAllButtons();
 	touchButtons.setTextFont(bigFont);
-	touchButtons.addButton(15, 160, 140, 55, (char*) "No");
-	touchButtons.addButton(165, 160, 140, 55, (char*) "Yes");
+	touchButtons.addButton(15, 160, 140, 55, (char*) "Yes");
+	touchButtons.addButton(165, 160, 140, 55, (char*) "No");
 	touchButtons.drawButtons();
 	touchButtons.setTextFont(smallFont);
 	//Wait for touch release
 	while (touch.touched());
-	updateInfos(true);
+	if (!infosHidden)
+		updateInfos(true);
 	//Touch handler
 	while (true) {
-		updateInfos(false);
+		if (!infosHidden)
+			updateInfos(false);
 		//If touch pressed
 		if (touch.touched() == true) {
 			int pressedButton = touchButtons.checkButtons(true);
 			//YES
-			if (pressedButton == 1) {
+			if (pressedButton == 0) {
 				return true;
 			}
 			//NO
-			else if (pressedButton == 0) {
+			else if (pressedButton == 1) {
 				return false;
 			}
 		}
@@ -243,12 +239,8 @@ void convertImage(char* filename) {
 	delay(500);
 	//Display on screen
 	display.writeScreen(image);
-	//Show the spot in the middle
-	if (spotEnabled)
-		showSpot(true);
-	//Show the color bar
-	if(colorbarEnabled)
-		showColorBar();
+	//Show additional information
+	displayInfos();
 	//Save image
 	saveThermalImage(filename);
 	drawMessage((char*) "Image converted !");
@@ -294,7 +286,7 @@ bool loadTouchHandler(bool isimg, char* filename, byte* choice, int imgCount, ch
 		uint16_t x = p.x;
 		uint16_t y = p.y;
 		//Find
-		if ((x >= 15) && (x <= 80) && (y >= 15) && (y <= 60) && (imgCount != 1)) {
+		if ((x >= 15) && (x <= 80) && (y >= 15) && (y <= 60)) {
 			*choice = 1;
 			return true;
 		}

@@ -14,7 +14,7 @@ byte* secondStorage;
 //Buffer for the resulting filename
 
 //Buffer for the single elements
-char yearBuf[] = "2014";
+char yearBuf[] = "2016";
 char monthBuf[] = "12";
 char dayBuf[] = "31";
 char hourBuf[] = "23";
@@ -42,7 +42,7 @@ void clearData() {
 		minuteStorage[i] = 0;
 		secondStorage[i] = 0;
 	}
-	strcpy(yearBuf, "2015");
+	strcpy(yearBuf, "2016");
 	strcpy(monthBuf, "12");
 	strcpy(dayBuf, "31");
 	strcpy(hourBuf, "23");
@@ -55,25 +55,29 @@ void clearData() {
 	minutenum = 0;
 	secondnum = 0;
 	imgCount = 0;
+	clearTemperatures();
 }
 
 /* Loads raw data from the internal storage*/
-void loadRawData(char* filename) {
+void loadRawData(char* filename, char* dirname) {
 	byte msb, lsb;
 	uint16_t valueCount;
 	unsigned short* valueArray;
 	//Switch Clock to Alternative
 	startAltClockline();
+	//Go into the video folder if video
+	if (dirname != NULL)
+		sd.chdir(dirname);
 	// Open the file for reading
 	sdFile.open(filename, O_READ);
 	//For the Lepton2 sensor, use 4800 raw values
-	if (sdFile.fileSize() == 9621) {
+	if ((sdFile.fileSize() == 9621) || (sdFile.fileSize() == 10005)) {
 		valueCount = 4800;
 		valueArray = rawValues;
 		leptonVersion = 0;
 	}
 	//For the Lepton3 sensor, use 19200 raw values
-	else if (sdFile.fileSize() == 38421) {
+	else if ((sdFile.fileSize() == 38421) || (sdFile.fileSize() == 38805)) {
 		valueCount = 19200;
 		valueArray = image;
 		leptonVersion = 1;
@@ -112,12 +116,26 @@ void loadRawData(char* filename) {
 	spotEnabled = sdFile.read();
 	//Read colorbar enabled
 	colorbarEnabled = sdFile.read();
-	//Read calibration done
-	sdFile.read();
-	//Read quick calibration offset
+	//Read points enabled
+	pointsEnabled = sdFile.read();
+	//Read calibration offset
 	for (int i = 0; i < 4; i++)
 			farray[i] = sdFile.read();
 	calOffset = bytesToFloat(farray);
+	//Read calibration slope
+	for (int i = 0; i < 4; i++)
+		farray[i] = sdFile.read();
+	calSlope = bytesToFloat(farray);
+	//Read temperature points
+	clearTemperatures();
+	if ((sdFile.fileSize() == 38805) || (sdFile.fileSize() == 10005)) {
+		for (int i = 0; i < 192; i++) {
+			//Read Min
+			msb = sdFile.read();
+			lsb = sdFile.read();
+			showTemp[i] = (((msb) << 8) + lsb);
+		}
+	}
 	//Close data file
 	sdFile.close();
 	//Draw thermal image on screen
@@ -132,8 +150,23 @@ void openImage(char* filename, byte* choice) {
 	loadRawData(filename);
 	//Display Raw Data
 	displayRawData();
+	//Create string for time and date
+	char nameStr[20] = { 
+		//Day
+		filename[6], filename[7], '.', 
+		//Month
+		filename[4], filename[5], '.',
+		//Year
+		filename[0], filename[1], filename[2], filename[3], ' ',
+		//Hour
+		filename[8], filename[9], ':',
+		//Minute
+		filename[10], filename[11], ':',
+		//Second
+		filename[12], filename[13], '\0'
+	};
 	//Display GUI
-	displayGUI(filename, imgCount);
+	displayGUI(imgCount, nameStr);
 	//Wait for touch press
 	while (1) {
 		if (loadTouchHandler(true, filename, choice, imgCount))
@@ -173,6 +206,7 @@ void playVideo(char* dirname, byte* choice) {
 	//Help variables
 	uint16_t numberOfFrames = getVideoFrameNumber(dirname);
 	char filename[] = "00000.DAT";
+	char buffer[14];
 	while (true) {
 		//Go through the frames
 		for (int i = 0; i < numberOfFrames; i++) {
@@ -188,8 +222,10 @@ void playVideo(char* dirname, byte* choice) {
 			loadRawData(filename);
 			//Display Raw Data
 			displayRawData();
+			//Create string
+			sprintf(buffer, "%5d / %-5d", i+1, numberOfFrames);
 			//Display GUI
-			displayGUI(filename, imgCount, dirname);
+			displayGUI(imgCount, buffer);
 			//Wait for touch press
 			if (loadTouchHandler(false, filename, choice, imgCount, dirname))
 				return;
@@ -203,11 +239,11 @@ bool yearChoose(char* filename) {
 	bool years[50] = { 0 };
 	//Go through all images
 	for (int i = 0; i < imgCount; i++) {
-		int yearCheck = yearStorage[i] - 2014;
-		//Check if the yearStorage is at least 2014
+		int yearCheck = yearStorage[i] - 2016;
+		//Check if the yearStorage is at least 2016
 		if (yearCheck < 0) {
 			//if it is not, return to main menu with error message
-			drawMessage((char*) "The year must be >= 2014!");
+			drawMessage((char*) "The year must be >= 2016!");
 			delay(1000);
 			return true;
 			//Check if yearStorage is smaller than 2064 - unlikely the Thermocam is still in use then !
@@ -233,7 +269,7 @@ bool yearChoose(char* filename) {
 	//Add them in descending order
 	for (int i = 49; i >= 0; i--) {
 		if (years[i]) {
-			Years[yearnum] = 2014 + i;
+			Years[yearnum] = 2016 + i;
 			yearnum = yearnum + 1;
 		}
 	}
@@ -493,7 +529,7 @@ bool findFile(char* filename, bool next, bool restart, int* position = 0, char* 
 	while (sdFile.openNext(sd.vwd(), O_READ)) {
 		//Either folder for video or file with specific size for single image
 		if (sdFile.isDir()
-			|| (sdFile.isFile() && ((sdFile.fileSize() == 9621) || (sdFile.fileSize() == 38421)))) {
+			|| (sdFile.isFile() && ((sdFile.fileSize() == 9621) || (sdFile.fileSize() == 10005) || (sdFile.fileSize() == 38421) || (sdFile.fileSize() == 38805)))) {
 			//Save filename into the buffer
 			sdFile.getName(filename, 19);
 			//Extract the time and date components into extra buffer
@@ -578,7 +614,7 @@ void searchFiles() {
 	while (imgCount < 500 && sdFile.openNext(sd.vwd(), O_READ)) {
 		//Either folder for video or file with specific size for single image
 		if (sdFile.isDir()
-			|| (sdFile.isFile() && ((sdFile.fileSize() == 9621) || (sdFile.fileSize() == 38421)))) {
+			|| (sdFile.isFile() && ((sdFile.fileSize() == 9621) || (sdFile.fileSize() == 10005) || (sdFile.fileSize() == 38421) || (sdFile.fileSize() == 38805)))) {
 			//Save filename into the buffer
 			sdFile.getName(filename, 19);
 			//Extract the time and date components into extra buffer
@@ -764,6 +800,7 @@ void loadAlloc() {
 	secondStorage = (byte*)calloc(500, sizeof(byte));
 	rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
 	image = (unsigned short*)calloc(19200, sizeof(unsigned short));
+	showTemp = (uint16_t*)calloc(192, sizeof(uint16_t));
 }
 
 /* De-Alloc space for the different arrays*/
@@ -776,6 +813,7 @@ void loadDeAlloc() {
 	free(secondStorage);
 	free(rawValues);
 	free(image);
+	free(showTemp);
 }
 
 /* Main entry point for loading images/videos*/
@@ -793,12 +831,17 @@ void loadThermal() {
 	//Save old settings
 	uint16_t old_minTemp = minTemp;
 	uint16_t old_maxTemp = maxTemp;
-	byte old_colorScheme = colorScheme;
-	byte old_tempFormat = tempFormat;
-	bool old_spotEnabled = spotEnabled;
-	bool old_colorbarEnabled = colorbarEnabled;
-	bool old_leptonVersion = leptonVersion;
-	float old_quickCalOffset = calOffset;
+	byte old_leptonVersion = leptonVersion;
+	byte old_calStatus = calStatus;
+	float old_calOffset = calOffset;
+	float old_calSlope = calSlope;
+	//Set calibration status to manual
+	calStatus = 2;
+	//Do not show additional information that are not required
+	batteryEnabled = false;
+	dateEnabled = false;
+	timeEnabled = false;
+	storageEnabled = false;
 	//Load message
 	drawMessage((char*) "Please wait..");
 	//Alloc space
@@ -830,6 +873,12 @@ void loadThermal() {
 			switch (choice) {
 				//Find
 			case 1:
+				//If there is only one image
+				if (imgCount == 1) {
+					drawMessage((char*) "Only one image available");
+					delay(1000);
+					break;
+				}
 				//Clear all previous data
 				clearData();
 				//Search files
@@ -889,15 +938,15 @@ void loadThermal() {
 	}
 	//Deallocate space
 	loadDeAlloc();
-	//Restore old settings
+	//Restore old settings from variables
 	minTemp = old_minTemp;
 	maxTemp = old_maxTemp;
-	colorScheme = old_colorScheme;
-	tempFormat = old_tempFormat;
-	spotEnabled = old_spotEnabled;
 	leptonVersion = old_leptonVersion;
-	colorbarEnabled = old_colorbarEnabled;
-	calOffset = old_quickCalOffset;
+	calStatus = old_calStatus;
+	calOffset = old_calOffset;
+	calSlope = old_calSlope;
+	//Restore the rest from EEPROM
+	readEEPROM();
 	//Return to the main menu
 	mainMenu();
 }

@@ -3,153 +3,124 @@
 */
 
 /* Includes */
+#include "Calibration.h"
 #include "Create.h"
 #include "Load.h"
 #include "Save.h"
 
+
 /* If the touch has been pressed, enable menu */
 void touchIRQ() {
-	//When in video mode, toggle display
-	if (videoSave == true) {
-		bool displayState = digitalRead(pin_lcd_backlight);
-		if (displayState == false)
-			displayOn(true);
-		else
-			displayOff(true);
-		return;
+	//When not in menu, show menu or lock/release limits
+	if ((!showMenu) && (!videoSave)) {
+		//Count the time to choose selection
+		long startTime = millis();
+		long endTime = millis() - startTime;
+		while ((!digitalRead(pin_touch_irq)) && (endTime <= 1000))
+			endTime = millis() - startTime;
+		endTime = millis() - startTime;
+		//Short press - show menu
+		if (endTime < 1000)
+			showMenu = true;
+		//Long press - lock or release limits
+		else {
+			detachInterrupts();
+			lockLimits = true;
+		}
 	}
-	//When not in video mode, show menu
-	if (showMenu == false)
-		showMenu = true;
 }
 
 /* Handler to check the external button and react to it */
 void buttonIRQ() {
-	//Check if the Button is pressed
-	if (extButtonPressed()) {
-		//If we are in the video mode
-		if (videoSave) {
-			detachInterrupt(pin_button);
-			videoSave = false;
+	//If we are in the video mode
+	if (videoSave) {
+		detachInterrupt(pin_button);
+		videoSave = false;
+		return;
+	}
+	//For Early Bird HW, check if the SD card is there
+	if (mlx90614Version == 0) {
+		if (!checkSDCard())
 			return;
-		}
-		//For Early Bird HW, check if the SD card is there
-		if (mlx90614Version == 0) {
-			if (!checkSDCard())
-				return;
-		}
-		//Check if there is at least 1MB of space left
-		if (getSDSpace() < 1000) {
-			drawMessage((char*) "Not enough space, return..");
-			delay(1000);
-			return;
-		}
-		//Count the time to choose selection
-		long startTime = millis();
-		long endTime = millis() - startTime;
-		while ((extButtonPressed()) && (endTime <= 1000))
-			endTime = millis() - startTime;
+	}
+	//Check if there is at least 1MB of space left
+	if (getSDSpace() < 1000) {
+		showMsg((char*) "Int. space full!");
+		return;
+	}
+	//Count the time to choose selection
+	long startTime = millis();
+	long endTime = millis() - startTime;
+	while ((extButtonPressed()) && (endTime <= 1000))
 		endTime = millis() - startTime;
-		//Short press - save image to SD Card
-		if (endTime < 1000) {
-			//Show message on screen
-			showMsg((char*) "Save Thermal..");
-			//Prepare image save but let screen refresh first
-			imgSave = 2;
-			delay(500);
-		}
-		//Long press - start video
-		else {
-			detachInterrupts();
-			videoSave = true;
-		}
+	endTime = millis() - startTime;
+	//Short press - save image to SD Card
+	if (endTime < 1000)
+		//Prepare image save but let screen refresh first
+		imgSave = 2;
+	//Long press - start video
+	else {
+		detachInterrupts();
+		videoSave = true;
 	}
-}
-
-/* Converts a given Temperature in Celcius to Fahrenheit */
-float celciusToFahrenheit(float Tc) {
-	float Tf = ((float) 9.0 / 5.0) * Tc + 32.0;
-	return (Tf);
-}
-
-/* Function to calculate temperature out of Lepton value */
-float calFunction(uint16_t rawValue) {
-	float temp;
-	//Refresh offset after 10 seconds in case ambient temp changed
-	if ((millis() - refreshTime) > 10000) {
-		calOffset = mlx90614GetAmb();
-		//If ambient temp changed more than 3 degress, trigger calibration
-		if (abs(calOffset - calOffset_old) > 3.0)
-			leptonRunCalibration();
-		calOffset_old = calOffset;
-		refreshTime = millis();
-	}
-	temp = (0.025 * (rawValue - 8192)) + calOffset;
-	//Convert to Fahrenheit if needed
-	if (tempFormat)
-		temp = celciusToFahrenheit(temp);
-	return temp;
 }
 
 /* Show the color bar on screen */
 void showColorBar() {
 	byte red, green, blue;
 	byte count = 0;
-	for (int i = 0; i < 255; i++) {
+	byte height = 240 - ((240 - (colorElements / 2)) / 2);
+	for (int i = 0; i < (colorElements - 1); i++) {
 		if ((i % 2) == 0) {
+			//Hot
+			if (colorScheme == 8) {
+				if (i < (255 - grayscaleLevel))
+					colorMap = colorMap_grayscale;
+				else
+					colorMap = colorMap_rainbow;
+			}
 			//Cold
 			if (colorScheme == 3) {
-				if (i < (255 - grayscaleLevel))
-					colormap = colormap_grayscale;
-				else
-					colormap = colormap_rainbow;
-			}
-			//Cold
-			if (colorScheme == 4) {
 				if (i > grayscaleLevel)
-					colormap = colormap_grayscale;
+					colorMap = colorMap_grayscale;
 				else
-					colormap = colormap_rainbow;
+					colorMap = colorMap_rainbow;
 			}
-			red = colormap[i * 3];
-			green = colormap[(i * 3) + 1];
-			blue = colormap[(i * 3) + 2];
+			red = colorMap[i * 3];
+			green = colorMap[(i * 3) + 1];
+			blue = colorMap[(i * 3) + 2];
 			display.setColor(red, green, blue);
-			display.drawLine(285, 184 - count, 315, 184 - count);
+			display.drawLine(285,  height - count, 315, height - count);
 			count++;
 		}
 	}
+	//Get MLX90614 ambient temp
+	mlx90614Amb = mlx90614GetAmb();
+	//Calculate min and max
 	float min = calFunction(minTemp);
 	float max = calFunction(maxTemp);
-	float step = (max - min) / 4.0;
+	//Check if spot temp is out of range
+	if ((agcEnabled) && (!limitsLocked)) {
+		if (mlx90614Temp < min)
+			min = mlx90614Temp;
+		if (mlx90614Temp > max)
+			max = mlx90614Temp;
+	}
+	float step = (max - min) / 3.0;
 	//Set color
-	setColor();
+	display.setColor(VGA_WHITE);
 	display.setBackColor(VGA_TRANSPARENT);
 	//Draw temperatures
 	char buffer[6];
-	for (int i = 0; i < 5; i++) {
-		float temp = max - (i*step);
-		sprintf(buffer, "%d", (int)temp);
-		display.print(buffer, 260, 51 + (i * 32));
+	for (int i = 3; i >= 0; i--) {
+		float temp = min + (i*step);
+		sprintf(buffer, "%d", (int)round(temp));
+		display.print(buffer, 260, height - 5 - (i * (colorElements / 6)));
 	}
-}
-
-/* Toggles the colorbar */
-void toggleColorbar() {
-	if (colorbarEnabled) {
-		colorbarEnabled = false;
-	}
-	else {
-		colorbarEnabled = true;
-	}
-	EEPROM.write(eeprom_colorbarEnabled, colorbarEnabled);
 }
 
 /* Show the current object temperature on screen*/
-void showSpot(bool save) {
-	//Set text color
-	setColor();
-	display.setBackColor(VGA_TRANSPARENT);
+void showSpot() {
 	//Draw the spot circle
 	display.drawCircle(160, 120, 12);
 	//Draw the lines
@@ -157,86 +128,232 @@ void showSpot(bool save) {
 	display.drawHLine(172, 120, 12);
 	display.drawVLine(160, 96, 12);
 	display.drawVLine(160, 132, 12);
-	//Receive object temperature
-	if (!save) {
-		mlx90614GetTemp();
-		//Convert to Fahrenheit if needed
-		if (tempFormat == 1)
-			mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
-	}
 	//Convert to float with a special method
 	char buffer[10];
 	floatToChar(buffer, mlx90614Temp);
 	display.print(buffer, 145, 150);
 }
 
-
-/* Toggles the spot display */
-void toggleSpot() {
-	if (spotEnabled) {
-		spotEnabled = false;
-	}
-	else {
-		spotEnabled = true;
-	}
-	//Save to EEPROM
-	EEPROM.write(eeprom_spotEnabled, spotEnabled);
-}
-
-/* Toggles the filter */
-void toggleFilter() {
-	if (filterEnabled) {
-		filterEnabled = false;
-	}
-	else {
-		filterEnabled = true;
-	}
-	//Save to EEPROM
-	EEPROM.write(eeprom_filterEnabled, filterEnabled);
-}
-
 /* Map to the right color scheme */
 void selectColorScheme() {
 	//Select the right color scheme
-	if (colorScheme == 0)
-		colormap = colormap_rainbow;
-	else if (colorScheme == 1)
-		colormap = colormap_ironblack;
-	else
-		colormap = colormap_grayscale;
-}
-
-/* Change the color scheme for the thermal image */
-void changeColorScheme(int pos) {
-	switch (pos) {
-		//Rainbow
+	switch (colorScheme) {
+	//Arctic
 	case 0:
-		colorScheme = 0;
+		colorMap = colorMap_arctic;
+		colorElements = 240;
 		break;
-		//Ironblack
+	//Black-Hot
 	case 1:
-		colorScheme = 1;
+		colorMap = colorMap_blackHot;
+		colorElements = 224;
 		break;
-		//Grayscale
+	//Blue-Red
 	case 2:
-		colorScheme = 2;
+		colorMap = colorMap_blueRed;
+		colorElements = 192;
 		break;
-		//Hot
+	//Coldest
 	case 3:
-		colorScheme = 3;
+		colorMap = colorMap_grayscale;
+		colorElements = 256;
 		break;
-		//Cold
+	//Contrast
 	case 4:
-		colorScheme = 4;
+		colorMap = colorMap_contrast;
+		colorElements = 224;
+		break;
+	//Double-Rainbow
+	case 5:
+		colorMap = colorMap_doubleRainbow;
+		colorElements = 256;
+		break;
+	//Gray-Red
+	case 6:
+		colorMap = colorMap_grayRed;
+		colorElements = 224;
+		break;
+	//Glowbow
+	case 7:
+		colorMap = colorMap_glowBow;
+		colorElements = 224;
+		break;
+	//Hottest
+	case 8:
+		colorMap = colorMap_grayscale;
+		colorElements = 256;
+		break;
+	//Ironblack
+	case 9:
+		colorMap = colorMap_ironblack;
+		colorElements = 256;
+		break;
+	//Lava
+	case 10:
+		colorMap = colorMap_lava;
+		colorElements = 240;
+		break;
+	//Medical
+	case 11:
+		colorMap = colorMap_medical;
+		colorElements = 224;
+		break;
+	//Rainbow
+	case 12:
+		colorMap = colorMap_rainbow;
+		colorElements = 256;
+		break;
+	//Wheel 1
+	case 13:
+		colorMap = colorMap_wheel1;
+		colorElements = 256;
+		break;
+	//Wheel 2
+	case 14:
+		colorMap = colorMap_wheel2;
+		colorElements = 256;
+		break;
+	//Wheel 3
+	case 15:
+		colorMap = colorMap_wheel3;
+		colorElements = 256;
+		break;
+	//White-Hot
+	case 16:
+		colorMap = colorMap_whiteHot;
+		colorElements = 224;
+		break;
+	//Yellow
+	case 17:
+		colorMap = colorMap_yellow;
+		colorElements = 224;
 		break;
 	}
+}
+
+
+/* Change the display options */
+void changeDisplayOptions(byte* pos) {
+	switch (*pos) {
+		//Battery
+	case 0:
+		batteryEnabled = !batteryEnabled;
+		EEPROM.write(eeprom_batteryEnabled, batteryEnabled);
+		break;
+		//Time
+	case 1:
+		timeEnabled = !timeEnabled;
+		EEPROM.write(eeprom_timeEnabled, timeEnabled);
+		break;
+		//Date
+	case 2:
+		dateEnabled = !dateEnabled;
+		EEPROM.write(eeprom_dateEnabled, dateEnabled);
+		break;
+		//Spot
+	case 3:
+		spotEnabled = !spotEnabled;
+		EEPROM.write(eeprom_spotEnabled, spotEnabled);
+		break;
+		//Colorbar
+	case 4:
+		colorbarEnabled = !colorbarEnabled;
+		EEPROM.write(eeprom_colorbarEnabled, colorbarEnabled);
+		break;
+		//Temperature Points
+	case 5:
+		pointsEnabled = !pointsEnabled;
+		EEPROM.write(eeprom_pointsEnabled, pointsEnabled);
+		break;
+		//Storage
+	case 6:
+		storageEnabled = !storageEnabled;
+		EEPROM.write(eeprom_storageEnabled, storageEnabled);
+		break;
+		//Filter
+	case 7:
+		filterEnabled = !filterEnabled;
+		EEPROM.write(eeprom_filterEnabled, filterEnabled);
+		break;
+	}
+}
+
+
+/* Change the color scheme for the thermal image */
+void changeColorScheme(byte* pos) {
+	//Align position to color scheme
+	colorScheme = *pos;
 	//Map to the right color scheme
 	selectColorScheme();
-	//Choose limits for hot and cold mode
-	if ((colorScheme == 3) || (colorScheme == 4))
+	//Choose limits for hot and cold mode when not in warmup
+	if(calStatus != 0 && ((colorScheme == 3) || (colorScheme == 8)))
 		hotColdChooser();
 	//Save to EEPROM
 	EEPROM.write(eeprom_colorScheme, colorScheme);
+}
+
+/* Lock or release limits */
+void limitLock() {
+	//If not warmed, do nothing
+	if (calStatus == 0) {
+		showMsg((char*) "Wait for warmup");
+	}
+	//Unlock limits
+	else if (limitsLocked) {
+		showMsg((char*) "Limits unlocked");
+		limitsLocked = false;
+	}
+	//Lock limits
+	else {
+		showMsg((char*) "Limits locked");
+		limitsLocked = true;
+	}
+	attachInterrupts();
+	showMenu = false;
+	lockLimits = false;
+}
+
+/* Display addition information on the screen */
+void displayInfos() {
+	///Refresh object temperature
+	mlx90614GetTemp();
+	//Convert to Fahrenheit if needed
+	if (tempFormat)
+		mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
+	//Set text color, font and background
+	display.setColor(VGA_WHITE);
+	display.setBackColor(VGA_TRANSPARENT);
+	display.setFont(smallFont);
+	//Show battery status in percantage
+	if ((batteryEnabled) && (imgSave != 1) && (!videoSave))
+		displayBatteryStatus();
+	//Show the time
+	if ((timeEnabled) && (imgSave != 1) && (!videoSave))
+		displayTime();
+	//Show the date
+	if ((dateEnabled) && (imgSave != 1) && (!videoSave))
+		displayDate();
+	//Show storage information
+	if ((storageEnabled) && (imgSave != 1) && (!videoSave))
+		displayFreeSpace();
+	//Show the spot in the middle
+	if (spotEnabled)
+		showSpot();
+	//Show the color bar when warmup is over and if enabled
+	if ((colorbarEnabled) && (calStatus > 0))
+		showColorBar();
+	//Show the temperature points
+	if (pointsEnabled)
+		showTemperatures();
+	//Activate the calibration after a warmup time of 60s
+	if ((calStatus == 0) && (imgSave != 1) && (!videoSave)) {
+		if (millis() - calTimer > 60000) {
+			leptonRunCalibration();
+			calStatus = 1;
+		}
+		else
+			displayWarmup();
+	}
 }
 
 /* Init procedure for the live mode */
@@ -250,6 +367,9 @@ void liveModeInit() {
 	attachInterrupts();
 	//Allocate space
 	image = (unsigned short*)calloc(19200, sizeof(unsigned short));
+	showTemp = (uint16_t*)calloc(192, sizeof(uint16_t));
+	//Clear showTemp values
+	clearTemperatures();
 }
 
 void liveModeExit() {
@@ -260,6 +380,7 @@ void liveModeExit() {
 	detachInterrupts();
 	//Deallocate space
 	free(image);
+	free(showTemp);
 	//Open the main menu
 	mainMenu();
 }
@@ -272,46 +393,25 @@ void liveMode() {
 	while (true) {
 		//If touch IRQ has been triggered, open menu
 		if (showMenu) {
-			//Detach the interrupts
-			detachInterrupts();
-			//Show the Menu
-			int ret = liveMenu();
-			showMenu = false;
-			if (ret)
+			if (liveMenu())
 				break;
-			//Re-attach the interrupts
-			attachInterrupts();
 		}
 		//Create and display the thermal image
 		displayThermalImg();
-		//Show the spot in the middle
-		if (spotEnabled)
-			showSpot();
-		//Show the color bar
-		if (colorbarEnabled)
-			showColorBar();
+		//Display additional information on the screen
+		if (imgSave != 2)
+			displayInfos();
 		//Save the image
-		if (imgSave == 1) {
-			//Detach the interrupts
-			detachInterrupts();
+		if (imgSave == 1)
 			saveImage();
-			imgSave = false;
-			//Re-attach the interrupts
-			attachInterrupts();
-		}
 		//Start the video
-		if (videoSave == 1) {
-			//Ask user for the video interval
-			if (videoIntervalChooser())
+		if (videoSave) {
+			if (videoModeChooser())
 				videoCapture();
-			//Re-attach the interrupts
-			attachInterrupts();
-			//Disable mode
-			videoSave = false;
-			imgSave = false;
 		}
-		//Save screenshot if serial command is send
-		//saveScreenshot();
+		//Release or lock the limits
+		if (lockLimits)
+			limitLock();
 	}
 	//Exit
 	liveModeExit();

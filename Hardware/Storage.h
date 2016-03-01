@@ -60,6 +60,7 @@ void refreshFreeSpace() {
 
 /* Initializes the SD card */
 void initSD() {
+	sdInfo = " - / - MB";
 	//Init the SD Card except for Early-Bird #1
 	if (mlx90614Version == 1) {
 		startAltClockline();

@@ -456,6 +456,9 @@
     <ClInclude Include="Libraries\Touchscreen\Point.h">
       <Filter>_libraries\Touchscreen</Filter>
     </ClInclude>
+    <ClInclude Include="Thermal\Calibration.h">
+      <Filter>Resource Files\Thermal</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\analog.c">

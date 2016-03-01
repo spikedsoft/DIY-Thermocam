@@ -51,7 +51,7 @@ void liveModeHelper() {
 	//Array to store up to 7 lines of text
 	String text[7];
 	//Hint screen for the live mode #1 
-	text[0] = "Live Mode Helper";
+	text[0] = "First time helper";
 	text[1] = "To enter the live mode menu,";
 	text[2] = "touch the screen. 'Exit' will";
 	text[3] = "bring you to the main menu.";
@@ -59,8 +59,28 @@ void liveModeHelper() {
 	text[5] = "top of the device short takes";
 	text[6] = "an image, long records a video.";
 	infoScreen(text);
+	text[1] = "The device needs one minute";
+	text[2] = "to warmup the sensor, the color-";
+	text[3] = "bar will be activated afterwards.";
+	text[4] = "If you want to lock the limits";
+	text[5] = "on the colorbar, touch the screen";
+	text[6] = "long until a message is shown.";
+	infoScreen(text);
 	//Set EEPROM marker to complete
 	EEPROM.write(eeprom_firstStart, eeprom_setValue);
+}
+
+/* Set the EEPROM values to default for the first time */
+void firstEEPROMSet() {
+	EEPROM.write(eeprom_spotEnabled, spotEnabled);
+	EEPROM.write(eeprom_filterEnabled, filterEnabled);
+	EEPROM.write(eeprom_colorbarEnabled, colorbarEnabled);
+	EEPROM.write(eeprom_batteryEnabled, batteryEnabled);
+	EEPROM.write(eeprom_timeEnabled, timeEnabled);
+	EEPROM.write(eeprom_dateEnabled, dateEnabled);
+	EEPROM.write(eeprom_pointsEnabled, pointsEnabled);
+	EEPROM.write(eeprom_storageEnabled, storageEnabled);
+	EEPROM.write(eeprom_firstStart, 100);
 }
 
 /* First start setup*/
@@ -87,6 +107,7 @@ void firstStart() {
 	text[6] = "powers the real-time-clock permanent.";
 	infoScreen(text);
 	//Adjust Time & Date settings
+	setTime(12, 30, 30, 15, 6, 2016);
 	timeAndDateMenu(true);
 	timeAndDateMenuHandler(true);
 	//Hint screen for temperature format setting
@@ -101,29 +122,27 @@ void firstStart() {
 	//Temperature format
 	tempFormatMenu(true);
 	//Hint screen for the image storage settings
-	text[0] = "Image Storage";
-	text[1] = "In the next screen, you have";
-	text[2] = "to set the format and the type";
-	text[3] = "for the image save proccess.";
-	text[4] = "";
-	text[5] = "Storage options for videos";
-	text[6] = "will be set in the next step.";
+	text[0] = "Convert image";
+	text[1] = "In the next screen, please select";
+	text[2] = "if you want to create a bitmap";
+	text[3] = "file for every saved thermal";
+	text[4] = "image automatically on the device.";
+	text[5] = "You can also convert images man-";
+	text[6] = "ually in the Load Menu later.";
 	infoScreen(text);;
-	//Image storage
-	imagesStorageMenu(true);
-	imagesStorageMenuHandler(true);
+	//Convert image
+	convertImageMenu(true);
 	//Hint screen for the video storage settings
-	text[0] = "Video Storage";
-	text[1] = "In the next screen, you have";
-	text[2] = "to set the format and the type";
-	text[3] = "for the video save proccess.";
-	text[4] = "Those will be applied for";
-	text[5] = "every single frame that is";
-	text[6] = "saved during the video record.";
+	text[0] = "Visual image";
+	text[1] = "In the next screen, choose";
+	text[2] = "whether you want to save";
+	text[3] = "a visual image together";
+	text[4] = "with the thermal image each";
+	text[5] = "time. Enable this if you want";
+	text[6] = "to create combined images.";
 	infoScreen(text);
-	//Image storage
-	videosStorageMenu(true);
-	videosStorageMenuHandler(true);
+	//Visual image
+	visualImageMenu(true);
 	//Set Color Scheme to Rainbow
 	EEPROM.write(eeprom_colorScheme, 0);
 	//Hint screen for the video storage settings
@@ -135,7 +154,7 @@ void firstStart() {
 	text[5] = "Afterwards, you will be able";
 	text[6] = "to use the Thermocam normally.";
 	infoScreen(text, false);
-	//Set EEPROM marker to show hint screen next time
-	EEPROM.write(eeprom_firstStart, 100);
+	//Set EEPROM values
+	firstEEPROMSet();
 	while (true);
 }

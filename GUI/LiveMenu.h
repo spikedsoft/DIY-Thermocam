@@ -32,6 +32,100 @@ void liveMenuSelection(char* selection) {
 	display.print(selection, CENTER, 77);
 }
 
+/* Calibration*/
+void calibrationScreen() {
+	//Title & Background
+	liveMenuBackground();
+	liveMenuTitle((char*)"Calibrating..");
+	display.setColor(VGA_WHITE);
+	display.setBackColor(153, 162, 163);
+	display.setFont(smallFont);
+	display.print((char*)"Point the camera to different", CENTER, 63);
+	display.print((char*)"hot and cold object in the area.", CENTER, 96);
+	touchButtons.deleteAllButtons();
+	touchButtons.setTextFont(bigFont);
+	touchButtons.addButton(90, 188, 140, 40, (char*) "Abort");
+	touchButtons.drawButtons();
+	display.setFont(bigFont);
+	display.print((char*) "Status:  0%", CENTER, 140);
+}
+
+/* Calibration Repeat Choose */
+bool calibrationRepeat() {
+	//Title & Background
+	liveMenuBackground();
+	liveMenuTitle((char*)"Bad Calibration");
+	display.setColor(VGA_WHITE);
+	display.setFont(bigFont);
+	display.setBackColor(153, 162, 163);
+	display.print((char*)"Try again ?", CENTER, 66);
+	display.setFont(smallFont);
+	display.setBackColor(127, 127, 127);
+	display.print((char*)"Use different calibration objects !", CENTER, 201);
+	//Draw the buttons
+	touchButtons.deleteAllButtons();
+	touchButtons.setTextFont(bigFont);
+	touchButtons.addButton(15, 106, 140, 55, (char*) "No");
+	touchButtons.addButton(165, 106, 140, 55, (char*) "Yes");
+	touchButtons.drawButtons();
+	//Touch handler
+	while (true) {
+		//If touch pressed
+		if (touch.touched() == true) {
+			int pressedButton = touchButtons.checkButtons(true);
+			//YES
+			if (pressedButton == 1) {
+				return true;
+				break;
+			}
+			//NO
+			else if (pressedButton == 0) {
+				return false;
+				break;
+			}
+		}
+	}
+	return true;
+}
+
+/* Calibration Chooser */
+bool calibrationChooser() {
+	//Title & Background
+	liveMenuBackground();
+	liveMenuTitle((char*)"Calibration");
+	//Draw the buttons
+	touchButtons.deleteAllButtons();
+	touchButtons.setTextFont(bigFont);
+	touchButtons.addButton(15, 47, 140, 120, (char*) "New");
+	touchButtons.addButton(165, 47, 140, 120, (char*) "Delete");
+	touchButtons.addButton(15, 188, 140, 40, (char*) "Back");
+	touchButtons.drawButtons();
+	//Touch handler
+	while (true) {
+		//If touch pressed
+		if (touch.touched() == true) {
+			int pressedButton = touchButtons.checkButtons(true);
+			//NEW
+			if (pressedButton == 0) {
+				calibrationProcess();
+				return true;
+				break;
+			}
+			//DELETE
+			else if (pressedButton == 1) {
+				calSlope = 0.025;
+				calStatus = 1;
+				return true;
+				break;
+			}
+			//BACK
+			else if (pressedButton == 2)
+				return false;
+		}
+	}
+	return true;
+}
+
 /* Touch handler for the hot & cold limit changer menu */
 void hotColdChooserHandler() {
 	grayscaleLevel = 85;
@@ -81,6 +175,7 @@ void hotColdChooserHandler() {
 				}
 			}
 			//Prepare the preview image
+			delay(10);
 			createThermalImg(true);
 			//Display the preview image
 			display.drawBitmap(80, 40, 160, 120, image, 1);
@@ -102,6 +197,7 @@ void hotColdChooser() {
 	touchButtons.addButton(250, 48, 55, 120, (char*) "+");
 	touchButtons.drawButtons();
 	//Prepare the preview image
+	delay(10);
 	createThermalImg(true);
 	//Display the preview image
 	display.drawBitmap(80, 40, 160, 120, image, 1);
@@ -239,9 +335,8 @@ void limitChooserHandler() {
 				}
 			}
 			//Prepare the preview image
-			delay(20);
+			delay(10);
 			createThermalImg(true);
-			delay(20);
 			//Display the preview image
 			display.drawBitmap(80, 40, 160, 120, image, 1);
 		}
@@ -262,9 +357,8 @@ void limitChooser() {
 	touchButtons.addButton(250, 48, 55, 120, (char*) "Max");
 	touchButtons.drawButtons();
 	//Prepare the preview image
-	delay(20);
+	delay(10);
 	createThermalImg(true);
-	delay(20);
 	//Display the preview image
 	display.drawBitmap(80, 40, 160, 120, image, 1);
 	//Draw the border for the preview image
@@ -276,6 +370,12 @@ void limitChooser() {
 
 /* Temperature Limit Mode Selection */
 bool tempLimits() {
+	//Still in warmup, do not let the user do this
+	if (calStatus == 0) {
+		drawMessage((char*) "Please wait for sensor warmup!");
+		delay(1500);
+		return true;
+	}
 	//Title & Background
 	liveMenuBackground();
 	liveMenuTitle((char*)"Temp. Limits");
@@ -309,77 +409,149 @@ bool tempLimits() {
 	}
 }
 
-/* Switch the current menu item */
-void liveMenuMainString(int pos) {
+/* Switch the current temperature menu item */
+void liveMenuTempString(int pos) {
 	char* text = (char*) "";
 	switch (pos) {
-		//Change Color
 	case 0:
-		text = (char*) "Chg. Color";
+		text = (char*) "Add point";
 		break;
-		//Temperature limits
 	case 1:
-		text = (char*) "Chg. Limits";
+		text = (char*) "Rem. point";
 		break;
-		//Calibration
 	case 2:
-		text = (char*) "Calibration";
-		break;
-		//Laser On/Off
-	case 3:
-		if (laserEnabled)
-			text = (char*) "Laser Off";
-		else
-			text = (char*) "Laser On";
-		break;
-		//Show/Hide Spot
-	case 4:
-		if (spotEnabled)
-			text = (char*) "Hide Spot";
-		else
-			text = (char*) "Show Spot";
-		break;
-		//Show/Hide Colorbar
-	case 5:
-		if (colorbarEnabled)
-			text = (char*) "Hide Bar";
-		else
-			text = (char*) "Show Bar";
-		break;
-		//Filter On/Off
-	case 6:
-		if (filterEnabled)
-			text = (char*) "Filter Off";
-		else
-			text = (char*) "Filter On";
-		break;
-		//Turn Display off
-	case 7:
-		text = (char*) "Display Off";
+		text = (char*) "Clear all";
 		break;
 	}
-	//Draws the current selection
 	liveMenuSelection(text);
 }
+
+/* Manu to select different options for temperature display */
+bool tempMenu() {
+	//Still in warmup, do not add points
+	if (calStatus == 0) {
+		drawMessage((char*) "Please wait for sensor warmup!");
+		delay(1500);
+		return true;
+	}
+	//Background
+	liveMenuBackground();
+	//Title
+	liveMenuTitle((char*) "Add temp.");
+	//Remove Exit button
+	touchButtons.deleteButton(4);
+	touchButtons.drawButtons();
+	//Border
+	display.setColor(255, 106, 0);
+	display.drawRect(65, 57, 257, 111);
+	//Draw the current item
+	liveMenuTempString(colorScheme);
+	//Save the current position inside the menu
+	int pos = colorScheme;
+	while (true) {
+		//Touch screen pressed
+		if (touch.touched() == true) {
+			int pressedButton = touchButtons.checkButtons(true);
+			//SELECT
+			if (pressedButton == 3) {
+				switch (pos) {
+					//Add point
+				case 0:
+					tempPointFunction();
+					break;
+					//Remove point
+				case 1:
+					tempPointFunction(true);
+					break;
+					//Clear all
+				case 2:
+					clearTemperatures();
+					break;
+				}
+				return true;
+			}
+			//BACK
+			if (pressedButton == 2)
+				return false;
+			//BACKWARD
+			else if (pressedButton == 0) {
+				if (pos > 0)
+					pos--;
+				else if (pos == 0)
+					pos = 2;
+			}
+			//FORWARD
+			else if (pressedButton == 1) {
+				if (pos < 2)
+					pos++;
+				else if (pos == 2)
+					pos = 0;
+			}
+			//Change the menu name
+			liveMenuTempString(pos);
+		}
+	}
+}
+
+
 
 /* Switch the current color scheme item */
 void liveMenuColorString(int pos) {
 	char* text = (char*) "";
 	switch (pos) {
 	case 0:
-		text = (char*) "Rainbow";
+		text = (char*) "Arctic";
 		break;
 	case 1:
-		text = (char*) "Ironblack";
+		text = (char*) "Black-Hot";
 		break;
 	case 2:
-		text = (char*) "Grayscale";
+		text = (char*) "Blue-Red";
 		break;
 	case 3:
-		text = (char*) "Hot";
+		text = (char*) "Coldest";
 		break;
 	case 4:
-		text = (char*) "Cold";
+		text = (char*) "Contrast";
+		break;
+	case 5:
+		text = (char*) "Double-Rain";
+		break;
+	case 6:
+		text = (char*) "Gray-Red";
+		break;
+	case 7:
+		text = (char*) "Glowbow";
+		break;
+	case 8:
+		text = (char*) "Hottest";
+		break;
+	case 9:
+		text = (char*) "Ironblack";
+		break;
+	case 10:
+		text = (char*) "Lava";
+		break;
+	case 11:
+		text = (char*) "Medical";
+		break;
+	case 12:
+		text = (char*) "Rainbow";
+		break;
+	case 13:
+		text = (char*) "Wheel 1";
+		break;
+	case 14:
+		text = (char*) "Wheel 2";
+		break;
+	case 15:
+		text = (char*) "Wheel 3";
+		break;
+	case 16:
+		text = (char*) "White-Hot";
+		break;
+	case 17:
+		text = (char*) "Yellow";
 		break;
 	}
 	liveMenuSelection(text);
@@ -387,6 +559,8 @@ void liveMenuColorString(int pos) {
 
 /* Choose the applied color scale */
 bool changeColor() {
+	//Save the current position inside the menu
+	static byte changeColorPos = 0;
 	//Background
 	liveMenuBackground();
 	//Title
@@ -399,15 +573,13 @@ bool changeColor() {
 	display.drawRect(65, 57, 257, 111);
 	//Draw the current item
 	liveMenuColorString(colorScheme);
-	//Save the current position inside the menu
-	int pos = colorScheme;
 	while (true) {
 		//Touch screen pressed
 		if (touch.touched() == true) {
 			int pressedButton = touchButtons.checkButtons(true);
 			//SELECT
 			if (pressedButton == 3) {
-				changeColorScheme(pos);
+				changeColorScheme(&changeColorPos);
 				return true;
 			}
 			//BACK
@@ -415,27 +587,142 @@ bool changeColor() {
 				return false;
 			//BACKWARD
 			else if (pressedButton == 0) {
-				if (pos > 0)
-					pos--;
-				else if (pos == 0)
-					pos = 4;
+				if (changeColorPos > 0)
+					changeColorPos--;
+				else if (changeColorPos == 0)
+					changeColorPos = 17;
 			}
 			//FORWARD
 			else if (pressedButton == 1) {
-				if (pos < 4)
-					pos++;
-				else if (pos == 4)
-					pos = 0;
+				if (changeColorPos < 17)
+					changeColorPos++;
+				else if (changeColorPos == 17)
+					changeColorPos = 0;
 			}
 			//Change the menu name
-			liveMenuColorString(pos);
+			liveMenuColorString(changeColorPos);
+		}
+	}
+}
+
+/* Switch the current display option item */
+void liveMenuDisplayString(int pos) {
+	char* text = (char*) "";
+	switch (pos) {
+		//Battery
+	case 0:
+		if (batteryEnabled)
+			text = (char*) "Battery On";
+		else
+			text = (char*) "Battery Off";
+		break;
+		//Time
+	case 1:
+		if (timeEnabled)
+			text = (char*) "Time On";
+		else
+			text = (char*) "Time Off";
+		break;
+		//Date
+	case 2:
+		if (dateEnabled)
+			text = (char*) "Date On";
+		else
+			text = (char*) "Date Off";
+		break;
+		//Spot
+	case 3:
+		if (spotEnabled)
+			text = (char*) "Spot On";
+		else
+			text = (char*) "Spot Off";
+		break;
+		//Colorbar
+	case 4:
+		if (colorbarEnabled)
+			text = (char*) "Bar On";
+		else
+			text = (char*) "Bar Off";
+		break;
+		//Temperature Points
+	case 5:
+		if (pointsEnabled)
+			text = (char*) "Points On";
+		else
+			text = (char*) "Points Off";
+		break;
+		//Storage
+	case 6:
+		if (storageEnabled)
+			text = (char*) "Storage On";
+		else
+			text = (char*) "Storage Off";
+		break;
+		//Filter
+	case 7:
+		if (filterEnabled)
+			text = (char*) "Filter On";
+		else
+			text = (char*) "Filter Off";
+		break;
+	}
+	liveMenuSelection(text);
+}
+
+/* Change the display options */
+bool displayOptions() {
+	//Save the current position inside the menu
+	static byte displayOptionsPos = 0;
+	//Background
+	liveMenuBackground();
+	//Title
+	liveMenuTitle((char*) "Display Options");
+	//Remove Exit button
+	touchButtons.deleteButton(4);
+	touchButtons.drawButtons();
+	//Rename OK button
+	touchButtons.relabelButton(3, (char*) "Switch", true);
+	//Border
+	display.setColor(255, 106, 0);
+	display.drawRect(65, 57, 257, 111);
+	//Draw the current item
+	liveMenuDisplayString(0);
+	while (true) {
+		//Touch screen pressed
+		if (touch.touched() == true) {
+			int pressedButton = touchButtons.checkButtons(true);
+			//SELECT
+			if (pressedButton == 3) {
+				changeDisplayOptions(&displayOptionsPos);
+			}
+			//BACK
+			if (pressedButton == 2) {
+				touchButtons.relabelButton(3, (char*) "OK", true);
+				return false;
+			}
+			//BACKWARD
+			else if (pressedButton == 0) {
+				if (displayOptionsPos > 0)
+					displayOptionsPos--;
+				else if (displayOptionsPos == 0)
+					displayOptionsPos = 7;
+			}
+			//FORWARD
+			else if (pressedButton == 1) {
+				if (displayOptionsPos < 7)
+					displayOptionsPos++;
+				else if (displayOptionsPos == 7)
+					displayOptionsPos = 0;
+			}
+			//Change the menu name
+			liveMenuDisplayString(displayOptionsPos);
 		}
 	}
 }
 
 /* Select the action when the select button is pressed */
-bool liveMenuSelect(int pos) {
-	switch (pos) {
+bool liveMenuSelect(byte* pos) {
+	switch (*pos) {
 		//Change Color
 	case 0:
 		return changeColor();
@@ -446,38 +733,74 @@ bool liveMenuSelect(int pos) {
 		break;
 		//Calibration
 	case 2:
-		leptonRunCalibration();
+		return calibrate();
 		break;
-		//Laser On/Off
+		//Temp. points
 	case 3:
+		return tempMenu();
+		break;
+		//Display options
+	case 4:
+		return displayOptions();
+		break;
+		//Toggle Laser
+	case 5:
 		toggleLaser();
 		break;
-		//Show/Hide Spot
-	case 4:
-		toggleSpot();
-		break;
-		//Show/Hide Colorbar
-	case 5:
-		toggleColorbar();
-		break;
-		//Filter On/Off
-	case 6:
-		toggleFilter();
-		break;
 		//Display off
-	case 7:
-		displayOff(false);
+	case 6:
+		digitalWrite(pin_lcd_backlight, LOW);
 		//Wait for touch press
 		while (!touch.touched());
-		displayOn(false);
-		return true;
+		digitalWrite(pin_lcd_backlight, HIGH);
+		return false;
 		break;
 	}
 	return true;
 }
 
+/* Switch the current menu item */
+void liveMenuMainString(byte* pos) {
+	char* text = (char*) "";
+	switch (*pos) {
+		//Change Color
+	case 0:
+		text = (char*) "Chg. Color";
+		break;
+		//Temperature limits
+	case 1:
+		text = (char*) "Chg. Limits";
+		break;
+		//Calibration
+	case 2:
+		text = (char*) "Calibration";
+		break;
+		//Temp points
+	case 3:
+		text = (char*) "Set Points";
+		break;
+		//Display options
+	case 4:
+		text = (char*) "Disp. Opt.";
+		break;
+		//Laser On/Off
+	case 5:
+		if (laserEnabled)
+			text = (char*) "Laser Off";
+		else
+			text = (char*) "Laser On";
+		break;
+		//Turn Display off
+	case 6:
+		text = (char*) "Display Off";
+		break;
+	}
+	//Draws the current selection
+	liveMenuSelection(text);
+}
+
 /* Draws the content of the live menu*/
-void drawLiveMenu() {
+void drawLiveMenu(byte* pos) {
 	//Border
 	display.setColor(VGA_BLACK);
 	display.fillRoundRect(5, 5, 315, 235);
@@ -498,13 +821,11 @@ void drawLiveMenu() {
 	//Title
 	liveMenuTitle((char*) "Live Menu");
 	//Current choice name
-	liveMenuMainString(liveMenuPos);
+	liveMenuMainString(pos);
 }
 
 /* Touch Handler for the Live Menu */
-bool liveMenuHandler() {
-	//Save the current position inside the menu
-	int pos = liveMenuPos;
+bool liveMenuHandler(byte* pos) {
 	//Main loop
 	while (true) {
 		//Touch screen pressed
@@ -516,12 +837,10 @@ bool liveMenuHandler() {
 			//SELECT
 			if (pressedButton == 3) {
 				//Leave menu
-				if (liveMenuSelect(pos)) {
-					liveMenuPos = pos;
+				if (liveMenuSelect(pos))
 					break;
-				}
 				else
-					drawLiveMenu();
+					drawLiveMenu(pos);
 			}
 			//BACK
 			else if (pressedButton == 2) {
@@ -529,17 +848,17 @@ bool liveMenuHandler() {
 			}
 			//BACKWARD
 			else if (pressedButton == 0) {
-				if (pos > 0)
-					pos--;
-				else if (pos == 0)
-					pos = 7;
+				if (*pos > 0)
+					*pos = *pos - 1;
+				else if (*pos == 0)
+					*pos = 6;
 			}
 			//FORWARD
 			else if (pressedButton == 1) {
-				if (pos < 7)
-					pos++;
-				else if (pos == 7)
-					pos = 0;
+				if (*pos < 6)
+					*pos = *pos + 1;
+				else if (*pos == 6)
+					*pos = 0;
 			}
 			//Change the menu name
 			liveMenuMainString(pos);
@@ -550,15 +869,24 @@ bool liveMenuHandler() {
 
 /* Start live menu */
 bool liveMenu() {
+	//Live menu position
+	static byte liveMenuPos = 0;
 	bool rtn = 0;
+	//Detach the interrupts
+	detachInterrupts();
 	//Draw content
-	drawLiveMenu();
+	drawLiveMenu(&liveMenuPos);
 	//Touch handler - return true if exit to Main menu, otherwise false
-	rtn = liveMenuHandler();
+	rtn = liveMenuHandler(&liveMenuPos);
 	//Restore old fonts
 	display.setFont(smallFont);
 	touchButtons.setTextFont(smallFont);
 	//Delete the old buttons
 	touchButtons.deleteAllButtons();
+	//Re-attach the interrupts
+	attachInterrupts();
+	//Disable menu marker
+	showMenu = false;
+	//Return
 	return rtn;
 }

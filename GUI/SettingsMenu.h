@@ -273,7 +273,7 @@ void yearMenu(bool firstStart) {
 			int pressedButton = touchButtons.checkButtons(true);
 			//Minus
 			if (pressedButton == 0) {
-				if (year() > 2014) {
+				if (year() > 2016) {
 					setTime(hour(), minute(), second(), day(), month(),
 						year() - 1);
 					drawCenterElement(year());
@@ -416,8 +416,8 @@ void timeAndDateMenuHandler(bool firstStart = false) {
 			//Save
 			else if (pressedButton == 2) {
 				if (firstStart) {
-					if (year() < 2015) {
-						drawMessage((char*) "Year must be >= 2015 !");
+					if (year() < 2016) {
+						drawMessage((char*) "Year must be >= 2016 !");
 						delay(1000);
 						timeAndDateMenu(true);
 					}
@@ -433,15 +433,19 @@ void timeAndDateMenuHandler(bool firstStart = false) {
 	}
 }
 
-/* Images format menu */
-void imagesFormatMenu(bool firstStart = false) {
-	drawTitle((char*) "Image Format");
+
+
+/* Visual image selection menu */
+void visualImageMenu(bool firstStart = false) {
+	drawTitle((char*) "Visual image");
 	touchButtons.deleteAllButtons();
-	touchButtons.addButton(20, 60, 130, 70, (char*) "Raw Only");
-	touchButtons.addButton(170, 60, 130, 70, (char*) "Raw + Bitmap");
+	touchButtons.addButton(20, 60, 130, 70, (char*) "Enabled");
+	touchButtons.addButton(170, 60, 130, 70, (char*) "Disabled");
 	touchButtons.addButton(20, 150, 280, 70, (char*) "Back");
+	if (firstStart)
+		touchButtons.relabelButton(2, (char*) "Set", false);
 	touchButtons.drawButtons();
-	if (imagesFormat == 0)
+	if (visualEnabled)
 		touchButtons.setActive(0);
 	else
 		touchButtons.setActive(1);
@@ -453,99 +457,29 @@ void imagesFormatMenu(bool firstStart = false) {
 		//touch pressed
 		if (touch.touched() == true) {
 			int pressedButton = touchButtons.checkButtons();
-			//Raw Only
+			//Enabled
 			if (pressedButton == 0) {
-				if (imagesFormat == 1) {
-					imagesFormat = 0;
+				if (!visualEnabled) {
+					visualEnabled = true;
 					touchButtons.setActive(0);
 					touchButtons.setInactive(1);
 				}
 			}
-			//Raw + Bitmap
+			//Disabled
 			else if (pressedButton == 1) {
-				if (imagesFormat == 0) {
-					imagesFormat = 1;
+				if (visualEnabled) {
+					visualEnabled = false;
 					touchButtons.setActive(1);
 					touchButtons.setInactive(0);
 				}
-			}
-			//Back
-			else if (pressedButton == 2) {
-				//Write new settings to EEPROM
-				EEPROM.write(eeprom_imagesFormat, imagesFormat);
-				imagesStorageMenu(firstStart);
-				break;
-			}
-		}
-	}
-}
-
-/* Images type menu */
-void imagesTypeMenu(bool firstStart = false) {
-	drawTitle((char*) "Image Type");
-	touchButtons.deleteAllButtons();
-	touchButtons.addButton(20, 60, 120, 70, (char*) "Thermal only");
-	touchButtons.addButton(160, 60, 140, 70, (char*) "Thermal + Visual");
-	touchButtons.addButton(20, 150, 280, 70, (char*) "Back");
-	touchButtons.drawButtons();
-	if (imagesType == 0)
-		touchButtons.setActive(0);
-	else
-		touchButtons.setActive(1);
-	if (!firstStart)
-		updateInfos(true);
-	while (1) {
-		if (!firstStart)
-			updateInfos(false);
-		//touch pressed
-		if (touch.touched() == true) {
-			int pressedButton = touchButtons.checkButtons();
-			//Thermal only
-			if (pressedButton == 0) {
-				if (imagesType == 1) {
-					imagesType = 0;
-					touchButtons.setActive(0);
-					touchButtons.setInactive(1);
-				}
-			}
-			//Thermal + Visual
-			else if (pressedButton == 1) {
-				if (imagesType == 0) {
-					imagesType = 1;
-					touchButtons.setActive(1);
-					touchButtons.setInactive(0);
-				}
-			}
-			//Back
-			else if (pressedButton == 2) {
-				//Write new settings to EEPROM
-				EEPROM.write(eeprom_imagesType, imagesType);
-				imagesStorageMenu(firstStart);
-				break;
-			}
-		}
-	}
-}
-
-/* Handler for the Images Storage Menu */
-void imagesStorageMenuHandler(bool firstStart) {
-	while (1) {
-		if (!firstStart)
-			updateInfos(false);
-		//touch pressed
-		if (touch.touched() == true) {
-			int pressedButton = touchButtons.checkButtons();
-			//Images Format
-			if (pressedButton == 0) {
-				imagesFormatMenu();
-			}
-			//Images Type
-			else if (pressedButton == 1) {
-				imagesTypeMenu();
 			}
 			//Save
 			else if (pressedButton == 2) {
-				if (!firstStart) {
+				//Write new settings to EEPROM
+				EEPROM.write(eeprom_visualEnabled, visualEnabled);
+				if (firstStart)
+					return;
+				else {
 					storageMenu();
 				}
 				break;
@@ -554,29 +488,17 @@ void imagesStorageMenuHandler(bool firstStart) {
 	}
 }
 
-/* Images Storage Menu */
-void imagesStorageMenu(bool firstStart) {
-	drawTitle((char*) "Image Storage");
+/* Convert image selection menu */
+void convertImageMenu(bool firstStart = false) {
+	drawTitle((char*) "Convert image");
 	touchButtons.deleteAllButtons();
-	touchButtons.addButton(20, 60, 130, 70, (char*) "Storage Format");
-	touchButtons.addButton(170, 60, 130, 70, (char*) "Storage Type");
-	touchButtons.addButton(20, 150, 280, 70, (char*) "Save");
+	touchButtons.addButton(20, 60, 130, 70, (char*) "Enabled");
+	touchButtons.addButton(170, 60, 130, 70, (char*) "Disabled");
+	touchButtons.addButton(20, 150, 280, 70, (char*) "Back");
 	if (firstStart)
 		touchButtons.relabelButton(2, (char*) "Set", false);
 	touchButtons.drawButtons();
-	if (!firstStart)
-		updateInfos(true);
-}
-
-/* Videos format menu */
-void videosFormatMenu(bool firstStart = false) {
-	drawTitle((char*) "Video Format");
-	touchButtons.deleteAllButtons();
-	touchButtons.addButton(20, 60, 130, 70, (char*) "Raw Only");
-	touchButtons.addButton(170, 60, 130, 70, (char*) "Raw + Bitmap");
-	touchButtons.addButton(20, 150, 280, 70, (char*) "Back");
-	touchButtons.drawButtons();
-	if (videosFormat == 0)
+	if (convertEnabled)
 		touchButtons.setActive(0);
 	else
 		touchButtons.setActive(1);
@@ -588,119 +510,35 @@ void videosFormatMenu(bool firstStart = false) {
 		//touch pressed
 		if (touch.touched() == true) {
 			int pressedButton = touchButtons.checkButtons();
-			//Raw Only
+			//Yes
 			if (pressedButton == 0) {
-				if (videosFormat == 1) {
-					videosFormat = 0;
+				if (!convertEnabled) {
+					convertEnabled = true;
 					touchButtons.setActive(0);
 					touchButtons.setInactive(1);
 				}
 			}
-			//Raw + Bitmap
+			//No
 			else if (pressedButton == 1) {
-				if (videosFormat == 0) {
-					videosFormat = 1;
+				if (convertEnabled) {
+					convertEnabled = false;
 					touchButtons.setActive(1);
 					touchButtons.setInactive(0);
 				}
-			}
-			//Back
-			else if (pressedButton == 2) {
-				//Write new settings to EEPROM
-				EEPROM.write(eeprom_videosFormat, videosFormat);
-				imagesStorageMenu(firstStart);
-				break;
-			}
-		}
-	}
-}
-
-/* Videos type menu */
-void videosTypeMenu(bool firstStart = false) {
-	drawTitle((char*) "Video Type");
-	touchButtons.deleteAllButtons();
-	touchButtons.addButton(20, 60, 120, 70, (char*) "Thermal only");
-	touchButtons.addButton(160, 60, 140, 70, (char*) "Thermal + Visual");
-	touchButtons.addButton(20, 150, 280, 70, (char*) "Back");
-	touchButtons.drawButtons();
-	if (videosType == 0)
-		touchButtons.setActive(0);
-	else
-		touchButtons.setActive(1);
-	if (!firstStart)
-		updateInfos(true);
-	while (1) {
-		if (!firstStart)
-			updateInfos(false);
-		//touch pressed
-		if (touch.touched() == true) {
-			int pressedButton = touchButtons.checkButtons();
-			//Thermal only
-			if (pressedButton == 0) {
-				if (videosType == 1) {
-					videosType = 0;
-					touchButtons.setActive(0);
-					touchButtons.setInactive(1);
-				}
-			}
-			//Thermal + Visual
-			else if (pressedButton == 1) {
-				if (videosType == 0) {
-					videosType = 1;
-					touchButtons.setActive(1);
-					touchButtons.setInactive(0);
-				}
-			}
-			//Back
-			else if (pressedButton == 2) {
-				//Write new settings to EEPROM
-				EEPROM.write(eeprom_videosType, videosType);
-				imagesStorageMenu(firstStart);
-				break;
-			}
-		}
-	}
-}
-
-/* Handler for the Videos Storage Menu */
-void videosStorageMenuHandler(bool firstStart) {
-	while (1) {
-		if (!firstStart)
-			updateInfos(false);
-		//touch pressed
-		if (touch.touched() == true) {
-			int pressedButton = touchButtons.checkButtons();
-			//Videos Format
-			if (pressedButton == 0) {
-				videosFormatMenu();
-			}
-			//Videos Type
-			else if (pressedButton == 1) {
-				videosTypeMenu();
 			}
 			//Save
 			else if (pressedButton == 2) {
-				if (!firstStart) {
+				//Write new settings to EEPROM
+				EEPROM.write(eeprom_convertEnabled, convertEnabled);
+				if (firstStart)
+					return;
+				else {
 					storageMenu();
 				}
 				break;
 			}
 		}
 	}
-}
-
-/* Videos Storage Menu */
-void videosStorageMenu(bool firstStart) {
-	drawTitle((char*) "Video Storage");
-	touchButtons.deleteAllButtons();
-	touchButtons.addButton(20, 60, 130, 70, (char*) "Storage Format");
-	touchButtons.addButton(170, 60, 130, 70, (char*) "Storage Type");
-	touchButtons.addButton(20, 150, 280, 70, (char*) "Save");
-	if (firstStart)
-		touchButtons.relabelButton(2, (char*) "Set", false);
-	touchButtons.drawButtons();
-	if (!firstStart)
-		updateInfos(true);
 }
 
 /* Asks the user if he really wants to format */
@@ -761,15 +599,13 @@ void storageMenuHandler() {
 		//touch pressed
 		if (touch.touched() == true) {
 			int pressedButton = touchButtons.checkButtons();
-			//Images
+			//Convert image
 			if (pressedButton == 0) {
-				imagesStorageMenu();
-				imagesStorageMenuHandler();
+				convertImageMenu();
 			}
-			//Videos
+			//Visual image
 			else if (pressedButton == 1) {
-				videosStorageMenu();
-				videosStorageMenuHandler();
+				visualImageMenu();
 			}
 			//Format
 			else if (pressedButton == 2) {
@@ -788,8 +624,8 @@ void storageMenuHandler() {
 void storageMenu() {
 	drawTitle((char*) "Storage");
 	touchButtons.deleteAllButtons();
-	touchButtons.addButton(20, 60, 130, 70, (char*) "Image Storage");
-	touchButtons.addButton(170, 60, 130, 70, (char*) "Video Storage");
+	touchButtons.addButton(20, 60, 130, 70, (char*) "Convert image");
+	touchButtons.addButton(170, 60, 130, 70, (char*) "Visual image");
 	touchButtons.addButton(20, 150, 130, 70, (char*) "Format");
 	touchButtons.addButton(170, 150, 130, 70, (char*) "Back");
 	touchButtons.drawButtons();

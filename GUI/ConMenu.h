@@ -86,7 +86,7 @@ void restartAndJumpToApp(void) {
 
 void serialFlush() {
 	while (Serial.available() > 0) {
-		char t = Serial.read();
+		Serial.read();
 	}
 }
 
@@ -94,13 +94,27 @@ void serialFlush() {
 void videoOutput() {
 	byte MSB, LSB;
 	drawMessage((char*) "Waiting for thermal viewer..");
+	display.print((char*) "Touch screen to return", CENTER, 170);
 	rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
-	while (!Serial.available());
+	while (!Serial.available()) {
+		if (touch.touched()) {
+			free(rawValues);
+			connectionMenu();
+			return;
+		}
+	}
 	Serial.read();
 	drawMessage((char*) "Sending data to the viewer..");
+	display.print((char*) "Touch screen to return", CENTER, 170);
 	delay(100);
 	while (true) {
-		while (!Serial.available());
+		while (!Serial.available()) {
+			if (touch.touched()) {
+				free(rawValues);
+				connectionMenu();
+				return;
+			}
+		}
 		char input = Serial.read();
 		serialFlush();
 		if (input == 'q')

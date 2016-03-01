@@ -61,6 +61,4 @@ void checkBattery(bool start = false) {
 		vBat += 0.1;
 	//Calculate the percentage
 	batPercentage = getLipoPerc(vBat);
-	//Set the timestamp
-	refreshTime = millis();
 }

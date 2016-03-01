@@ -10,7 +10,7 @@
 */
 
 /* Current firmware version */
-#define Version "FW Version 1.06"
+#define Version "Firmware 1.10 from 01.03.2016"
 
 /* Libraries */
 #include <ADC.h>
@@ -42,7 +42,7 @@ void setup()
 	//Init Hardware
 	initHardware();
 	//Read EEPROM settings
-	if (checkEEPROM()) {
+	if (readEEPROM()) {
 		//Return to connection menu when coming from Mass storage
 		connectionMenu();
 		connectionMenuHandler();

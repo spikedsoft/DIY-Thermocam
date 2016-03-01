@@ -62,9 +62,9 @@ void createSDName(char* filename, bool folder = false) {
 }
 
 /* Shows on the screen that we saved an image */
-void showMsg(char* msg, bool bottom = false) {
+void showMsg(char* msg, bool bottom) {
 	//Set Text Color
-	setColor();
+	display.setColor(VGA_WHITE);
 	//set Background transparent
 	display.setBackColor(VGA_TRANSPARENT);
 	//Give the user a hint that it tries to save
@@ -74,6 +74,8 @@ void showMsg(char* msg, bool bottom = false) {
 	else
 		display.print(msg, CENTER, 80);
 	display.setFont(smallFont);
+	//Wait some time to read the text
+	delay(1000);
 }
 
 /* Creates a bmp file for the thermal image */
@@ -97,9 +99,12 @@ void createBMPFile(char* filename) {
 }
 
 /* Creates a jpg file for the visual image */
-void createJPGFile(char* filename) {
+void createJPGFile(char* filename, char* dirname) {
 	//Begin SD Transmission
 	startAltClockline(true);
+	//Go into the video folder if required
+	if (dirname != NULL)
+		sd.chdir(dirname);
 	//File extension and open
 	strcpy(&filename[14], ".JPG");
 	sdFile.open(filename, O_RDWR | O_CREAT | O_AT_END);
@@ -120,9 +125,12 @@ void createVideoFolder(char* dirname) {
 }
 
 /* Saves a thermal image to the sd card */
-void saveThermalImage(char* filename) {
+void saveThermalImage(char* filename, char* dirname) {
 	//Begin SD Transmission
 	startAltClockline(true);
+	//Switch to video folder if video
+	if (dirname != NULL)
+		sd.chdir(dirname);
 	//Create file
 	createBMPFile(filename);
 	//Allocate space for sd buffer
@@ -162,8 +170,10 @@ void saveThermalImage(char* filename) {
 
 /* Saves images to the internal storage */
 void saveImage() {
+	//Detach the interrupts
+	detachInterrupts();
 	//Wake camera up if needed and take image
-	if (imagesType == 1)
+	if (visualEnabled == 1)
 		//Capture image command
 		captureVisualImage();
 	//Build filename from the current time & date
@@ -176,27 +186,25 @@ void saveImage() {
 	//Deallocate space again
 	free(rawValues);
 	//Save Bitmap image if activated
-	if (imagesFormat == 1)
+	if (convertEnabled == 1)
 		saveThermalImage(filename);
 	//Eventually save optical image
-	if (imagesType == 1) {
-		//Deallocate space
-		free(image);
+	if (visualEnabled == 1) {
 		//Create file
 		createJPGFile(filename);
 		//Display message
 		showMsg((char*) "Save Visual..");
 		//Save visual image
 		saveVisualImage();
-		//Allocate space
-		image = (unsigned short*)calloc(19200, sizeof(unsigned short));
 	}
 	//Show Message on screen
-	if (imagesType == 1)
+	if (visualEnabled == 1)
 		showMsg((char*) "All saved!", true);
-	else 
+	else
 		showMsg((char*) "Thermal saved!");
-	delay(500);
+	imgSave = false;
+	//Re-attach the interrupts
+	attachInterrupts();
 }
 
 /* Converts a float to four bytes */
@@ -228,130 +236,6 @@ void frameFilename(char* filename, uint16_t count) {
 	filename[4] = '0' + count % 10;
 }
 
-/* Save visual image inside the video capture */
-void saveVisualFrame(uint16_t count, char* dirname) {
-	//Create filename to save data
-	char filename[] = "00000.JPG";
-	frameFilename(filename, count);
-	//Switch Clock to Alternative
-	startAltClockline();
-	//Go into the video folder
-	sd.chdir(dirname);
-	// Open the file for writing
-	sdFile.open(filename, O_RDWR | O_CREAT | O_AT_END);
-	//Switch clockline
-	endAltClockline();
-	//Deallocate space
-	free(image);
-	free(rawValues);
-	//Save visual image
-	saveVisualImage();
-	//Allocate space
-	rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
-	image = (unsigned short*)calloc(19200, sizeof(unsigned short));
-}
-
-/* Read video frame from file for processing*/
-void readVideoFrame(uint16_t count, char* dirname) {
-	byte msb, lsb;
-	uint16_t valueCount;
-	unsigned short* valueArray;
-	//For the Lepton2 sensor, use 4800 raw values
-	if (leptonVersion != 1) {
-		valueCount = 4800;
-		valueArray = rawValues;
-	}
-	//For the Lepton3 sensor, use 19200 raw values
-	else {
-		valueCount = 19200;
-		valueArray = image;
-	}
-	//Create filename to open saved data
-	char filename[] = "00000.DAT";
-	frameFilename(filename, count);
-	//Switch Clock to Alternative
-	startAltClockline();
-	//Go into the video folder
-	sd.chdir(dirname);
-	// Open the file for reading
-	sdFile.open(filename, O_READ);
-	//Read all lepton raw values from file
-	for (int i = 0; i < valueCount; i++) {
-		msb = sdFile.read();
-		lsb = sdFile.read();
-		valueArray[i] = (((msb) << 8) + lsb);
-	}
-	//Read Min
-	msb = sdFile.read();
-	lsb = sdFile.read();
-	minTemp = (((msb) << 8) + lsb);
-	//Read Max
-	msb = sdFile.read();
-	lsb = sdFile.read();
-	maxTemp = (((msb) << 8) + lsb);
-	//Read object temperature if enabled
-	if (spotEnabled) {
-		uint8_t farray[4];
-		for (int i = 0; i < 4; i++) {
-			farray[i] = sdFile.read();
-		}
-		mlx90614Temp = bytesToFloat(farray);
-	}
-	//Close data file
-	sdFile.close();
-}
-
-/* Save video frame to image file */
-void saveVideoFrame(uint16_t count, char* dirname) {
-	//Create filename to save data
-	char filename[] = "00000.BMP";
-	frameFilename(filename, count);
-	//Switch Clock to Alternative
-	startAltClockline();
-	//Go into the video folder
-	sd.chdir(dirname);
-	// Open the file for writing
-	sdFile.open(filename, O_RDWR | O_CREAT | O_AT_END);
-	//Header for frame content
-	const char bmp_header[66] = { 0x42, 0x4D, 0x36, 0x58, 0x02, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x42, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00,
-		0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x01,
-		0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x58, 0x02,
-		0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00,
-		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00,
-		0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00 };
-	//Write the BMP header
-	for (int i = 0; i < 66; i++) {
-		char ch = bmp_header[i];
-		sdFile.write((uint8_t*)&ch, 1);
-	}
-	//Help variables for saving
-	unsigned short pixel;
-	//Allocate space for sd buffer
-	uint8_t* sdBuffer = (uint8_t*)calloc(640, sizeof(uint8_t));
-	//Save 320*60 pixels from the screen at one time
-	for (int i = 3; i >= 0; i--) {
-		endAltClockline();
-		//Read pixels from the display
-		display.readScreen(i, image);
-		startAltClockline();
-		for (byte y = 0; y < 60; y++) {
-			//Write them into the sd buffer
-			for (uint16_t x = 0; x < 320; x++) {
-				pixel = image[((59 - y) * 320) + x];
-				sdFile.write(pixel & 0x00FF);
-				sdFile.write((pixel & 0xFF00) >> 8);
-			}
-		}
-	}
-	//De-allocate space
-	free(sdBuffer);
-	//Close the file
-	sdFile.close();
-	//Switch Clock back to Standard
-	endAltClockline();
-}
-
 /* Fills the image array with the raw values */
 void fillImageArray() {
 	//Fill image array
@@ -368,6 +252,7 @@ void fillImageArray() {
 /* Proccess video frames */
 void proccessVideoFrames(uint16_t framesCaptured, char* dirname) {
 	char buffer[14];
+	char filename[] = "00000.DAT";
 	display.setBackColor(VGA_TRANSPARENT);
 	for (uint16_t count = 0; count < framesCaptured; count++) {
 		//Check if there is at least 1MB of space left
@@ -382,32 +267,20 @@ void proccessVideoFrames(uint16_t framesCaptured, char* dirname) {
 			delay(1000);
 			return;
 		}
-		//Read frame
-		readVideoFrame(count, dirname);
-		//Fill image array for Lepton2 sensor
-		if (leptonVersion != 1)
-			fillImageArray();
-		//Scale values
-		scaleValues();
-		//Apply gaussian filter
-		gaussianBlur(image, 160, 120, 1.5f, 1);
-		//Convert lepton data to RGB565 colors
-		convertColors();
-		//Draw thermal image on screen
-		endAltClockline();
-		display.writeScreen(image);
-		//Show the spot in the middle
-		if (spotEnabled)
-			showSpot(true);
-		//Show the color bar
-		if(colorbarEnabled)
-			showColorBar();
+		//Get filename
+		frameFilename(filename, count);
+		strcpy(&filename[5], ".DAT");
+		//Load Raw data
+		loadRawData(filename, dirname);
+		//Display Raw Data
+		displayRawData();
 		//Show the image number
 		sprintf(buffer, "%5d / %-5d", count + 1, framesCaptured);
-		setColor();
+		display.setColor(VGA_WHITE);
 		display.print(buffer, CENTER, 225);
 		//Save frame to image file
-		saveVideoFrame(count, dirname);
+		strcpy(&filename[5], ".BMP");
+		saveThermalImage(filename, dirname);
 	}
 	//All images converted!
 	drawMessage((char*) "Video proccessing finished !");
@@ -431,7 +304,7 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	//Get temperatures
 	getTemperatures(true);
 	//Find min and max
-	if (agcEnabled) {
+	if ((agcEnabled) && (!limitsLocked)) {
 		maxTemp = 0;
 		minTemp = 65535;
 		uint16_t temp;
@@ -484,16 +357,28 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	//Write the show spot attribute
 	sdFile.write(spotEnabled);
 	//Write the show colorbar attribute
-	sdFile.write(colorbarEnabled);
-	//Write the calibration done attribute
-	sdFile.write('0');
+	if (calStatus == 0)
+		sdFile.write((byte)0);
+	else
+		sdFile.write(colorbarEnabled);
+	//Write the temperature points enabled attribute
+	if (calStatus == 0)
+		sdFile.write((byte)0);
+	else
+		sdFile.write(pointsEnabled);
 	//Write quick Calibration offset
 	floatToBytes(farray, (float)calOffset);
 	for (int i = 0; i < 4; i++)
 		sdFile.write(farray[i]);
-	//Fill with zeros to match filesize
+	//Write quick Calibration slope
+	floatToBytes(farray, (float)calSlope);
 	for (int i = 0; i < 4; i++)
-		sdFile.write('0');
+		sdFile.write(farray[i]);
+	//Write temperature points
+	for (int i = 0; i < 192; i++) {
+		sdFile.write((showTemp[i] & 0xFF00) >> 8);
+		sdFile.write(showTemp[i] & 0x00FF);
+	}
 	//Close the file
 	sdFile.close();
 	//Switch Clock back to Standard
@@ -501,7 +386,7 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 }
 
 /* Save a screenshot to the sd Card */
-/*void saveScreenshot() {
+void saveScreenshot() {
 	if (Serial.available() > 0) {
 		Serial.read();
 		Serial.println("Saving Screenshot..");
@@ -565,4 +450,4 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 		endAltClockline();
 		Serial.println("Screenshot saved !");
 	}
-}*/
+}
