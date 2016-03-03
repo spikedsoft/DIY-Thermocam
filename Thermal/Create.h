@@ -234,8 +234,8 @@ void createThermalImg(bool menu) {
 		limitValues();
 	//Scale the values
 	scaleValues();
-	//Scale values and apply gaussian filter
-	if ((filterEnabled) || menu)
+	//Apply filter if enabled, in menu or when saving the image to bitmap
+	if ((filterEnabled) || menu || ((imgSave == 3) && convertEnabled))
 		gaussianBlur(image, 160, 120, 1.5f, 1);
 	//Convert lepton data to RGB565 colors
 	convertColors();
@@ -268,6 +268,10 @@ void tempPointFunction(bool remove) {
 	int x, y;
 	//Show thermal image
 	displayThermalImg();
+	//Set text color, font and background
+	display.setColor(VGA_WHITE);
+	display.setBackColor(VGA_TRANSPARENT);
+	display.setFont(smallFont);
 	//Show current temperature points
 	showTemperatures();
 	//Get touched coordinates

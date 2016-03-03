@@ -10,18 +10,15 @@ byte leptonFrame[164];
 
 /* Start Lepton SPI Transmission */
 void leptonBeginSPI() {
-	int clockspeed;
-	//Lepton3 - 30 Mhz minimum
+	//Lepton3 - 30 Mhz minimum and SPI mode 0
 	if (leptonVersion == 1)
-		clockspeed = 30000000;
-	//Lepton2 - 20 Mhz maximum
+		SPI.beginTransaction(SPISettings(30000000, MSBFIRST, SPI_MODE0));
+	//Lepton2 - 20 Mhz maximum and SPI mode 1
 	else
-		clockspeed = 20000000;
+		SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE1));
 	//Start alternative clock line expcept for Early-Bird #1
 	if (mlx90614Version == 1)
 		startAltClockline();
-	//Begin SPI Transaction on alternative Clock
-	SPI.beginTransaction(SPISettings(clockspeed, MSBFIRST, SPI_MODE1));
 	//Start transfer  - CS LOW
 	digitalWriteFast(15, LOW);
 }
@@ -149,4 +146,6 @@ void initLepton() {
 		leptonRunCalibration();
 	//Set the calibration timer
 	calTimer = millis();
+	Serial.println(elapsedDays(now()));
+	Serial.println(elapsedSecsToday(now()));
 }

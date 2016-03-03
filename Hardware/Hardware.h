@@ -132,7 +132,7 @@ bool checkSDCard() {
 }
 
 /* Reads the old settings from EEPROM */
-bool readEEPROM() {
+void readEEPROM() {
 	byte read;
 	//Read settings if first start is done
 	if ((EEPROM.read(eeprom_firstStart) == eeprom_setValue) || (EEPROM.read(eeprom_firstStart) == 100)) {
@@ -186,11 +186,11 @@ bool readEEPROM() {
 		read = EEPROM.read(eeprom_colorbarEnabled);
 		if ((read == 0) || (read == 1))
 			colorbarEnabled = read;
-		//Return from Mass Storage reboot
+		//Return from Mass Storage reboot, no warmup required
 		read = EEPROM.read(eeprom_massStorage);
 		if (read == eeprom_setValue) {
 			EEPROM.write(eeprom_massStorage, 0);
-			return true;
+			calStatus = 1;
 		}
 	}
 	//Do first start
@@ -199,7 +199,6 @@ bool readEEPROM() {
 	//Show hint screen
 	if (EEPROM.read(eeprom_firstStart) == 100)
 		liveModeHelper();
-	return false;
 }
 
 /* Startup procedure for the Hardware */
@@ -236,4 +235,6 @@ void initHardware() {
 	checkBattery();
 	//Check Lepton HW Revision
 	initLepton();
+	//Read EEPROM settings
+	readEEPROM();
 }

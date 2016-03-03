@@ -426,8 +426,10 @@ void liveMenuTempString(int pos) {
 	liveMenuSelection(text);
 }
 
-/* Manu to select different options for temperature display */
+/* Menu to add or remove temperature points to the thermal image */
 bool tempMenu() {
+	//Save the current position inside the menu
+	static byte tempMenuPos = 0;
 	//Still in warmup, do not add points
 	if (calStatus == 0) {
 		drawMessage((char*) "Please wait for sensor warmup!");
@@ -445,16 +447,15 @@ bool tempMenu() {
 	display.setColor(255, 106, 0);
 	display.drawRect(65, 57, 257, 111);
 	//Draw the current item
-	liveMenuTempString(colorScheme);
+	liveMenuTempString(tempMenuPos);
 	//Save the current position inside the menu
-	int pos = colorScheme;
 	while (true) {
 		//Touch screen pressed
 		if (touch.touched() == true) {
 			int pressedButton = touchButtons.checkButtons(true);
 			//SELECT
 			if (pressedButton == 3) {
-				switch (pos) {
+				switch (tempMenuPos) {
 					//Add point
 				case 0:
 					tempPointFunction();
@@ -475,20 +476,20 @@ bool tempMenu() {
 				return false;
 			//BACKWARD
 			else if (pressedButton == 0) {
-				if (pos > 0)
-					pos--;
-				else if (pos == 0)
-					pos = 2;
+				if (tempMenuPos > 0)
+					tempMenuPos--;
+				else if (tempMenuPos == 0)
+					tempMenuPos = 2;
 			}
 			//FORWARD
 			else if (pressedButton == 1) {
-				if (pos < 2)
-					pos++;
-				else if (pos == 2)
-					pos = 0;
+				if (tempMenuPos < 2)
+					tempMenuPos++;
+				else if (tempMenuPos == 2)
+					tempMenuPos = 0;
 			}
 			//Change the menu name
-			liveMenuTempString(pos);
+			liveMenuTempString(tempMenuPos);
 		}
 	}
 }
@@ -572,7 +573,7 @@ bool changeColor() {
 	display.setColor(255, 106, 0);
 	display.drawRect(65, 57, 257, 111);
 	//Draw the current item
-	liveMenuColorString(colorScheme);
+	liveMenuColorString(changeColorPos);
 	while (true) {
 		//Touch screen pressed
 		if (touch.touched() == true) {
@@ -686,7 +687,7 @@ bool displayOptions() {
 	display.setColor(255, 106, 0);
 	display.drawRect(65, 57, 257, 111);
 	//Draw the current item
-	liveMenuDisplayString(0);
+	liveMenuDisplayString(displayOptionsPos);
 	while (true) {
 		//Touch screen pressed
 		if (touch.touched() == true) {

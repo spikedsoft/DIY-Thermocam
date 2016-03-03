@@ -10,7 +10,7 @@
 */
 
 /* Current firmware version */
-#define Version "Firmware 1.10 from 01.03.2016"
+#define Version "Firmware 1.10-2 from 03.03.2016"
 
 /* Libraries */
 #include <ADC.h>
@@ -41,15 +41,8 @@ void setup()
 {
 	//Init Hardware
 	initHardware();
-	//Read EEPROM settings
-	if (readEEPROM()) {
-		//Return to connection menu when coming from Mass storage
-		connectionMenu();
-		connectionMenuHandler();
-	}
-	else
-		//Go to the live Mode
-		liveMode();
+	//Go to the live Mode
+	liveMode();
 }
 
 /* Loop forever */
