@@ -16,8 +16,15 @@ void touchIRQ() {
 		//Count the time to choose selection
 		long startTime = millis();
 		long endTime = millis() - startTime;
-		while ((!digitalRead(pin_touch_irq)) && (endTime <= 1000))
-			endTime = millis() - startTime;
+		//For capacitive touch
+		if (touch.capacitive) {
+			while ((touch.touched()) && (endTime <= 1000))
+				endTime = millis() - startTime;
+		}
+		else {
+			while ((!digitalRead(pin_touch_irq)) && (endTime <= 1000))
+				endTime = millis() - startTime;
+		}
 		endTime = millis() - startTime;
 		//Short press - show menu
 		if (endTime < 1000)
