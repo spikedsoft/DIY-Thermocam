@@ -124,6 +124,54 @@ void createVideoFolder(char* dirname) {
 	endAltClockline();
 }
 
+/* Save video frame to image file */
+void saveVideoFrame(char* filename, char* dirname) {
+	//Begin SD Transmission
+	startAltClockline(true);
+	//Switch to video folder 
+	sd.chdir(dirname);
+	// Open the file for writing
+	sdFile.open(filename, O_RDWR | O_CREAT | O_AT_END);
+	//Header for frame content
+	const char bmp_header[66] = { 0x42, 0x4D, 0x36, 0x58, 0x02, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x42, 0x00, 0x00, 0x00, 0x28, 0x00, 0x00,
+		0x00, 0x40, 0x01, 0x00, 0x00, 0xF0, 0x00, 0x00, 0x00, 0x01,
+		0x00, 0x10, 0x00, 0x03, 0x00, 0x00, 0x00, 0x00, 0x58, 0x02,
+		0x00, 0xC4, 0x0E, 0x00, 0x00, 0xC4, 0x0E, 0x00, 0x00, 0x00,
+		0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xF8, 0x00,
+		0x00, 0xE0, 0x07, 0x00, 0x00, 0x1F, 0x00, 0x00, 0x00 };
+	//Write the BMP header
+	for (int i = 0; i < 66; i++) {
+		char ch = bmp_header[i];
+		sdFile.write((uint8_t*)&ch, 1);
+	}
+	//Help variables for saving
+	unsigned short pixel;
+	//Allocate space for sd buffer
+	uint8_t* sdBuffer = (uint8_t*)calloc(640, sizeof(uint8_t));
+	//Save 320*60 pixels from the screen at one time
+	for (int i = 3; i >= 0; i--) {
+		endAltClockline();
+		//Read pixels from the display
+		display.readScreen(i, image);
+		startAltClockline();
+		for (byte y = 0; y < 60; y++) {
+			//Write them into the sd buffer
+			for (uint16_t x = 0; x < 320; x++) {
+				pixel = image[((59 - y) * 320) + x];
+				sdFile.write(pixel & 0x00FF);
+				sdFile.write((pixel & 0xFF00) >> 8);
+			}
+		}
+	}
+	//De-allocate space
+	free(sdBuffer);
+	//Close the file
+	sdFile.close();
+	//Switch Clock back to Standard
+	endAltClockline();
+}
+
 /* Saves a thermal image to the sd card */
 void saveThermalImage(char* filename, char* dirname) {
 	//Begin SD Transmission
@@ -280,7 +328,7 @@ void proccessVideoFrames(uint16_t framesCaptured, char* dirname) {
 		display.print(buffer, CENTER, 225);
 		//Save frame to image file
 		strcpy(&filename[5], ".BMP");
-		saveThermalImage(filename, dirname);
+		saveVideoFrame(filename, dirname);
 	}
 	//All images converted!
 	drawMessage((char*) "Video proccessing finished !");

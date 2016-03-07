@@ -84,7 +84,7 @@ void restartAndJumpToApp(void) {
 
 /* Methods */
 
-void serialFlush() {
+void serialInFlush() {
 	while (Serial.available() > 0) {
 		Serial.read();
 	}
@@ -95,44 +95,64 @@ void videoOutput() {
 	byte MSB, LSB;
 	drawMessage((char*) "Waiting for thermal viewer..");
 	display.print((char*) "Touch screen to return", CENTER, 170);
-	rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
+	//Allocate space
+	if (leptonVersion == 0)
+		rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
+	if (leptonVersion == 1)
+		image = (unsigned short*)calloc(19200, sizeof(unsigned short));
 	while (!Serial.available()) {
 		if (touch.touched()) {
-			free(rawValues);
+			if (leptonVersion == 0)
+				free(rawValues);
+			if (leptonVersion == 1)
+				free(image);
 			connectionMenu();
 			return;
 		}
 	}
-	Serial.read();
+	serialInFlush();
 	drawMessage((char*) "Sending data to the viewer..");
 	display.print((char*) "Touch screen to return", CENTER, 170);
-	delay(100);
+	delay(1000);
+	//Send config data
+	//Serial.write(leptonVersion);
 	while (true) {
-		while (!Serial.available()) {
-			if (touch.touched()) {
-				free(rawValues);
-				connectionMenu();
-				return;
-			}
+		if (leptonVersion == 1){
+			drawMessage((char*) "Sending data to the viewer..");
+			getTemperatures();
 		}
-		char input = Serial.read();
-		serialFlush();
-		if (input == 'q')
-			break;
-		else {
+		else
 			getTemperatures(true);
-			for (int i = 0; i < 4800; i++) {
-				MSB = (byte)(rawValues[i] & 0xff);
-				LSB = (byte)((rawValues[i] >> 8) & 0xff);
-				Serial.write(LSB);
-				Serial.write(MSB);
+		if (touch.touched())
+			break;
+		if (Serial.available() > 0) {
+			serialInFlush();
+			Serial.clearReadError();
+			Serial.clearWriteError();
+			if (leptonVersion == 0) {
+				for (int i = 0; i < 4800; i++) {
+					MSB = (byte)(rawValues[i] & 0xff);
+					LSB = (byte)((rawValues[i] >> 8) & 0xff);
+					Serial.write(LSB);
+					Serial.write(MSB);
+				}
 			}
+			if (leptonVersion == 1) {
+				for (int i = 0; i < 19200; i++) {
+					MSB = (byte)(image[i] & 0xff);
+					LSB = (byte)((image[i] >> 8) & 0xff);
+					Serial.write(LSB);
+					Serial.write(MSB);
+				}
+			}
+			Serial.flush();
 		}
-		delay(100);
 	}
 	drawMessage((char*) "Connection ended, return..");
-	Serial.read();
-	free(rawValues);
+	if (leptonVersion == 0)
+		free(rawValues);
+	if (leptonVersion == 1)
+		free(image);
 	delay(1000);
 	//Go back
 	connectionMenu();
@@ -153,7 +173,7 @@ void massStorage() {
 		drawMessage((char*) "Disconnect USB cable to return !");
 		delay(1500);
 		//No warmup needed after restart if done previously
-		if(calStatus != 0)
+		if (calStatus != 0)
 			EEPROM.write(eeprom_massStorage, eeprom_setValue);
 		restartAndJumpToApp();
 	}

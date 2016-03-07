@@ -13,7 +13,7 @@
 #define PORTRAIT 0
 #define LANDSCAPE 1
 
- //pinout defs
+//pinout defs
 #define LED 22
 #define CS 21
 #define DC 6
@@ -112,31 +112,31 @@ struct _current_font {
 };
 
 static const uint8_t init_commands[] = { 4, 0xEF, 0x03, 0x80, 0x02, 4, 0xCF,
-		0x00, 0XC1, 0X30, 5, 0xED, 0x64, 0x03, 0X12, 0X81, 4, 0xE8, 0x85, 0x00,
-		0x78, 6, 0xCB, 0x39, 0x2C, 0x00, 0x34, 0x02, 2, 0xF7, 0x20, 3, 0xEA,
-		0x00, 0x00, 2, ILI9341_PWCTR1,
-		0x23, // Power control
-		2, ILI9341_PWCTR2,
-		0x10, // Power control
-		3, ILI9341_VMCTR1, 0x3e,
-		0x28, // VCM control
-		2, ILI9341_VMCTR2,
-		0x86, // VCM control2
-		2, ILI9341_MADCTL,
-		0x48, // Memory Access Control
-		2, ILI9341_PIXFMT, 0x55, 3, ILI9341_FRMCTR1, 0x00, 0x18, 4,
-		ILI9341_DFUNCTR, 0x08, 0x82,
-		0x27, // Display Function Control
-		2, 0xF2,
-		0x00, // Gamma Function Disable
-		2, ILI9341_GAMMASET,
-		0x01, // Gamma curve selected
-		16, ILI9341_GMCTRP1, 0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1,
-		0x37, 0x07, 0x10, 0x03, 0x0E, 0x09,
-		0x00, // Set Gamma
-		16, ILI9341_GMCTRN1, 0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1,
-		0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F, // Set Gamma
-		0 };
+0x00, 0XC1, 0X30, 5, 0xED, 0x64, 0x03, 0X12, 0X81, 4, 0xE8, 0x85, 0x00,
+0x78, 6, 0xCB, 0x39, 0x2C, 0x00, 0x34, 0x02, 2, 0xF7, 0x20, 3, 0xEA,
+0x00, 0x00, 2, ILI9341_PWCTR1,
+0x23, // Power control
+2, ILI9341_PWCTR2,
+0x10, // Power control
+3, ILI9341_VMCTR1, 0x3e,
+0x28, // VCM control
+2, ILI9341_VMCTR2,
+0x86, // VCM control2
+2, ILI9341_MADCTL,
+0x48, // Memory Access Control
+2, ILI9341_PIXFMT, 0x55, 3, ILI9341_FRMCTR1, 0x00, 0x18, 4,
+ILI9341_DFUNCTR, 0x08, 0x82,
+0x27, // Display Function Control
+2, 0xF2,
+0x00, // Gamma Function Disable
+2, ILI9341_GAMMASET,
+0x01, // Gamma curve selected
+16, ILI9341_GMCTRP1, 0x0F, 0x31, 0x2B, 0x0C, 0x0E, 0x08, 0x4E, 0xF1,
+0x37, 0x07, 0x10, 0x03, 0x0E, 0x09,
+0x00, // Set Gamma
+16, ILI9341_GMCTRN1, 0x00, 0x0E, 0x14, 0x03, 0x11, 0x07, 0x31, 0xC1,
+0x48, 0x08, 0x0F, 0x0C, 0x31, 0x36, 0x0F, // Set Gamma
+0 };
 
 class UTFT {
 public:
@@ -181,12 +181,12 @@ public:
 	int	 getDisplayYSize();
 
 	/*
-		The functions and variables below should not normally be used.
-		They have been left publicly available for use in add-on libraries
-		that might need access to the lower level functions of UTFT.
+	The functions and variables below should not normally be used.
+	They have been left publicly available for use in add-on libraries
+	that might need access to the lower level functions of UTFT.
 
-		Please note that these functions and variables are not documented
-		and I do not provide support on how to use them.
+	Please note that these functions and variables are not documented
+	and I do not provide support on how to use them.
 	*/
 	char		imgbuf[160];
 	byte __p1, __p2, __p3, __p4;
@@ -372,13 +372,17 @@ private:
 		__attribute__((always_inline)) {
 		setAddr(x, y, x + w - 1, y);
 		writecommand_cont(ILI9341_RAMWR);
-		do { writedata16_cont(color); } while (--w > 0);
+		do {
+			writedata16_cont(color);
+		} while (--w > 0);
 	}
 	void VLine(int16_t x, int16_t y, int16_t h, uint16_t color)
 		__attribute__((always_inline)) {
 		setAddr(x, y, x, y + h - 1);
 		writecommand_cont(ILI9341_RAMWR);
-		do { writedata16_cont(color); } while (--h > 0);
+		do {
+			writedata16_cont(color);
+		} while (--h > 0);
 	}
 	void Pixel(int16_t x, int16_t y, uint16_t color)
 		__attribute__((always_inline)) {

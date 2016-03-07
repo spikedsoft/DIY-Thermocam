@@ -259,7 +259,7 @@ void mlx90614Init() {
 	if (mlx90614GetEmissivity() != 0.90)
 		mlx90614SetEmissivity(0.90);
 	//Set filter settings
-	if (mlx90614CheckFilterTemp()) {
+	if (mlx90614CheckFilterTemp() && (EEPROM.read(eeprom_firstStart) == eeprom_setValue)) {
 		drawMessage((char*) "Please reboot the device manually.");
 		display.print((char*) "New filter settings flashed !", CENTER, 80);
 		while (true);

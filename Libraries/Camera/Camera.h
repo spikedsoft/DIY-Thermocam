@@ -28,6 +28,7 @@ class Camera{
   uint32_t frameLength(void);
   uint8_t available();
   boolean setImageSize(uint8_t);
+  boolean setCompression(uint8_t c);
   boolean cameraFrameBuffCtrl(uint8_t command);
 
  private:

@@ -144,7 +144,7 @@ void firstStart() {
 	//Visual image
 	visualImageMenu(true);
 	//Set Color Scheme to Rainbow
-	EEPROM.write(eeprom_colorScheme, 0);
+	EEPROM.write(eeprom_colorScheme, 12);
 	//Hint screen for the video storage settings
 	text[0] = "Setup completed !";
 	text[1] = "The first-time setup is";

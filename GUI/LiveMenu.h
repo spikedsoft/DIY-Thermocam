@@ -561,7 +561,7 @@ void liveMenuColorString(int pos) {
 /* Choose the applied color scale */
 bool changeColor() {
 	//Save the current position inside the menu
-	static byte changeColorPos = 0;
+	byte changeColorPos = colorScheme;
 	//Background
 	liveMenuBackground();
 	//Title

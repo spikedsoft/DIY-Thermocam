@@ -146,6 +146,4 @@ void initLepton() {
 		leptonRunCalibration();
 	//Set the calibration timer
 	calTimer = millis();
-	Serial.println(elapsedDays(now()));
-	Serial.println(elapsedSecsToday(now()));
 }

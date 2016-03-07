@@ -43,6 +43,11 @@ boolean Camera::setImageSize(uint8_t x) {
 	return runCommand(0x31, args, sizeof(args), 5);
 }
 
+boolean Camera::setCompression(uint8_t c) {
+	uint8_t args[] = { 0x5, 0x1, 0x1, 0x12, 0x04, c };
+	return runCommand(0x31, args, sizeof(args), 5);
+}
+
 boolean Camera::takePicture() {
 	frameptr = 0;
 	return cameraFrameBuffCtrl(0x0);

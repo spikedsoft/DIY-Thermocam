@@ -9,6 +9,7 @@ void initCamera() {
 		while (1);
 	}
 	cam.setImageSize(VC0706_640x480);
+	cam.setCompression(95);
 }
 
 /* Send the capture command to the camera*/
