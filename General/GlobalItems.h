@@ -89,8 +89,7 @@ int16_t colorElements;
 //Variables for color calculation
 uint16_t maxTemp;
 uint16_t minTemp;
-//For hot & cold mode
-byte grayscaleLevel = 85;
+
 //If enabled, image will be converted to bitmap every time
 bool convertEnabled = false;
 //If enabled, visual image will be saved automatically

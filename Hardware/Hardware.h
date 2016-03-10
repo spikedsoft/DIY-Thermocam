@@ -144,6 +144,9 @@ void readEEPROM() {
 		read = EEPROM.read(eeprom_colorScheme);
 		if ((read >= 0) && (read <= 17))
 			colorScheme = read;
+		//If Hot or Cold on startup, switch to Rainbow
+		if ((colorScheme == 3) || (colorScheme == 8))
+			colorScheme = 12;
 		//Convert Enabled
 		read = EEPROM.read(eeprom_convertEnabled);
 		if ((read == 0) || (read == 1))

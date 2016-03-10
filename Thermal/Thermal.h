@@ -74,30 +74,22 @@ void buttonIRQ() {
 
 /* Show the color bar on screen */
 void showColorBar() {
+	//Set color
+	display.setColor(VGA_WHITE);
+	display.setBackColor(VGA_TRANSPARENT);
+	//Help variables
+	char buffer[6];
 	byte red, green, blue;
 	byte count = 0;
 	byte height = 240 - ((240 - (colorElements / 2)) / 2);
+	//Display color scheme
 	for (int i = 0; i < (colorElements - 1); i++) {
 		if ((i % 2) == 0) {
-			//Hot
-			if (colorScheme == 8) {
-				if (i < (255 - grayscaleLevel))
-					colorMap = colorMap_grayscale;
-				else
-					colorMap = colorMap_rainbow;
-			}
-			//Cold
-			if (colorScheme == 3) {
-				if (i > grayscaleLevel)
-					colorMap = colorMap_grayscale;
-				else
-					colorMap = colorMap_rainbow;
-			}
 			red = colorMap[i * 3];
 			green = colorMap[(i * 3) + 1];
 			blue = colorMap[(i * 3) + 2];
 			display.setColor(red, green, blue);
-			display.drawLine(285,  height - count, 315, height - count);
+			display.drawLine(285, height - count, 315, height - count);
 			count++;
 		}
 	}
@@ -108,22 +100,25 @@ void showColorBar() {
 	float max = calFunction(maxTemp);
 	//Check if spot temp is out of range
 	if ((agcEnabled) && (!limitsLocked)) {
-		if (mlx90614Temp < min)
+		if ((mlx90614Temp < min) && (colorScheme != 8))
 			min = mlx90614Temp;
-		if (mlx90614Temp > max)
+		if ((mlx90614Temp > max) && (colorScheme != 3))
 			max = mlx90614Temp;
 	}
+	//Calculate step
 	float step = (max - min) / 3.0;
-	//Set color
-	display.setColor(VGA_WHITE);
-	display.setBackColor(VGA_TRANSPARENT);
-	//Draw temperatures
-	char buffer[6];
-	for (int i = 3; i >= 0; i--) {
+	//Draw min temp
+	sprintf(buffer, "%d", (int)round(min));
+	display.print(buffer, 260, height - 5);
+	//Draw temperatures after min before max
+	for (int i = 2; i >= 1; i--) {
 		float temp = min + (i*step);
 		sprintf(buffer, "%d", (int)round(temp));
 		display.print(buffer, 260, height - 5 - (i * (colorElements / 6)));
 	}
+	//Draw max temp
+	sprintf(buffer, "%d", (int)round(max));
+	display.print(buffer, 260, height - 5 - (3 * (colorElements / 6)));
 }
 
 /* Show the current object temperature on screen*/
@@ -145,92 +140,92 @@ void showSpot() {
 void selectColorScheme() {
 	//Select the right color scheme
 	switch (colorScheme) {
-	//Arctic
+		//Arctic
 	case 0:
 		colorMap = colorMap_arctic;
 		colorElements = 240;
 		break;
-	//Black-Hot
+		//Black-Hot
 	case 1:
 		colorMap = colorMap_blackHot;
 		colorElements = 224;
 		break;
-	//Blue-Red
+		//Blue-Red
 	case 2:
 		colorMap = colorMap_blueRed;
 		colorElements = 192;
 		break;
-	//Coldest
+		//Coldest
 	case 3:
-		colorMap = colorMap_grayscale;
-		colorElements = 256;
+		colorMap = colorMap_coldest;
+		colorElements = 224;
 		break;
-	//Contrast
+		//Contrast
 	case 4:
 		colorMap = colorMap_contrast;
 		colorElements = 224;
 		break;
-	//Double-Rainbow
+		//Double-Rainbow
 	case 5:
 		colorMap = colorMap_doubleRainbow;
 		colorElements = 256;
 		break;
-	//Gray-Red
+		//Gray-Red
 	case 6:
 		colorMap = colorMap_grayRed;
 		colorElements = 224;
 		break;
-	//Glowbow
+		//Glowbow
 	case 7:
 		colorMap = colorMap_glowBow;
 		colorElements = 224;
 		break;
-	//Hottest
+		//Hottest
 	case 8:
-		colorMap = colorMap_grayscale;
-		colorElements = 256;
+		colorMap = colorMap_hottest;
+		colorElements = 224;
 		break;
-	//Ironblack
+		//Ironblack
 	case 9:
 		colorMap = colorMap_ironblack;
 		colorElements = 256;
 		break;
-	//Lava
+		//Lava
 	case 10:
 		colorMap = colorMap_lava;
 		colorElements = 240;
 		break;
-	//Medical
+		//Medical
 	case 11:
 		colorMap = colorMap_medical;
 		colorElements = 224;
 		break;
-	//Rainbow
+		//Rainbow
 	case 12:
 		colorMap = colorMap_rainbow;
 		colorElements = 256;
 		break;
-	//Wheel 1
+		//Wheel 1
 	case 13:
 		colorMap = colorMap_wheel1;
 		colorElements = 256;
 		break;
-	//Wheel 2
+		//Wheel 2
 	case 14:
 		colorMap = colorMap_wheel2;
 		colorElements = 256;
 		break;
-	//Wheel 3
+		//Wheel 3
 	case 15:
 		colorMap = colorMap_wheel3;
 		colorElements = 256;
 		break;
-	//White-Hot
+		//White-Hot
 	case 16:
 		colorMap = colorMap_whiteHot;
 		colorElements = 224;
 		break;
-	//Yellow
+		//Yellow
 	case 17:
 		colorMap = colorMap_yellow;
 		colorElements = 224;
@@ -292,8 +287,8 @@ void changeColorScheme(byte* pos) {
 	colorScheme = *pos;
 	//Map to the right color scheme
 	selectColorScheme();
-	//Choose limits for hot and cold mode when not in warmup
-	if(calStatus != 0 && ((colorScheme == 3) || (colorScheme == 8)))
+	//Choose limits for hot and cold mode
+	if ((colorScheme == 3) || (colorScheme == 8))
 		hotColdChooser();
 	//Save to EEPROM
 	EEPROM.write(eeprom_colorScheme, colorScheme);

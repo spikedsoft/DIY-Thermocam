@@ -201,25 +201,10 @@ void convertColors() {
 	//Go through the array
 	for (int i = 0; i < 19200; i++) {
 		uint16_t value = image[i];
-		//Hot
-		if (colorScheme == 8) {
-			if (value < (255 - grayscaleLevel))
-				colorMap = colorMap_grayscale;
-			else
-				colorMap = colorMap_rainbow;
-		}
-		//Cold
-		if (colorScheme == 3) {
-			if (value > grayscaleLevel)
-				colorMap = colorMap_grayscale;
-			else
-				colorMap = colorMap_rainbow;
-		}
 		//Look for the corresponding RGB values
 		uint8_t red = colorMap[3 * value ];
 		uint8_t green = colorMap[3 * value + 1];
 		uint8_t blue = colorMap[3 * value + 2];
-
 		//Convert to RGB565
 		image[i] = (((red & 248) | green >> 5) << 8) | ((green & 28) << 3 | blue >> 3);
 	}
@@ -230,8 +215,11 @@ void createThermalImg(bool menu) {
 	//Receive the temperatures over SPI
 	getTemperatures();
 	//Find min and max if not in manual mode and limits not locked
-	if ((agcEnabled) && (!limitsLocked))
-		limitValues();
+	if ((agcEnabled) && (!limitsLocked)) {
+		//Limit values if we are in the menu or not in cold/hot mode
+		if(menu || ((colorScheme != 3) && (colorScheme != 8)))
+			limitValues();
+	}
 	//Scale the values
 	scaleValues();
 	//Apply filter if enabled, in menu or when saving the image to bitmap

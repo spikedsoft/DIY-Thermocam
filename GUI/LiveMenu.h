@@ -128,17 +128,21 @@ bool calibrationChooser() {
 
 /* Touch handler for the hot & cold limit changer menu */
 void hotColdChooserHandler() {
-	grayscaleLevel = 85;
-	byte grayscaleLevel_old = grayscaleLevel;
+	//Help variables
 	char margin[14];
-	float scale;
 	uint16_t value;
-	int temp = 0;
+	int temp;
+	float limit;
+	//Cold mode, limit is 30 of 224
+	if (colorScheme == 3)
+		limit = 0.134;
+	//Hot mpde, limit is 194 of 224
+	if (colorScheme == 8)
+		limit = 0.866;
 	while (1) {
 		display.setFont(smallFont);
-		scale = 255.0 / (maxTemp - minTemp);
-		value = (grayscaleLevel / scale) + minTemp;
-		temp = (int)calFunction(value);
+		value = (limit * (maxTemp - minTemp)) + minTemp;
+		temp = round(calFunction(value));
 		//Display Fahrenheit or Celcius
 		if (!tempFormat) {
 			sprintf(margin, "Margin: %dC", temp);
@@ -153,8 +157,7 @@ void hotColdChooserHandler() {
 			int pressedButton = touchButtons.checkButtons(true);
 			//RESET
 			if (pressedButton == 0) {
-				//Restore the old values
-				grayscaleLevel = grayscaleLevel_old;
+				createThermalImg(true);
 			}
 			//SELECT
 			else if (pressedButton == 1) {
@@ -162,21 +165,24 @@ void hotColdChooserHandler() {
 			}
 			//MINUS
 			else if (pressedButton == 2) {
-				while ((((int)calFunction(value)) > (temp - 1)) && (grayscaleLevel > 1)) {
-					grayscaleLevel -= 1;
-					value = (grayscaleLevel / scale) + minTemp;
+				while (((round(calFunction(value))) > (temp - 1)) && (minTemp > 1)) {
+					minTemp--;
+					maxTemp--;
+					value = (limit * (maxTemp - minTemp)) + minTemp;
 				}
 			}
 			//PLUS
 			else if (pressedButton == 3) {
-				while ((((int)calFunction(value)) < (temp + 1)) && (grayscaleLevel < 255)) {
-					grayscaleLevel += 1;
-					value = (grayscaleLevel / scale) + minTemp;
+				while (((round(calFunction(value))) < (temp + 1)) && (maxTemp < 16384)) {
+					minTemp++;
+					maxTemp++;
+					value = (limit * (maxTemp - minTemp)) + minTemp;
 				}
 			}
 			//Prepare the preview image
 			delay(10);
-			createThermalImg(true);
+			if(pressedButton != 0)
+				createThermalImg();
 			//Display the preview image
 			display.drawBitmap(80, 40, 160, 120, image, 1);
 		}
@@ -562,6 +568,7 @@ void liveMenuColorString(int pos) {
 bool changeColor() {
 	//Save the current position inside the menu
 	byte changeColorPos = colorScheme;
+	redraw:
 	//Background
 	liveMenuBackground();
 	//Title
@@ -580,7 +587,14 @@ bool changeColor() {
 			int pressedButton = touchButtons.checkButtons(true);
 			//SELECT
 			if (pressedButton == 3) {
-				changeColorScheme(&changeColorPos);
+				//If hot or cold chosen and still in warmup
+				if (((changeColorPos == 3) || (changeColorPos == 8)) && (calStatus == 0)){
+					drawMessage((char*) "Please wait for sensor warmup!");
+					delay(1500);
+					goto redraw;
+				}
+				else
+					changeColorScheme(&changeColorPos);
 				return true;
 			}
 			//BACK
