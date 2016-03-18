@@ -29,6 +29,7 @@ class Camera{
   uint8_t available();
   boolean setImageSize(uint8_t);
   boolean setCompression(uint8_t c);
+  uint8_t getImageSize();
   boolean cameraFrameBuffCtrl(uint8_t command);
 
  private:
@@ -40,7 +41,8 @@ class Camera{
 
   void common_init(void);
 
-  boolean runCommand(uint8_t cmd, uint8_t args[], uint8_t argn, uint8_t resp, boolean flushflag = true);
+  boolean runCommand(uint8_t cmd, uint8_t *args, uint8_t argn,
+	  uint8_t resplen, boolean flushflag = true);
   void sendCommand(uint8_t cmd, uint8_t args[], uint8_t argn);
   uint8_t readResponse(uint8_t numbytes, uint8_t timeout);
   boolean verifyResponse(uint8_t command);

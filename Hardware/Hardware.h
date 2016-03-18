@@ -43,22 +43,24 @@ void initSPI() {
 
 /* Inits the I2C Bus */
 void initI2C() {
+	//Start the Bus
 	Wire.begin();
-	//Early-Bird #1
-	if(mlx90614Version == 0)
-		Wire.pinConfigure(I2C_PINS_18_19, I2C_PULLUP_INT);
+	//Enable Timeout for Hardware start
+	Wire.setDefaultTimeout(1000);
+	//Enable pullups
+	Wire.pinConfigure(I2C_PINS_18_19, I2C_PULLUP_INT);
 }
 
 /* Init the Analog-Digital-Converter for the battery measure */
 void initADC() {
 	//set number of averages
-	batMeasure->setAveraging(4); 
+	batMeasure->setAveraging(4);
 	//set bits of resolution
-	batMeasure->setResolution(12); 
+	batMeasure->setResolution(12);
 	//change the conversion speed
 	batMeasure->setConversionSpeed(ADC_MED_SPEED);
 	//change the sampling speed
-	batMeasure->setSamplingSpeed(ADC_MED_SPEED); 
+	batMeasure->setSamplingSpeed(ADC_MED_SPEED);
 	//set battery pin as input
 	pinMode(pin_bat_measure, INPUT);
 }
@@ -179,12 +181,10 @@ void readEEPROM() {
 		read = EEPROM.read(eeprom_spotEnabled);
 		if ((read == 0) || (read == 1))
 			spotEnabled = read;
-		//Filter Enabled, only for Lepton2
-		if (leptonVersion != 1) {
-			read = EEPROM.read(eeprom_filterEnabled);
-			if ((read == 0) || (read == 1))
-				filterEnabled = read;
-		}
+		//Filter Enabled
+		read = EEPROM.read(eeprom_filterEnabled);
+		if ((read == 0) || (read == 1))
+			filterEnabled = read;
 		//Colorbar Enabled
 		read = EEPROM.read(eeprom_colorbarEnabled);
 		if ((read == 0) || (read == 1))
@@ -206,6 +206,7 @@ void readEEPROM() {
 
 /* Startup procedure for the Hardware */
 void initHardware() {
+	//Start serial connection at max baud
 	Serial.begin(115200);
 	//Laser off
 	pinMode(pin_laser, OUTPUT);
@@ -238,6 +239,8 @@ void initHardware() {
 	checkBattery();
 	//Check Lepton HW Revision
 	initLepton();
+	//Disable I2C timeout
+	Wire.setDefaultTimeout(0);
 	//Read EEPROM settings
 	readEEPROM();
 }

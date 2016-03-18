@@ -145,6 +145,9 @@ void firstStart() {
 	visualImageMenu(true);
 	//Set Color Scheme to Rainbow
 	EEPROM.write(eeprom_colorScheme, 12);
+	//For Lepton3, disable filter
+	if(leptonVersion == 1)
+		EEPROM.write(eeprom_filterEnabled, false);
 	//Hint screen for the video storage settings
 	text[0] = "Setup completed !";
 	text[1] = "The first-time setup is";

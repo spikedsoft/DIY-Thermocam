@@ -893,6 +893,8 @@ bool liveMenu() {
 	drawLiveMenu(&liveMenuPos);
 	//Touch handler - return true if exit to Main menu, otherwise false
 	rtn = liveMenuHandler(&liveMenuPos);
+	//Wait for touch release
+	while (touch.touched());
 	//Restore old fonts
 	display.setFont(smallFont);
 	touchButtons.setTextFont(smallFont);

@@ -4,11 +4,18 @@
 
 /* Init the camera module */
 void initCamera() {
-	if (!cam.begin(115200)) {
-		drawMessage((char*) "Error connecting to visual camera!");
+	//Start connection at 115.2k Baud
+	cam.begin(115200);
+	//Test if the camera works
+	if (!cam.takePicture()) {
+		drawMessage((char*) "Error connecting to camera!");
 		while (1);
 	}
+	//Skip the picture
+	cam.end();
+	//Set image size
 	cam.setImageSize(VC0706_640x480);
+	//Set compression
 	cam.setCompression(95);
 }
 

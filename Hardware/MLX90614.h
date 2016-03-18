@@ -243,7 +243,7 @@ void mlx90614Init() {
 	do {
 		mlx90614Measure(0, &check);
 		if (count == 100) {
-			drawMessage((char*) "Error connecting to MLX90614!");
+			drawMessage((char*) "Error connecting to IR sensor!");
 			while (1);
 		}
 		count++;

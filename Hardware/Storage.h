@@ -65,7 +65,7 @@ void initSD() {
 	if (mlx90614Version == 1) {
 		startAltClockline();
 		if (!sd.begin(pin_sd_cs, SPI_FULL_SPEED)) {
-			drawMessage((char*) "Problem with internal space !");
+			drawMessage((char*) "Problem with internal space!");
 			while (!sd.begin(pin_sd_cs, SPI_FULL_SPEED));
 		}
 		card.begin(pin_sd_cs, SPI_FULL_SPEED);

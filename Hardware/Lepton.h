@@ -10,9 +10,9 @@ byte leptonFrame[164];
 
 /* Start Lepton SPI Transmission */
 void leptonBeginSPI() {
-	//Lepton3 - 30 Mhz minimum and SPI mode 0
+	//Lepton3 - 40 Mhz minimum and SPI mode 0
 	if (leptonVersion == 1)
-		SPI.beginTransaction(SPISettings(30000000, MSBFIRST, SPI_MODE0));
+		SPI.beginTransaction(SPISettings(40000000, MSBFIRST, SPI_MODE0));
 	//Lepton2 - 20 Mhz maximum and SPI mode 1
 	else
 		SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE1));
@@ -20,13 +20,13 @@ void leptonBeginSPI() {
 	if (mlx90614Version == 1)
 		startAltClockline();
 	//Start transfer  - CS LOW
-	digitalWriteFast(15, LOW);
+	digitalWrite(15, LOW);
 }
 
 /* End Lepton SPI Transmission */
 void leptonEndSPI() {
 	//End transfer - CS HIGH
-	digitalWriteFast(15, HIGH);
+	digitalWrite(15, HIGH);
 	//End SPI Transaction
 	SPI.endTransaction();
 	//End alternative clock line except for Early-Bird #2
@@ -47,7 +47,7 @@ boolean leptonReadFrame(uint8_t line, uint8_t seg) {
 	if (leptonFrame[1] != line) {
 		success = false;
 	}
-	//For the Lepton3, check if the segment number matche
+	//For the Lepton3, check if the segment number matches
 	if ((line == 20) && (leptonVersion == 1)) {
 		byte segment = (leptonFrame[0] >> 4);
 		if (segment != seg) {
@@ -126,8 +126,6 @@ void leptonCheckVersion() {
 	//Detected Lepton3 Shuttered
 	else if (strstr(leptonhw, "05-070530-") != NULL) {
 		leptonVersion = 1;
-		//Disable filter
-		filterEnabled = false;
 	}
 	//Detected Lepton2 No-Shutter
 	else {
@@ -146,4 +144,17 @@ void initLepton() {
 		leptonRunCalibration();
 	//Set the calibration timer
 	calTimer = millis();
+	//Check if SPI works
+	leptonBeginSPI();
+	do {
+		SPI.transfer(leptonFrame, 164);
+	}
+	//Repeat as long as the frame is not valid, equals sync
+	while (((leptonFrame[0] & 0x0F) == 0x0F) && ((millis() - calTimer) < 1000));
+	leptonEndSPI();
+	//If sync not received after a second, show error message
+	if ((leptonFrame[0] & 0x0F) == 0x0F) {
+		drawMessage((char*)"FLIR Lepton SPI error!");
+		while (true);
+	}
 }

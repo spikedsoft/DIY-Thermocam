@@ -68,8 +68,12 @@ void displayBatteryStatus() {
 	//Check battery status
 	checkBattery();
 	//Display it
-	display.printNumI(batPercentage, 280, 0, 3, ' ');
-	display.printChar('%', 310, 0);
+	if (batPercentage != -1) {
+		display.printNumI(batPercentage, 280, 0, 3, ' ');
+		display.printChar('%', 310, 0);
+	}
+	else
+		display.print((char*) "USB Power", 240, 0);
 }
 
 /* Display the date on screen */
