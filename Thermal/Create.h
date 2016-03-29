@@ -3,157 +3,152 @@
 */
 
 /* A method to create a gaussian blur filter over an image */
-void gaussianBlur(unsigned short *img, long width, long height, float sigma,
-	int numsteps) {
-	const long numpixels = width * height;
+void gaussianBlur() {
+	const long numpixels = 19200;
 	double lambda, dnu;
 	float nu, boundaryscale, postscale;
 	unsigned short *ptr;
 	long i, x, y;
-	int step;
-	lambda = (sigma * sigma) / (2.0 * numsteps);
+	float sigma = 1.5;
+	lambda = (sigma * sigma) / 2.0;
 	dnu = (1.0 + 2.0 * lambda - sqrt(1.0 + 4.0 * lambda)) / (2.0 * lambda);
 	nu = (float)dnu;
 	boundaryscale = (float)(1.0 / (1.0 - dnu));
-	//For Lepton2 sensor
-	if (leptonVersion != 1)
-		postscale = (float)(pow(dnu / lambda, 2 * numsteps));
+	//For Lepton2 sensor or image save
+	if ((imgSave == 3) || (leptonVersion != 1))
+		postscale = (float)(pow(dnu / lambda, 2));
 	//For Lepton3 sensor
 	else
-		postscale = (float)(pow(dnu / lambda, numsteps));
+		postscale = (float)(pow(dnu / lambda, 1));
 	//Filter horizontally along each row
-	for (y = 0; y < height; y++) {
-		for (step = 0; step < numsteps; step++) {
-			ptr = img + width * y;
-			ptr[0] *= boundaryscale;
-			//Filter rightwards
-			for (x = 1; x < width; x++)
-				ptr[x] += nu * ptr[x - 1];
-			//For Lepton2 sensor
-			if (leptonVersion != 1) {
-				ptr[x = width - 1] *= boundaryscale;
-				//Filter leftwards
-				for (; x > 0; x--)
-					ptr[x - 1] += nu * ptr[x];
-			}
+	for (y = 0; y < 120; y++) {
+		ptr = image + (160 * y);
+		ptr[0] *= boundaryscale;
+		//Filter rightwards
+		for (x = 1; x < 160; x++)
+			ptr[x] += nu * ptr[x - 1];
+		//For Lepton2 sensor or image save
+		if ((imgSave == 3) || (leptonVersion != 1)) {
+			ptr[x = 159] *= boundaryscale;
+			//Filter leftwards
+			for (; x > 0; x--)
+				ptr[x - 1] += nu * ptr[x];
 		}
 	}
 	//Filter vertically along each column
-	for (x = 0; x < width; x++) {
-		for (step = 0; step < numsteps; step++) {
-			ptr = img + x;
-			ptr[0] *= boundaryscale;
-			//Filter downwards
-			for (i = width; i < numpixels; i += width)
-				ptr[i] += nu * ptr[i - width];
-			//For Lepton2 sensor
-			if (leptonVersion != 1) {
-				ptr[i = numpixels - width] *= boundaryscale;
-				//Filter upwards
-				for (; i > 0; i -= width)
-					ptr[i - width] += nu * ptr[i];
-			}
+	for (x = 0; x < 160; x++) {
+		ptr = image + x;
+		ptr[0] *= boundaryscale;
+		//Filter downwards
+		for (i = 160; i < numpixels; i += 160)
+			ptr[i] += nu * ptr[i - 160];
+		//For Lepton2 sensor or image save
+		if ((imgSave == 3) || (leptonVersion != 1)) {
+			ptr[i = numpixels - 160] *= boundaryscale;
+			//Filter upwards
+			for (; i > 0; i -= 160)
+				ptr[i - 160] += nu * ptr[i];
 		}
 	}
 	for (i = 0; i < numpixels; i++) {
-		img[i] *= postscale;
-		if (img[i] > (colorElements - 1))
-			img[i] = (colorElements - 1);
+		image[i] *= postscale;
+		if (image[i] > 255)
+			image[i] = 255;
 	}
 	return;
+}
+
+void savePackage(byte line, byte segment = 0, bool save = false) {
+	//Go through the video pixels for one video line
+	for (int column = 0; column < 80; column++) {
+		uint16_t result = (uint16_t)(leptonFrame[2 * column + 4] << 8
+			| leptonFrame[2 * column + 5]);
+		//Early-Bird #1
+		if ((mlx90614Version == 0) && (leptonVersion != 1)) {
+			//For saving raw data, use small array
+			if (save) {
+				rawValues[column + (line * 80)] = result;
+			}
+			else {
+				image[(line * 2 * 160) + (column * 2)] = result;
+				image[(line * 2 * 160) + (column * 2) + 1] = result;
+				image[(line * 2 * 160) + 160 + (column * 2)] = result;
+				image[(line * 2 * 160) + 160 + (column * 2) + 1] = result;
+			}
+		}
+		//All other
+		else if ((mlx90614Version == 1) && (leptonVersion != 1)) {
+			//For saving raw data, use small array
+			if (save) {
+				rawValues[4799 - (column + (line * 80))] = result;
+			}
+			else {
+				image[19199 - ((line * 2 * 160) + (column * 2))] = result;
+				image[19199 - ((line * 2 * 160) + (column * 2) + 1)] = result;
+				image[19199 - ((line * 2 * 160) + 160 + (column * 2))] = result;
+				image[19199 - ((line * 2 * 160) + 160 + (column * 2) + 1)] = result;
+			}
+		}
+		//Batch #1
+		else if (leptonVersion == 1) {
+			switch (segment) {
+			case 1:
+				image[19199 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
+				break;
+			case 2:
+				image[14399 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
+				break;
+			case 3:
+				image[9599 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
+				break;
+			case 4:
+				image[4799 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
+				break;
+			}
+		}
+		//Refresh show temp array
+		if (((line % 5) == 0) && ((column % 5) == 0)) {
+			if (showTemp[(column / 5) + (16 * (line / 5))] != 0) {
+				showTemp[(column / 5) + (16 * (line / 5))] = result;
+			}
+		}
+	}
 }
 
 /* Get one image from the Lepton module */
 void getTemperatures(bool save) {
 	byte leptonError = 0;
-	byte line, segmentNumbers;
+	byte segmentNumbers, line;
 	//For Lepton2 sensor, get only one segment per frame
 	if (leptonVersion != 1)
 		segmentNumbers = 1;
 	//For Lepton3 sensor, get four packages per frame
 	else
 		segmentNumbers = 4;
-	//Begin SPI Transmission
+	//Begin SPI transmission
 	leptonBeginSPI();
-	//Get number of packages per frame according to the lepton revision
-	for (int segment = 1; segment <= segmentNumbers; segment++) {
+	for (byte segment = 1; segment <= segmentNumbers; segment++) {
 		do {
 			leptonError = 0;
 			for (line = 0; line < 60; line++) {
+				//If line matches expectation
+				if (leptonReadFrame(line, segment))
+					savePackage(line, segment, save);
 				//Reset if the expected line does not match the answer
-				if (!leptonReadFrame(line, segment)) {
-					//Reset line to -1, will be zero in the next cycle
-					line = -1;
-					//Raise Error count
-					leptonError++;
-					//Little delay
-					delay(1);
-					//If the Error count is too high, reset the device
-					if (leptonError > 100) {
-						//Segment Error
-						segment = 0;
-						//Re-Sync the Lepton
+				else {
+					if (leptonError == 100) {
+						//End Lepton SPI
 						leptonEndSPI();
+						//Short delay
 						delay(186);
+						//Begin Lepton SPI
 						leptonBeginSPI();
 						break;
 					}
-				}
-				//If line matches answer, save the packet
-				else {
-					//Go through the video pixels for one video line
-					for (int column = 0; column < 80; column++) {
-						uint16_t result = (uint16_t)(leptonFrame[2 * column + 4] << 8
-							| leptonFrame[2 * column + 5]);
-						//Early-Bird #1
-						if ((mlx90614Version == 0) && (leptonVersion != 1)) {
-							//For saving raw data, use small array
-							if (save) {
-								rawValues[column + (line * 80)] = result;
-							}
-							else {
-								image[(line * 2 * 160) + (column * 2)] = result;
-								image[(line * 2 * 160) + (column * 2) + 1] = result;
-								image[(line * 2 * 160) + 160 + (column * 2)] = result;
-								image[(line * 2 * 160) + 160 + (column * 2) + 1] = result;
-							}
-						}
-						//All other
-						else if ((mlx90614Version == 1) && (leptonVersion != 1)) {
-							//For saving raw data, use small array
-							if (save) {
-								rawValues[4799 - (column + (line * 80))] = result;
-							}
-							else {
-								image[19199 - ((line * 2 * 160) + (column * 2))] = result;
-								image[19199 - ((line * 2 * 160) + (column * 2) + 1)] = result;
-								image[19199 - ((line * 2 * 160) + 160 + (column * 2))] = result;
-								image[19199 - ((line * 2 * 160) + 160 + (column * 2) + 1)] = result;
-							}
-						}
-						//Batch #1
-						else if (leptonVersion == 1) {
-							switch (segment) {
-							case 1:
-								image[19199 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
-								break;
-							case 2:
-								image[14399 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
-								break;
-							case 3:
-								image[9599 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
-								break;
-							case 4:
-								image[4799 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
-								break;
-							}
-						}
-						//Refresh show temp array
-						if (((line % 5) == 0) && ((column % 5) == 0)) {
-							if (showTemp[(column / 5) + (16 * (line / 5))] != 0) {
-								showTemp[(column / 5) + (16 * (line / 5))] = result;
-							}
-						}
+					else {
+						delayMicroseconds(900);
+						leptonError++;
+						break;
 					}
 				}
 			}
@@ -186,6 +181,7 @@ void limitValues() {
 	minTemp = 65535;
 	uint16_t temp;
 	for (int i = 0; i < 19200; i++) {
+		//Get value
 		temp = image[i];
 		//Find maximum temp
 		if (temp > maxTemp)
@@ -202,7 +198,7 @@ void convertColors() {
 	for (int i = 0; i < 19200; i++) {
 		uint16_t value = image[i];
 		//Look for the corresponding RGB values
-		uint8_t red = colorMap[3 * value ];
+		uint8_t red = colorMap[3 * value];
 		uint8_t green = colorMap[3 * value + 1];
 		uint8_t blue = colorMap[3 * value + 2];
 		//Convert to RGB565
@@ -217,14 +213,14 @@ void createThermalImg(bool menu) {
 	//Find min and max if not in manual mode and limits not locked
 	if ((agcEnabled) && (!limitsLocked)) {
 		//Limit values if we are in the menu or not in cold/hot mode
-		if(menu || ((colorScheme != 3) && (colorScheme != 8)))
+		if (menu || ((colorScheme != 3) && (colorScheme != 8)))
 			limitValues();
 	}
 	//Scale the values
 	scaleValues();
 	//Apply filter if enabled, in menu or when saving the image to bitmap
 	if ((filterEnabled) || menu || ((imgSave == 3) && convertEnabled))
-		gaussianBlur(image, 160, 120, 1.5f, 1);
+		gaussianBlur();
 	//Convert lepton data to RGB565 colors
 	convertColors();
 }

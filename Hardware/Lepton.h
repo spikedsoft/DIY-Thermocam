@@ -26,7 +26,7 @@ void leptonBeginSPI() {
 /* End Lepton SPI Transmission */
 void leptonEndSPI() {
 	//End transfer - CS HIGH
-	digitalWrite(15, HIGH);
+	digitalWriteFast(15, HIGH);
 	//End SPI Transaction
 	SPI.endTransaction();
 	//End alternative clock line except for Early-Bird #2
@@ -35,26 +35,24 @@ void leptonEndSPI() {
 }
 
 /* Reads one line (164 Bytes) from the lepton over SPI */
-boolean leptonReadFrame(uint8_t line, uint8_t seg) {
-	bool success = true;
+boolean leptonReadFrame(byte line, byte seg) {
 	//Receive one frame over SPI
-	do {
-		SPI.transfer(leptonFrame, 164);
-	}
+	SPI.transfer(leptonFrame, 164);
 	//Repeat as long as the frame is not valid, equals sync
-	while ((leptonFrame[0] & 0x0F) == 0x0F);
+	if ((leptonFrame[0] & 0x0F) == 0x0F) {
+		return false;
+	}
 	//Check if the line number matches the expected line
 	if (leptonFrame[1] != line) {
-		success = false;
+		return false;
 	}
 	//For the Lepton3, check if the segment number matches
 	if ((line == 20) && (leptonVersion == 1)) {
 		byte segment = (leptonFrame[0] >> 4);
-		if (segment != seg) {
-			success = false;
-		}
+		if (segment != seg)
+			return false;
 	}
-	return success;
+	return true;
 }
 
 /* Trigger a flat-field-correction on the Lepton */
@@ -120,11 +118,11 @@ void leptonCheckVersion() {
 	char leptonhw[33];
 	Wire.readBytes(leptonhw, 32);
 	//Detected Lepton2 Shuttered
-	if (strstr(leptonhw, "05-060950-") != NULL) {
+	if (strstr(leptonhw, "05-060") != NULL) {
 		leptonVersion = 0;
 	}
 	//Detected Lepton3 Shuttered
-	else if (strstr(leptonhw, "05-070530-") != NULL) {
+	else if (strstr(leptonhw, "05-070") != NULL) {
 		leptonVersion = 1;
 	}
 	//Detected Lepton2 No-Shutter
@@ -140,14 +138,16 @@ void initLepton() {
 	//Check the Lepton HW Revision
 	leptonCheckVersion();
 	//Perform FFC if shutter is attached
-	if (leptonVersion != 2) 
+	if (leptonVersion != 2)
 		leptonRunCalibration();
 	//Set the calibration timer
 	calTimer = millis();
 	//Check if SPI works
 	leptonBeginSPI();
 	do {
+		digitalWriteFast(15, LOW);
 		SPI.transfer(leptonFrame, 164);
+		digitalWriteFast(15, HIGH);
 	}
 	//Repeat as long as the frame is not valid, equals sync
 	while (((leptonFrame[0] & 0x0F) == 0x0F) && ((millis() - calTimer) < 1000));

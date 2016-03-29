@@ -335,6 +335,25 @@ void proccessVideoFrames(uint16_t framesCaptured, char* dirname) {
 	delay(1000);
 }
 
+/* Get raw values from FLIR Lepton to save them */
+void limitLeptonSaveValues(uint16_t valueCount, unsigned short* valueArray) {
+	//Find min and max
+	if ((agcEnabled) && (!limitsLocked) && (colorScheme != 3) && (colorScheme != 8)){
+		maxTemp = 0;
+		minTemp = 65535;
+		uint16_t temp;
+		for (int i = 0; i < valueCount; i++) {
+			temp = valueArray[i];
+			//Find maximum temp
+			if (temp > maxTemp)
+				maxTemp = temp;
+			//Find minimum temp
+			if (temp < minTemp)
+				minTemp = temp;
+		}
+	}
+}
+
 /* Saves raw data for an image or an video frame */
 void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	uint16_t valueCount;
@@ -351,21 +370,8 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	}
 	//Get temperatures
 	getTemperatures(true);
-	//Find min and max
-	if ((agcEnabled) && (!limitsLocked)) {
-		maxTemp = 0;
-		minTemp = 65535;
-		uint16_t temp;
-		for (int i = 0; i < valueCount; i++) {
-			temp = valueArray[i];
-			//Find maximum temp
-			if (temp > maxTemp)
-				maxTemp = temp;
-			//Find minimum temp
-			if (temp < minTemp)
-				minTemp = temp;
-		}
-	}
+	//Limit the raw values from FLIR Lepton
+	limitLeptonSaveValues(valueCount, valueArray);
 	//Start SD
 	startAltClockline(true);
 	//Create filename for image
@@ -414,11 +420,11 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 		sdFile.write((byte)0);
 	else
 		sdFile.write(pointsEnabled);
-	//Write quick Calibration offset
+	//Write calibration offset
 	floatToBytes(farray, (float)calOffset);
 	for (int i = 0; i < 4; i++)
 		sdFile.write(farray[i]);
-	//Write quick Calibration slope
+	//Write calibration slope
 	floatToBytes(farray, (float)calSlope);
 	for (int i = 0; i < 4; i++)
 		sdFile.write(farray[i]);

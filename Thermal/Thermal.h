@@ -82,7 +82,7 @@ void showColorBar() {
 	byte red, green, blue;
 	byte count = 0;
 	byte height = 240 - ((240 - (colorElements / 2)) / 2);
-	//Display color scheme
+	//Display color bar
 	for (int i = 0; i < (colorElements - 1); i++) {
 		if ((i % 2) == 0) {
 			red = colorMap[i * 3];
@@ -350,7 +350,9 @@ void displayInfos() {
 	//Activate the calibration after a warmup time of 60s
 	if ((calStatus == 0) && (imgSave != 1) && (!videoSave)) {
 		if (millis() - calTimer > 60000) {
-			leptonRunCalibration();
+			//Perform FFC if shutter is attached
+			if (leptonVersion != 2)
+				leptonRunCalibration();
 			calStatus = 1;
 		}
 		else
@@ -414,6 +416,9 @@ void liveMode() {
 		//Release or lock the limits
 		if (lockLimits)
 			limitLock();
+		//Check for serial connection
+		if ((Serial.available() > 0) && (Serial.read() == 71))
+			videoOutput();
 	}
 	//Exit
 	liveModeExit();

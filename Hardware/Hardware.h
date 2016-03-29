@@ -8,6 +8,7 @@
 #include "MLX90614.h"
 #include "Lepton.h"
 #include "Storage.h"
+#include "Connection.h"
 
 
 /* Methods */

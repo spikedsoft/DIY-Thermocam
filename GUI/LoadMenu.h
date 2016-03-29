@@ -12,7 +12,7 @@ void displayRawData() {
 	//Scale values
 	scaleValues();
 	//Apply gaussian filter
-	gaussianBlur(image, 160, 120, 1.5f, 1);
+	gaussianBlur();
 	//Convert lepton data to RGB565 colors
 	convertColors();
 	//Display on screen

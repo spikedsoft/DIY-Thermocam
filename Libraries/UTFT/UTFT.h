@@ -1,7 +1,7 @@
 #ifndef UTFT_h
 #define UTFT_h
 
-#define SPICLOCK 30000000
+#define SPICLOCK 40000000
 
 #define UTFT_VERSION 270
 #define VERSION9341 12

@@ -87,9 +87,6 @@
     <ClInclude Include="General\GlobalItems.h">
       <Filter>Resource Files\General</Filter>
     </ClInclude>
-    <ClInclude Include="GUI\ConMenu.h">
-      <Filter>Resource Files\GUI</Filter>
-    </ClInclude>
     <ClInclude Include="GUI\FirstStart.h">
       <Filter>Resource Files\GUI</Filter>
     </ClInclude>
@@ -458,6 +455,9 @@
     </ClInclude>
     <ClInclude Include="Thermal\Calibration.h">
       <Filter>Resource Files\Thermal</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\Connection.h">
+      <Filter>Resource Files\Hardware</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

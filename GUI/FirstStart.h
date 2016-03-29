@@ -148,6 +148,13 @@ void firstStart() {
 	//For Lepton3, disable filter
 	if(leptonVersion == 1)
 		EEPROM.write(eeprom_filterEnabled, false);
+	drawMessage((char*) "Flashing spot EEPROM settings..");
+	//Set spot maximum temp to 380°C
+	mlx90614SetMaxTemp();
+	//Set spot minimum temp to -70°
+	mlx90614CheckMinTemp();
+	//Set filter settings
+	mlx90614SetFilterTemp();
 	//Hint screen for the video storage settings
 	text[0] = "Setup completed !";
 	text[1] = "The first-time setup is";

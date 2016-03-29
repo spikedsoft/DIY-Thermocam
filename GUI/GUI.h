@@ -128,24 +128,23 @@ void mainMenuHandler() {
 	//Touch pressed
 	if (touch.touched() == true) {
 		int pressedButton = touchButtons.checkButtons();
-		//Create Image
+		//Live Mode
 		if (pressedButton == 0) {
 			drawMessage((char*) "Please wait..");
 			liveMode();
 		}
-		//Open Image/Video
+		//Load Menu
 		else if (pressedButton == 1) {
 			loadThermal();
 		}
-		//Settings
+		//Settings Menu
 		else if (pressedButton == 2) {
 			settingsMenu();
 			settingsMenuHandler();
 		}
-		//About
+		//File Transfer
 		else if (pressedButton == 3) {
-			connectionMenu();
-			connectionMenuHandler();
+			massStorage();
 		}
 	}
 }
@@ -158,14 +157,13 @@ void mainMenu() {
 	touchButtons.addButton(170, 60, 130, 70, (char*) "Load Menu");
 	touchButtons.addButton(20, 150, 130, 70,
 		(char*) "Settings Menu");
-	touchButtons.addButton(170, 150, 130, 70, (char*) "Connection Menu");
+	touchButtons.addButton(170, 150, 130, 70, (char*) "File Transfer");
 	touchButtons.drawButtons();
 	refreshFreeSpace();
 	updateInfos(true);
 }
 
 /*Include section */
-#include "ConMenu.h"
 #include "LiveMenu.h"
 #include "LoadMenu.h"
 #include "SettingsMenu.h"

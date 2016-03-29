@@ -162,7 +162,7 @@ void refreshCapture() {
 	scaleValues();
 	//Filter image - not in normal mode
 	if (videoInterval != 0)
-		gaussianBlur(image, 160, 120, 1.5f, 1);
+		gaussianBlur();
 	//Convert lepton data to RGB565 colors
 	convertColors();
 	//Draw thermal image on screen
