@@ -35,7 +35,7 @@ void leptonEndSPI() {
 }
 
 /* Reads one line (164 Bytes) from the lepton over SPI */
-boolean leptonReadFrame(byte line, byte seg) {
+bool leptonReadFrame(byte line, byte seg) {
 	//Receive one frame over SPI
 	SPI.transfer(leptonFrame, 164);
 	//Repeat as long as the frame is not valid, equals sync

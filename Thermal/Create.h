@@ -117,7 +117,7 @@ void savePackage(byte line, byte segment = 0, bool save = false) {
 
 /* Get one image from the Lepton module */
 void getTemperatures(bool save) {
-	byte leptonError = 0;
+	int leptonError = 0;
 	byte segmentNumbers, line;
 	//For Lepton2 sensor, get only one segment per frame
 	if (leptonVersion != 1)
@@ -128,15 +128,19 @@ void getTemperatures(bool save) {
 	//Begin SPI transmission
 	leptonBeginSPI();
 	for (byte segment = 1; segment <= segmentNumbers; segment++) {
+		leptonError = 0;
 		do {
-			leptonError = 0;
 			for (line = 0; line < 60; line++) {
 				//If line matches expectation
 				if (leptonReadFrame(line, segment))
 					savePackage(line, segment, save);
 				//Reset if the expected line does not match the answer
 				else {
-					if (leptonError == 100) {
+					if (leptonError == 1000) {
+						//Reset segment
+						segment = 1;
+						//Reset lepton error
+						leptonError = 0;
 						//End Lepton SPI
 						leptonEndSPI();
 						//Short delay
@@ -146,13 +150,15 @@ void getTemperatures(bool save) {
 						break;
 					}
 					else {
-						delayMicroseconds(900);
+						//Stabilize framerate
+						delayMicroseconds(850);
+						//Raise lepton error
 						leptonError++;
 						break;
 					}
 				}
 			}
-		} while ((leptonError > 100) || (line != 60));
+		} while (line != 60);
 	}
 	//End Lepton SPI
 	leptonEndSPI();
