@@ -764,11 +764,15 @@ bool liveMenuSelect(byte* pos) {
 		break;
 		//Display off
 	case 6:
-		digitalWrite(pin_lcd_backlight, LOW);
+		disableScreenLight();
 		//Wait for touch press
 		while (!touch.touched());
-		digitalWrite(pin_lcd_backlight, HIGH);
+		enableScreenLight();
 		return false;
+		break;
+		//Video output
+	case 7:
+		videoConnect();
 		break;
 	}
 	return true;
@@ -808,6 +812,10 @@ void liveMenuMainString(byte* pos) {
 		//Turn Display off
 	case 6:
 		text = (char*) "Display Off";
+		break;
+		//Video output
+	case 7:
+		text = (char*) "Video Out";
 		break;
 	}
 	//Draws the current selection
@@ -866,13 +874,13 @@ bool liveMenuHandler(byte* pos) {
 				if (*pos > 0)
 					*pos = *pos - 1;
 				else if (*pos == 0)
-					*pos = 6;
+					*pos = 7;
 			}
 			//FORWARD
 			else if (pressedButton == 1) {
-				if (*pos < 6)
+				if (*pos < 7)
 					*pos = *pos + 1;
-				else if (*pos == 6)
+				else if (*pos == 7)
 					*pos = 0;
 			}
 			//Change the menu name

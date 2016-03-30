@@ -10,7 +10,7 @@
 */
 
 /* Current firmware version */
-#define Version "Firmware 1.14 from 29.03.2016"
+#define Version "Firmware 1.15 from 30.03.2016"
 
 /* Libraries */
 #include <ADC.h>

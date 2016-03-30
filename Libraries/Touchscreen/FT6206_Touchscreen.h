@@ -24,17 +24,17 @@
 #include "Point.h"
 
 class FT6206_Touchscreen {
- public:
-  boolean begin(uint8_t thresh = FT6206_DEFAULT_THRESSHOLD);  
-  void writeRegister8(uint8_t reg, uint8_t val);
-  uint8_t readRegister8(uint8_t reg);
-  void readData(uint16_t *x, uint16_t *y);
-  boolean touched(void);
-  TS_Point getPoint(void);
-
- private:
-  uint8_t touches;
-  uint16_t touchX[2], touchY[2], touchID[2];
+public:
+	boolean begin(uint8_t thresh = FT6206_DEFAULT_THRESSHOLD);
+	void writeRegister8(uint8_t reg, uint8_t val);
+	uint8_t readRegister8(uint8_t reg);
+	void readData(uint16_t *x, uint16_t *y);
+	boolean touched(void);
+	TS_Point getPoint(void);
+	bool rotated = false;
+private:
+	uint8_t touches;
+	uint16_t touchX[2], touchY[2], touchID[2];
 };
 
 #endif 

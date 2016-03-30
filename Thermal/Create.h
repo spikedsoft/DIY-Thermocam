@@ -58,58 +58,125 @@ void gaussianBlur() {
 	return;
 }
 
-void savePackage(byte line, byte segment = 0, bool save = false) {
+bool savePackage(byte line, byte segment = 0, bool save = false) {
 	//Go through the video pixels for one video line
 	for (int column = 0; column < 80; column++) {
 		uint16_t result = (uint16_t)(leptonFrame[2 * column + 4] << 8
 			| leptonFrame[2 * column + 5]);
-		//Early-Bird #1
+		if (result == 0) {
+			return false;
+		}
+		//Lepton2 Rotated (ThermocamV4)
 		if ((mlx90614Version == 0) && (leptonVersion != 1)) {
 			//For saving raw data, use small array
 			if (save) {
-				rawValues[column + (line * 80)] = result;
+				if (!rotationEnabled)
+					rawValues[column + (line * 80)] = result;
+				else
+					rawValues[4799 - (column + (line * 80))] = result;
 			}
 			else {
-				image[(line * 2 * 160) + (column * 2)] = result;
-				image[(line * 2 * 160) + (column * 2) + 1] = result;
-				image[(line * 2 * 160) + 160 + (column * 2)] = result;
-				image[(line * 2 * 160) + 160 + (column * 2) + 1] = result;
+				if (!rotationEnabled) {
+					image[(line * 2 * 160) + (column * 2)] = result;
+					image[(line * 2 * 160) + (column * 2) + 1] = result;
+					image[(line * 2 * 160) + 160 + (column * 2)] = result;
+					image[(line * 2 * 160) + 160 + (column * 2) + 1] = result;
+				}
+				else {
+					image[19199 - ((line * 2 * 160) + (column * 2))] = result;
+					image[19199 - ((line * 2 * 160) + (column * 2) + 1)] = result;
+					image[19199 - ((line * 2 * 160) + 160 + (column * 2))] = result;
+					image[19199 - ((line * 2 * 160) + 160 + (column * 2) + 1)] = result;
+				}
 			}
 		}
-		//All other
+		//Lepton2 Non-Rotated
 		else if ((mlx90614Version == 1) && (leptonVersion != 1)) {
 			//For saving raw data, use small array
 			if (save) {
-				rawValues[4799 - (column + (line * 80))] = result;
+				if (!rotationEnabled)
+					rawValues[4799 - (column + (line * 80))] = result;
+				else
+					rawValues[column + (line * 80)] = result;
 			}
 			else {
-				image[19199 - ((line * 2 * 160) + (column * 2))] = result;
-				image[19199 - ((line * 2 * 160) + (column * 2) + 1)] = result;
-				image[19199 - ((line * 2 * 160) + 160 + (column * 2))] = result;
-				image[19199 - ((line * 2 * 160) + 160 + (column * 2) + 1)] = result;
+				if (!rotationEnabled) {
+					image[19199 - ((line * 2 * 160) + (column * 2))] = result;
+					image[19199 - ((line * 2 * 160) + (column * 2) + 1)] = result;
+					image[19199 - ((line * 2 * 160) + 160 + (column * 2))] = result;
+					image[19199 - ((line * 2 * 160) + 160 + (column * 2) + 1)] = result;
+				}
+				else {
+					image[(line * 2 * 160) + (column * 2)] = result;
+					image[(line * 2 * 160) + (column * 2) + 1] = result;
+					image[(line * 2 * 160) + 160 + (column * 2)] = result;
+					image[(line * 2 * 160) + 160 + (column * 2) + 1] = result;
+				}
 			}
 		}
-		//Batch #1
+		//Lepton3
 		else if (leptonVersion == 1) {
-			switch (segment) {
-			case 1:
-				image[19199 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
-				break;
-			case 2:
-				image[14399 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
-				break;
-			case 3:
-				image[9599 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
-				break;
-			case 4:
-				image[4799 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
-				break;
+			//Fill array non rotated
+			if (!rotationEnabled) {
+				switch (segment) {
+				case 1:
+					image[19199 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
+					break;
+				case 2:
+					image[14399 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
+					break;
+				case 3:
+					image[9599 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
+					break;
+				case 4:
+					image[4799 - (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
+					break;
+				}
+			}
+			//Fill array rotated
+			else {
+				switch (segment) {
+				case 1:
+					image[((line / 2) * 160) + ((line % 2) * 80) + (column)] = result;
+					break;
+				case 2:
+					image[4800 + (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
+					break;
+				case 3:
+					image[9600 + (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
+					break;
+				case 4:
+					image[14400 + (((line / 2) * 160) + ((line % 2) * 80) + (column))] = result;
+					break;
+				}
 			}
 		}
-		//Refresh show temp array
-		if (((line % 5) == 0) && ((column % 5) == 0)) {
-			if (showTemp[(column / 5) + (16 * (line / 5))] != 0) {
-				showTemp[(column / 5) + (16 * (line / 5))] = result;
+	}
+	return true;
+}
+
+/* Refresh the temperature points*/
+void refreshTempPoints(bool save) {
+	//Lepton2
+	if (leptonVersion != 1) {
+		for (int y = 0; y < 60; y = y + 5) {
+			for (int x = 0; x < 80; x = x + 5) {
+				if (showTemp[(x / 5) + (16 * (y / 5))] != 0) {
+					if (save)
+						showTemp[(x / 5) + (16 * (y / 5))] = rawValues[x + (y * 160)];
+					else
+						showTemp[(x / 5) + (16 * (y / 5))] = image[(x * 2) + (y * 2 * 160)];
+				}
+			}
+		}
+	}
+	//Lepton3
+	else {
+		for (int y = 0; y < 120; y = y + 10) {
+			for (int x = 0; x < 160; x = x + 10) {
+				if (showTemp[(x / 10) + (16 * (y / 10))] != 0) {
+					showTemp[(x / 10) + (16 * (y / 10))] = image[x + (y * 160)];
+				}
 			}
 		}
 	}
@@ -131,8 +198,15 @@ void getTemperatures(bool save) {
 		do {
 			for (line = 0; line < 60; line++) {
 				//If line matches expectation
-				if (leptonReadFrame(line, segment))
-					savePackage(line, segment, save);
+				if (leptonReadFrame(line, segment)) {
+					if (!savePackage(line, segment, save)) {
+						//Stabilize framerate
+						delayMicroseconds(800);
+						//Raise lepton error
+						leptonError++;
+						break;
+					}
+				}
 				//Reset if the expected line does not match the answer
 				else {
 					if (leptonError == 255) {
@@ -150,7 +224,7 @@ void getTemperatures(bool save) {
 					}
 					else {
 						//Stabilize framerate
-						delayMicroseconds(850);
+						delayMicroseconds(800);
 						//Raise lepton error
 						leptonError++;
 						break;
@@ -215,6 +289,9 @@ void convertColors() {
 void createThermalImg(bool menu) {
 	//Receive the temperatures over SPI
 	getTemperatures();
+	//Refresh the temp points if required
+	if (pointsEnabled)
+		refreshTempPoints();
 	//Find min and max if not in manual mode and limits not locked
 	if ((agcEnabled) && (!limitsLocked)) {
 		//Limit values if we are in the menu or not in cold/hot mode
@@ -265,11 +342,6 @@ void tempPointFunction(bool remove) {
 	showTemperatures();
 	//Get touched coordinates
 	getTouchPos(&x, &y);
-	//Do rotate if not Early Bird
-	if (!((mlx90614Version == 0) && (leptonVersion != 1))) {
-		x = 320 - x;
-		y = 240 - y;
-	}
 	//Divide through 20 to match array size
 	x /= 20;
 	y /= 20;
@@ -334,16 +406,8 @@ void showTemperatures() {
 	for (int x = 0; x < 16; x++) {
 		for (int y = 0; y < 12; y++) {
 			if (showTemp[(y * 16) + x] != 0) {
-				//Early bird, no rotation
-				if ((mlx90614Version == 0) && (leptonVersion != 1)) {
-					xpos = x * 20;
-					ypos = y * 20;
-				}
-				//Others, rotate
-				else {
-					xpos = 320 - (x * 20);
-					ypos = 240 - (y * 20);
-				}
+				xpos = x * 20;
+				ypos = y * 20;
 				if (ypos <= 12)
 					ypos = 13;
 				display.drawPixel(xpos, ypos);

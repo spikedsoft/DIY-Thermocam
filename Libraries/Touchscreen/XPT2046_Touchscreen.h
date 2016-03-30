@@ -15,7 +15,7 @@ public:
 	bool bufferEmpty();
 	uint8_t bufferSize() { return 1; }
 	bool isrWake;
-
+	bool rotated = false;
 private:
 	void update();
 	uint8_t csPin, tirqPin;

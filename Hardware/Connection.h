@@ -2,6 +2,26 @@
 * Connection
 */
 
+/* Defines */
+
+#define CMD_VERSION 86
+#define CMD_START 83
+#define CMD_ROTATED 82
+#define CMD_GET 71
+#define CMD_END 69
+#define CMD_COLORSCHEME 67
+
+#define START_SESSION 0
+#define CAP_IMG 100
+#define START_VID 150
+#define STOP_VID 200
+#define SEND_FRAME 250
+
+/* Variables */
+
+//Command, default send frame
+byte sendCmd = SEND_FRAME;
+
 /* Mass storage - jump to end of hex file */
 
 // default flag is EEPROM Address 0x00 set to 0xAE
@@ -139,10 +159,18 @@ void sendConfigData() {
 	floatToBytes(farray, (float)calSlope);
 	for (int i = 0; i < 4; i++)
 		Serial.write(farray[i]);
-	//Send the temperature points
-	for (int i = 0; i < 192; i++) {
-		Serial.write((showTemp[i] & 0xFF00) >> 8);
-		Serial.write(showTemp[i] & 0x00FF);
+	//Send the temperature points if enabled
+	if (pointsEnabled) {
+		for (int i = 0; i < 192; i++) {
+			Serial.write((showTemp[i] & 0xFF00) >> 8);
+			Serial.write(showTemp[i] & 0x00FF);
+		}
+	}
+	else {
+		//Write dummy data if not enabled
+		for (int i = 0; i < 384; i++) {
+			sdFile.write((byte)0);
+		}
 	}
 	//Send adjust bar allowed
 	Serial.write((agcEnabled) && (!limitsLocked));
@@ -173,20 +201,90 @@ void sendLeptonData() {
 	}
 }
 
+/* Evaluates commands from the serial port*/
+bool serialHandler() {
+	byte recCmd = Serial.read();
+	switch (recCmd) {
+		//G - Get command
+	case CMD_GET:
+		//Send command
+		Serial.write(sendCmd);
+		Serial.flush();
+		//Send frame
+		if (sendCmd == SEND_FRAME) {
+			//Clear all serial buffers
+			serialClear();
+			//Send Lepton data
+			sendLeptonData();
+			//Send config data
+			sendConfigData();
+			//Make sure all data has been send
+			Serial.flush();
+		}
+		//Switch back to send frame the next time
+		else
+			sendCmd = SEND_FRAME;
+		break;
+		//E - End connection
+	case CMD_END:
+		return true;
+		break;
+		//C - Change color scheme
+	case CMD_COLORSCHEME:
+		if (colorScheme < 17)
+			colorScheme++;
+		else if (colorScheme == 17)
+			colorScheme = 0;
+		break;
+		//R - Get rotation
+	case CMD_ROTATED:
+		Serial.write(rotationEnabled);
+		Serial.flush();
+		break;
+		//V - Send lepton version
+	case CMD_VERSION:
+		Serial.write(leptonVersion);
+		Serial.flush();
+		break;
+	}
+	return false;
+}
+
+/* Evaluate button presses */
+void buttonHandler() {
+	// Count the time to choose selection
+	long startTime = millis();
+	long endTime = millis() - startTime;
+	while ((extButtonPressed()) && (endTime <= 1000))
+		endTime = millis() - startTime;
+	endTime = millis() - startTime;
+	//Short press - request to save an image
+	if (endTime < 1000) {
+		sendCmd = CAP_IMG;
+	}
+	//Long press - request to start or stop a video
+	else {
+		//Start video
+		if (!videoSave) {
+			sendCmd = START_VID;
+			videoSave = true;
+		}
+		//Stop video
+		else {
+			sendCmd = STOP_VID;
+			videoSave = false;
+		}
+	}
+}
+
 /* Go into video output mode and wait for connected module */
 void videoOutput() {
-	//Save old color scheme selection
-	byte colorSchemeOld = colorScheme;
-	//Allocate space
-	rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
 	//Show message
-	drawMessage((char*) "Sending data to the viewer..");
+	drawMessage((char*) "Connection established!");
 	display.print((char*) "Touch screen to return", CENTER, 170);
 	delay(1000);
 	//Disable screen backlight
-	digitalWrite(pin_lcd_backlight, LOW);
-	//Send config data
-	Serial.write(leptonVersion);
+	disableScreenLight();
 	//Send the frames
 	while (true) {
 		//Abort transmission
@@ -194,6 +292,9 @@ void videoOutput() {
 			break;
 		//Get the temps
 		getTemperatures(true);
+		//Refresh the temp points if enabled
+		if (pointsEnabled)
+			refreshTempPoints(true);
 		//Activate the calibration after warmup
 		if (calStatus == 0) {
 			if (millis() - calTimer > 60000) {
@@ -203,44 +304,62 @@ void videoOutput() {
 				calStatus = 1;
 			}
 		}
-		//Serial command send
+		//Check buttton press
+		if (extButtonPressed())
+			buttonHandler();
+		//Serial command check
 		if (Serial.available() > 0) {
-			byte cmd = Serial.read();
-			//G - Get frame
-			if (cmd == 71) {
-				//Clear all serial buffers
-				serialClear();
-				//Send Lepton data
-				sendLeptonData();
-				//Send config data
-				sendConfigData();
-				//Make sure all data has been send
-				Serial.flush();
-			}
-			//E - End connection
-			else if (cmd == 69)
+			if (serialHandler())
 				break;
-			//C - Change color scheme
-			else if (cmd == 67) {
-				if (colorScheme < 17)
-					colorScheme++;
-				else if (colorScheme == 17)
-					colorScheme = 0;
-			}
 		}
 	}
 	//Enable display backlight
-	digitalWrite(pin_lcd_backlight, HIGH);
+	enableScreenLight();
+}
+
+/* Tries to establish a connection to a thermal viewer or video output module*/
+void videoConnect() {
+	//Disable interrupts
+	detachInterrupts();
+	//Save old color scheme selection
+	byte colorSchemeOld = colorScheme;
+	//Allocate space
+	rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
+	//Start serial connection
+	Serial.begin(115200);
+	drawMessage((char*)"Waiting for connection..");
+	display.print((char*) "Touch screen to return", CENTER, 170);
+	delay(1000);
+	//Wait for device
+	while (true) {
+		//Check for serial connection
+		if ((Serial.available() > 0) && (Serial.read() == CMD_START)) {
+			//Clear input buffer
+			serialClear();
+			//Send start byte
+			Serial.write(START_SESSION);
+			//Start video output
+			videoOutput();
+			break;
+		}
+		//Abort search
+		if (touch.touched())
+			break;
+	}
+	//End serial connection
+	drawMessage((char*)"Connection ended, return..");
+	delay(1000);
+	Serial.end();
 	//Clear all serial buffers
 	serialClear();
 	//Free space again
 	free(rawValues);
-	//Show return message
-	drawMessage((char*) "Connection ended, return..");
-	delay(1000);
 	//Restore values
 	colorScheme = colorSchemeOld;
+	videoSave = false;
 	showMenu = false;
+	//Enable interrupts
+	attachInterrupts();
 }
 
 /* Go into mass storage mode */

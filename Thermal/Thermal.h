@@ -45,16 +45,6 @@ void buttonIRQ() {
 		videoSave = false;
 		return;
 	}
-	//For Early Bird HW, check if the SD card is there
-	if (mlx90614Version == 0) {
-		if (!checkSDCard())
-			return;
-	}
-	//Check if there is at least 1MB of space left
-	if (getSDSpace() < 1000) {
-		showMsg((char*) "Int. space full!");
-		return;
-	}
 	//Count the time to choose selection
 	long startTime = millis();
 	long endTime = millis() - startTime;
@@ -416,9 +406,6 @@ void liveMode() {
 		//Release or lock the limits
 		if (lockLimits)
 			limitLock();
-		//Check for serial connection
-		if ((Serial.available() > 0) && (Serial.read() == 71))
-			videoOutput();
 	}
 	//Exit
 	liveModeExit();

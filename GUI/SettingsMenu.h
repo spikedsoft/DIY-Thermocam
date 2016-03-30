@@ -678,12 +678,102 @@ void tempFormatMenu(bool firstStart = false) {
 				if (firstStart)
 					return;
 				else {
-					settingsMenu();
+					displayMenu();
 				}
 				break;
 			}
 		}
 	}
+}
+
+/* Rotate display menu */
+void rotateDisplayMenu(bool firstStart = false) {
+	drawTitle((char*) "Disp. rotation");
+	touchButtons.deleteAllButtons();
+	touchButtons.addButton(20, 60, 130, 70, (char*) "Enabled");
+	touchButtons.addButton(170, 60, 130, 70, (char*) "Disabled");
+	touchButtons.addButton(20, 150, 280, 70, (char*) "Save");
+	if (firstStart)
+		touchButtons.relabelButton(2, (char*) "Set", false);
+	touchButtons.drawButtons();
+	if (rotationEnabled)
+		touchButtons.setActive(0);
+	else
+		touchButtons.setActive(1);
+	if (!firstStart)
+		updateInfos(true);
+	while (1) {
+		if (!firstStart)
+			updateInfos(false);
+		//touch pressed
+		if (touch.touched() == true) {
+			int pressedButton = touchButtons.checkButtons();
+			//Enabled
+			if (pressedButton == 0) {
+				if (!rotationEnabled) {
+					rotationEnabled = true;
+					touchButtons.setActive(0);
+					touchButtons.setInactive(1);
+				}
+			}
+			//Disabled
+			else if (pressedButton == 1) {
+				if (rotationEnabled) {
+					rotationEnabled = false;
+					touchButtons.setActive(1);
+					touchButtons.setInactive(0);
+				}
+			}
+			//Save
+			else if (pressedButton == 2) {
+				//Write new settings to EEPROM
+				EEPROM.write(eeprom_rotationEnabled, rotationEnabled);
+				if (firstStart)
+					return;
+				else {
+					setDisplayRotation();
+					displayMenu();
+				}
+				break;
+			}
+		}
+	}
+}
+
+/* Display menu handler*/
+void displayMenuHandler() {
+	while (1) {
+		updateInfos(false);
+		//touch pressed
+		if (touch.touched() == true) {
+			int pressedButton = touchButtons.checkButtons();
+			//Temp. format
+			if (pressedButton == 0) {
+				tempFormatMenu();
+			}
+			//Rotate display
+			else if (pressedButton == 1) {
+				rotateDisplayMenu();
+			}
+			//Back
+			else if (pressedButton == 2) {
+				settingsMenu();
+				break;
+			}
+		}
+	}
+}
+
+/* Display menu */
+void displayMenu() {
+	drawTitle((char*) "Display");
+	touchButtons.deleteAllButtons();
+	touchButtons.addButton(20, 60, 130, 70, (char*) "Temp. format");
+	touchButtons.addButton(170, 60, 130, 70, (char*) "Disp. rotation");
+	touchButtons.addButton(20, 150, 280, 70, (char*) "Back");
+	touchButtons.drawButtons();
+	updateInfos(true);
+
 }
 
 /* Touch handler for the settings menu */
@@ -693,9 +783,10 @@ void settingsMenuHandler() {
 		//touch press
 		if (touch.touched() == true) {
 			int pressedButton = touchButtons.checkButtons();
-			//Temp. format
+			//Display
 			if (pressedButton == 0) {
-				tempFormatMenu();
+				displayMenu();
+				displayMenuHandler();
 			}
 			//Storage
 			else if (pressedButton == 1) {
@@ -722,7 +813,7 @@ void settingsMenuHandler() {
 void settingsMenu() {
 	drawTitle((char*) "Settings");
 	touchButtons.deleteAllButtons();
-	touchButtons.addButton(20, 60, 130, 70, (char*) "Temp. Format");
+	touchButtons.addButton(20, 60, 130, 70, (char*) "Display");
 	touchButtons.addButton(170, 60, 130, 70, (char*) "Storage");
 	touchButtons.addButton(20, 150, 130, 70, (char*) "Time & Date");
 	touchButtons.addButton(170, 150, 130, 70, (char*) "Back");

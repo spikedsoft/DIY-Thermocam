@@ -58,3 +58,8 @@ void limitLock();
 void showMsg(char* msg, bool bottom = false);
 void createJPGFile(char* filename, char* dirname = NULL);
 void floatToBytes(uint8_t* farray, float val);
+bool extButtonPressed();
+void disableScreenLight();
+void enableScreenLight();
+void refreshTempPoints(bool save = false);
+void displayMenu();

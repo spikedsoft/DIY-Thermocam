@@ -596,9 +596,6 @@
     <ClCompile Include="libraries\Camera\Camera.cpp">
       <Filter>_libraries\Camera</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\EEPROM\EEPROM.cpp">
-      <Filter>_libraries\EEPROM</Filter>
-    </ClCompile>
     <ClCompile Include="libraries\i2c_t3\i2c_t3.cpp">
       <Filter>_libraries\i2c_t3</Filter>
     </ClCompile>

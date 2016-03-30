@@ -39,6 +39,7 @@
 #define eeprom_dateEnabled 113
 #define eeprom_pointsEnabled 114
 #define eeprom_storageEnabled 115
+#define eeprom_rotationEnabled 116
 #define eeprom_firstStart 150
 #define eeprom_setValue 200
 
@@ -98,6 +99,8 @@ bool visualEnabled = false;
 bool agcEnabled = true;
 //Lock current limits
 bool limitsLocked = false;
+//Rotation - 0 = normal, 1 = rotated
+bool rotationEnabled = 0;
 
 //Display options
 bool batteryEnabled = false;

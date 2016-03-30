@@ -266,7 +266,7 @@ void videoCapture() {
 	while (videoSave) {
 		//Touch - turn display on or off
 		if (!digitalRead(pin_touch_irq)) {
-			digitalWrite(pin_lcd_backlight, !(digitalRead(pin_lcd_backlight)));
+			digitalWrite(pin_lcd_backlight, !(checkScreenLight()));
 			while (!digitalRead(pin_touch_irq));
 		}
 		//Normal  mode
@@ -283,8 +283,8 @@ void videoCapture() {
 		}
 	}
 	//Turn the display on if it was off before
-	if (!digitalRead(pin_lcd_backlight))
-		digitalWrite(pin_lcd_backlight, HIGH);
+	if (!checkScreenLight())
+		enableScreenLight();
 	//Post processing for interval videos if enabled
 	if ((framesCaptured > 0)  && (videoInterval != 0)) {
 		videoSave = true;
@@ -312,6 +312,27 @@ void videoCapture() {
 
 /* Video mode chooser, normal or interval */
 bool videoModeChooser() {
+	//For Early Bird HW, check if the SD card is there
+	if (mlx90614Version == 0) {
+		if (!checkSDCard()) {
+			//Re-attach the interrupts
+			attachInterrupts();
+			//Disable mode
+			videoSave = false;
+			imgSave = false;
+			return false;
+		}
+	}
+	//Check if there is at least 1MB of space left
+	if (getSDSpace() < 1000) {
+		showMsg((char*) "Int. space full!");
+		//Re-attach the interrupts
+		attachInterrupts();
+		//Disable mode
+		videoSave = false;
+		imgSave = false;
+		return false;
+	}
 	//Title & Background
 	liveMenuBackground();
 	liveMenuTitle((char*)"Video mode");

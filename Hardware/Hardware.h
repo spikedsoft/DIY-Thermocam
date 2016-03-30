@@ -113,6 +113,21 @@ bool extButtonPressed() {
 	return buttonDebouncer.read();
 }
 
+/* Disable the screen backlight */
+void disableScreenLight() {
+	digitalWrite(pin_lcd_backlight, LOW);
+}
+
+/* Enables the screen backlight */
+void enableScreenLight() {
+	digitalWrite(pin_lcd_backlight, HIGH);
+}
+
+/* Checks if the screen backlight is on or off*/
+bool checkScreenLight() {
+	return digitalRead(pin_lcd_backlight);
+}
+
 /* Checks if the sd card is inserted for Early Bird Hardware */
 bool checkSDCard() {
 	//Early-Bird #1
@@ -132,6 +147,18 @@ bool checkSDCard() {
 	//All other do not need the check
 	else
 		return true;
+}
+
+/* Sets the display rotation depending on the setting */
+void setDisplayRotation() {
+	if (rotationEnabled) {
+		display.setRotation(135);
+		touch.setRotation(true);
+	}
+	else {
+		display.setRotation(45);
+		touch.setRotation(false);
+	}
 }
 
 /* Reads the old settings from EEPROM */
@@ -190,6 +217,10 @@ void readEEPROM() {
 		read = EEPROM.read(eeprom_colorbarEnabled);
 		if ((read == 0) || (read == 1))
 			colorbarEnabled = read;
+		//Rotation Enabled
+		read = EEPROM.read(eeprom_rotationEnabled);
+		if ((read == 0) || (read == 1))
+			rotationEnabled = read;
 		//Return from Mass Storage reboot, no warmup required
 		read = EEPROM.read(eeprom_massStorage);
 		if (read == eeprom_setValue) {
@@ -207,8 +238,6 @@ void readEEPROM() {
 
 /* Startup procedure for the Hardware */
 void initHardware() {
-	//Start serial connection at max baud
-	Serial.begin(115200);
 	//Laser off
 	pinMode(pin_laser, OUTPUT);
 	digitalWrite(pin_laser, LOW);
@@ -220,6 +249,8 @@ void initHardware() {
 	SdFile::dateTimeCallback(dateTime);
 	//Init I2C
 	initI2C();
+	//Init the MLX90614
+	mlx90614Init();
 	//Init Display
 	display.InitLCD();
 	//Show Boot Screen
@@ -228,8 +259,6 @@ void initHardware() {
 	pinMode(pin_button, INPUT);
 	//Init ADC
 	initADC();
-	//Init the MLX90614
-	mlx90614Init();
 	//Init Camera module
 	initCamera();
 	//Init Touch screen
@@ -244,4 +273,6 @@ void initHardware() {
 	Wire.setDefaultTimeout(0);
 	//Read EEPROM settings
 	readEEPROM();
+	//Set rotation
+	setDisplayRotation();
 }

@@ -317,7 +317,6 @@
     <ClCompile Include="libraries\ADC\ADC_Module.cpp" />
     <ClCompile Include="libraries\Bounce\Bounce.cpp" />
     <ClCompile Include="libraries\Camera\Camera.cpp" />
-    <ClCompile Include="libraries\EEPROM\EEPROM.cpp" />
     <ClCompile Include="libraries\i2c_t3\i2c_t3.cpp" />
     <ClCompile Include="libraries\SdFat\MinimumSerial.cpp" />
     <ClCompile Include="libraries\SdFat\SdFatBase.cpp" />

@@ -218,6 +218,19 @@ void saveThermalImage(char* filename, char* dirname) {
 
 /* Saves images to the internal storage */
 void saveImage() {
+	//For Early Bird HW, check if the SD card is there
+	if (mlx90614Version == 0) {
+		if (!checkSDCard()) {
+			imgSave = false;
+			return;
+		}
+	}
+	//Check if there is at least 1MB of space left
+	if (getSDSpace() < 1000) {
+		showMsg((char*) "Int. space full!");
+		imgSave = false;
+		return;
+	}
 	//Detach the interrupts
 	detachInterrupts();
 	//Wake camera up if needed and take image
@@ -338,7 +351,7 @@ void proccessVideoFrames(uint16_t framesCaptured, char* dirname) {
 /* Get raw values from FLIR Lepton to save them */
 void limitLeptonSaveValues(uint16_t valueCount, unsigned short* valueArray) {
 	//Find min and max
-	if ((agcEnabled) && (!limitsLocked) && (colorScheme != 3) && (colorScheme != 8)){
+	if ((agcEnabled) && (!limitsLocked) && (colorScheme != 3) && (colorScheme != 8)) {
 		maxTemp = 0;
 		minTemp = 65535;
 		uint16_t temp;
@@ -428,10 +441,19 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	floatToBytes(farray, (float)calSlope);
 	for (int i = 0; i < 4; i++)
 		sdFile.write(farray[i]);
-	//Write temperature points
-	for (int i = 0; i < 192; i++) {
-		sdFile.write((showTemp[i] & 0xFF00) >> 8);
-		sdFile.write(showTemp[i] & 0x00FF);
+	//Write temperature points if enabled
+	if (pointsEnabled) {
+		refreshTempPoints(true);
+		for (int i = 0; i < 192; i++) {
+			sdFile.write((showTemp[i] & 0xFF00) >> 8);
+			sdFile.write(showTemp[i] & 0x00FF);
+		}
+	}
+	else {
+		//Write dummy data if not enabled
+		for (int i = 0; i < 384; i++) {
+			sdFile.write((byte)0);
+		}
 	}
 	//Close the file
 	sdFile.close();

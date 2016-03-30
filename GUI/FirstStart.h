@@ -121,6 +121,17 @@ void firstStart() {
 	infoScreen(text);
 	//Temperature format
 	tempFormatMenu(true);
+	//Hint screen for display rotation setting
+	text[0] = "Set Disp. rotation";
+	text[1] = "In the next screen, you can";
+	text[2] = "enable the display rotation.";
+	text[3] = "Activate this option for a ";
+	text[4] = "180 degree rotated view, for";
+	text[5] = "example when you mount the";
+	text[6] = "device under a drone.";
+	infoScreen(text);
+	//Display rotation
+	rotateDisplayMenu(true);
 	//Hint screen for the image storage settings
 	text[0] = "Convert image";
 	text[1] = "In the next screen, please select";

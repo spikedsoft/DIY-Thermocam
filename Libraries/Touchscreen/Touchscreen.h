@@ -27,6 +27,14 @@ public:
 			return resTouch.touched();
 	}
 
+	/* Set rotation for touch screen */
+	void setRotation(bool rotated) {
+		if (capacitive)
+			capTouch.rotated = rotated;
+		else
+			resTouch.rotated = rotated;
+	}
+
 	/* Returns the coordinates of the touched point */
 	TS_Point getPoint() {
 		if (capacitive)

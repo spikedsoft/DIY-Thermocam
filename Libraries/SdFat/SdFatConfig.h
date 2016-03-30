@@ -107,7 +107,7 @@ uint8_t const SOFT_SPI_SCK_PIN = 13;
  * of the standard Arduino SPI library.  You must include SPI.h in your
  * programs when ENABLE_SPI_TRANSACTION is nonzero.
  */
-#define ENABLE_SPI_TRANSACTION 1
+#define ENABLE_SPI_TRANSACTION 0
 //------------------------------------------------------------------------------
 /**
  * Set ENABLE_SPI_YIELD nonzero to enable release of the SPI bus during

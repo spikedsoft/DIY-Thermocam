@@ -20,13 +20,13 @@ void leptonBeginSPI() {
 	if (mlx90614Version == 1)
 		startAltClockline();
 	//Start transfer  - CS LOW
-	digitalWrite(15, LOW);
+	digitalWrite(pin_lepton_cs, LOW);
 }
 
 /* End Lepton SPI Transmission */
 void leptonEndSPI() {
 	//End transfer - CS HIGH
-	digitalWriteFast(15, HIGH);
+	digitalWriteFast(pin_lepton_cs, HIGH);
 	//End SPI Transaction
 	SPI.endTransaction();
 	//End alternative clock line except for Early-Bird #2
@@ -145,9 +145,9 @@ void initLepton() {
 	//Check if SPI works
 	leptonBeginSPI();
 	do {
-		digitalWriteFast(15, LOW);
+		digitalWriteFast(pin_lepton_cs, LOW);
 		SPI.transfer(leptonFrame, 164);
-		digitalWriteFast(15, HIGH);
+		digitalWriteFast(pin_lepton_cs, HIGH);
 	}
 	//Repeat as long as the frame is not valid, equals sync
 	while (((leptonFrame[0] & 0x0F) == 0x0F) && ((millis() - calTimer) < 1000));

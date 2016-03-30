@@ -36,6 +36,10 @@ void isrPin( void )
 TS_Point XPT2046_Touchscreen::getPoint()
 {
 	update();
+	if (rotated) {
+		yraw = map(yraw, 0, 240, 240, 0);
+		xraw = map(xraw, 0, 320, 320, 0);
+	}
 	return TS_Point(xraw, yraw, zraw);
 }
 
