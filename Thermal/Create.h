@@ -117,8 +117,7 @@ void savePackage(byte line, byte segment = 0, bool save = false) {
 
 /* Get one image from the Lepton module */
 void getTemperatures(bool save) {
-	int leptonError = 0;
-	byte segmentNumbers, line;
+	byte leptonError, segmentNumbers, line;
 	//For Lepton2 sensor, get only one segment per frame
 	if (leptonVersion != 1)
 		segmentNumbers = 1;
@@ -136,7 +135,7 @@ void getTemperatures(bool save) {
 					savePackage(line, segment, save);
 				//Reset if the expected line does not match the answer
 				else {
-					if (leptonError == 1000) {
+					if (leptonError == 255) {
 						//Reset segment
 						segment = 1;
 						//Reset lepton error
