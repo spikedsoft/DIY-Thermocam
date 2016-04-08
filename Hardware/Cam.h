@@ -1,11 +1,48 @@
 /*
-* Methods to access the VC0706 camera module
+* Access the VC0706 camera module and display JPEGs
 */
+
+/* Variables */
+
+//JPEG Decompressor structure
+typedef struct {
+	const byte* jpic;
+	unsigned short jsize;
+	unsigned short joffset;
+} IODEV;
+//JPEG Decompressor
+void* jdwork;
+JDEC jd;
+IODEV iodev;
+bool combined = false;
+
+/* Methods */
+
+
+/* Change the resolution of the device */
+void changeCamRes(bool big) {
+	//Big resolution, 640x480 pixel
+	if(big)
+		cam.setImageSize(VC0706_640x480);
+	//Small resoltion, 160x120 pixel
+	else
+		cam.setImageSize(VC0706_160x120);
+	//Reset the device to change the resolution
+	cam.reset();
+	//Wait some time
+	delay(300);
+	//Re-establish the connection to the device
+	cam.begin(115200);
+	//Set camera compression
+	cam.setCompression(95);
+}
 
 /* Init the camera module */
 void initCamera() {
 	//Start connection at 115.2k Baud
 	cam.begin(115200);
+	//Set camera compression
+	cam.setCompression(95);
 	//Test if the camera works
 	if (!cam.takePicture()) {
 		drawMessage((char*) "Error connecting to camera!");
@@ -13,10 +50,9 @@ void initCamera() {
 	}
 	//Skip the picture
 	cam.end();
-	//Set image size
-	cam.setImageSize(VC0706_640x480);
-	//Set compression
-	cam.setCompression(95);
+	//Check if the resolution is set to big
+	if (cam.getImageSize() != VC0706_640x480)
+		changeCamRes(true);
 }
 
 /* Send the capture command to the camera*/
@@ -40,6 +76,94 @@ void saveVisualImage() {
 	sdFile.close();
 	//End SD Transmission
 	endAltClockline();
+	//End camera
 	cam.end();
-	return;
+}
+
+/* Output function for the JPEG Decompressor - extracts the RGB565 values into the target array */
+unsigned int output_func(JDEC * jd, void * bitmap, JRECT * rect) {
+	//Help Variables
+	byte redV, greenV, blueV, redT, greenT, blueT, red, green, blue;
+	unsigned short pixel;
+	unsigned short * bmp = (unsigned short *)bitmap;
+	unsigned short x, y;
+	unsigned short i = 0;
+	//Go through the image
+	for (y = rect->top; y <= rect->bottom; y++) {
+		for (x = rect->left; x <= rect->right; x++) {
+			//Write into the array with transparency if combined activated
+			if (combined) {
+				//Get the visual image color
+				pixel = bmp[i++];
+				//And extract the RGB values out of it
+				redV = (pixel & 0xF800) >> 8;
+				greenV = (pixel & 0x7E0) >> 3;
+				blueV = (pixel & 0x1F) << 3;
+				//Get the thermal image color
+				pixel = image[x + (y * 160)];
+				//And extract the RGB values out of it
+				redT = (pixel & 0xF800) >> 8;
+				greenT = (pixel & 0x7E0) >> 3;
+				blueT = (pixel & 0x1F) << 3;
+				//Mix both
+				red = redT * 0.5 + redV * 0.5;
+				green = greenT * 0.5 + greenV * 0.5;
+				blue = blueT * 0.5 + blueV * 0.5;
+				//Set image to that calculated RGB value
+				image[x + (y * 160)] = (((red & 248) | green >> 5) << 8)
+					| ((green & 28) << 3 | blue >> 3);
+			}
+			//Write into the array if combined not activated
+			else
+				image[x + (y * 160)] = bmp[i++];
+		}
+	}
+	return 1;
+}
+
+/* Help function to insert the JPEG data into the decompressor */
+unsigned int input_func(JDEC * jd, byte* buff, unsigned int ndata) {
+	IODEV * dev = (IODEV *)jd->device;
+	ndata = (unsigned int)dev->jsize - dev->joffset > ndata ?
+		ndata : dev->jsize - dev->joffset;
+	if (buff)
+		memcpy(buff, dev->jpic + dev->joffset, ndata);
+	dev->joffset += ndata;
+	return ndata;
+}
+
+/* Receive the image data and display it on the screen */
+void getVisualImage() {
+	//Get frame length
+	uint16_t jpglen = cam.frameLength();
+	//Define array for the jpeg data
+	uint8_t* jpegData = (uint8_t*)calloc(jpglen, sizeof(uint8_t));
+	//Buffer to store the data of up to 64 byte
+	uint8_t *buffer;
+	//Count variable
+	uint16_t counter = 0;
+	//Transfer data
+	uint16_t length = jpglen;
+	while (length > 0) {
+		uint8_t bytesToRead = min(length, 64);
+		buffer = cam.readPicture(bytesToRead);
+		for (int i = 0; i < bytesToRead; i++) {
+			jpegData[counter] = buffer[i];
+			counter++;
+		}
+		length -= bytesToRead;
+	}
+	//End transmission
+	cam.end();
+	//Decompress the image
+	iodev.jpic = jpegData;
+	iodev.jsize = jpglen;
+	//the offset is zero
+	iodev.joffset = 0;
+	//Prepare the image for convertion to RGB565
+	jd_prepare(&jd, input_func, jdwork, 3100, &iodev);
+	//Decompile the JPEG image
+	jd_decomp(&jd, output_func, 0);
+	//Free the jpeg data array
+	free(jpegData);
 }

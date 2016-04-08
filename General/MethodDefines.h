@@ -63,3 +63,4 @@ void disableScreenLight();
 void enableScreenLight();
 void refreshTempPoints(bool save = false);
 void displayMenu();
+void adjustCam();

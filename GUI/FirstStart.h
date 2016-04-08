@@ -46,6 +46,97 @@ void infoScreen(String* text, bool Continue = true) {
 	}
 }
 
+/* Setting screen for the time and date */
+void timeDateScreen() {
+	String text[7];
+	text[0] = "Set Time & Date";
+	text[1] = "In the next screen, you have";
+	text[2] = "to set the time and date so ";
+	text[3] = "that it matches your current";
+	text[4] = "time zone. This only has to be";
+	text[5] = "done once, as the coin cell battery";
+	text[6] = "powers the real-time-clock permanent.";
+	infoScreen(text);
+	//Adjust Time & Date settings
+	setTime(12, 30, 30, 15, 6, 2016);
+	timeAndDateMenu(true);
+	timeAndDateMenuHandler(true);
+}
+
+/* Setting screen for the temperature format */
+void tempFormatScreen() {
+	String text[7];
+	text[0] = "Set Temp. Format";
+	text[1] = "In the next screen, you have";
+	text[2] = "to set the temperature format ";
+	text[3] = "for the temperature display.";
+	text[4] = "Choose either Celcius or";
+	text[5] = "Fahrenheit, the conversion will";
+	text[6] = "be done automatically.";
+	infoScreen(text);
+	//Temperature format
+	tempFormatMenu(true);
+}
+
+/* Setting screen for the display rotation */
+void dispRotationScreen() {
+	String text[7];
+	text[0] = "Set Disp. rotation";
+	text[1] = "In the next screen, you can";
+	text[2] = "enable the display rotation.";
+	text[3] = "Activate this option for a ";
+	text[4] = "180 degree rotated view, for";
+	text[5] = "example when you mount the";
+	text[6] = "device under a drone.";
+	infoScreen(text);
+	//Display rotation
+	rotateDisplayMenu(true);
+}
+
+/* Setting screen for the convert image option */
+void convertImageScreen() {
+	String text[7];
+	text[0] = "Convert image";
+	text[1] = "In the next screen, please select";
+	text[2] = "if you want to create a bitmap";
+	text[3] = "file for every saved thermal";
+	text[4] = "image automatically on the device.";
+	text[5] = "You can also convert images man-";
+	text[6] = "ually in the Load Menu later.";
+	infoScreen(text);;
+	//Convert image
+	convertImageMenu(true);
+}
+
+/* Setting screen for the visual image option */
+void visualImageScreen() {
+	String text[7];
+	text[0] = "Visual image";
+	text[1] = "In the next screen, choose";
+	text[2] = "whether you want to save";
+	text[3] = "a visual image together";
+	text[4] = "with the thermal image each";
+	text[5] = "time. Enable this if you want";
+	text[6] = "to create combined images.";
+	infoScreen(text);
+	//Visual image
+	visualImageMenu(true);
+}
+
+/* Show the first start complete screen */
+void firstStartComplete() {
+	String text[7];
+	text[0] = "Setup completed !";
+	text[1] = "The first-time setup is";
+	text[2] = "now complete. Please reboot";
+	text[3] = "the device by turning the";
+	text[4] = "power switch off and on again.";
+	text[5] = "Afterwards, you will be redirected";
+	text[6] = "to first start helper.";
+	infoScreen(text, false);
+	while (true);
+}
+
 /* Help screen for the first start of live mode */
 void liveModeHelper() {
 	//Array to store up to 7 lines of text
@@ -67,11 +158,150 @@ void liveModeHelper() {
 	text[6] = "long until a message is shown.";
 	infoScreen(text);
 	//Set EEPROM marker to complete
-	EEPROM.write(eeprom_firstStart, eeprom_setValue);
+	EEPROM.write(eeprom_liveHelper, eeprom_setValue);
+}
+
+/* Shows the completion message for the adjust camera */
+void adjustCamComplete() {
+	String text[7];
+	text[0] = "Adjust completed!";
+	text[1] = "The adjust camera setup is";
+	text[2] = "now complete. Please reboot";
+	text[3] = "the device by turning the";
+	text[4] = "power switch off and on again.";
+	text[5] = "Afterwards, you will be redirected";
+	text[6] = "to the live mode again.";
+	infoScreen(text, false);
+	while (true);
+}
+
+/* Shows a message that the resolution needs to be changed */
+void adjustCamResChange() {
+	String text[7];
+	//Hint screen for the live mode #1 
+	text[0] = "Adjust camera";
+	text[1] = "In this firmware version,";
+	text[2] = "a wizard has been added to";
+	text[3] = "help you to adjust the ";
+	text[4] = "visual camera module.";
+	text[5] = "Hard-reset the device in order ";
+	text[6] = "to change the resolution.";
+	infoScreen(text, false);
+	//Set camera to small resolution for adjust wizard
+	cam.setImageSize(VC0706_160x120);
+	//Set camera compression
+	cam.setCompression(95);
+	//Wait forever
+	while (true);
+}
+
+/* Helps to adjust the focus */
+void adjustCamFocus() {
+	String text[7];
+	//Hint screen for the live mode #1 
+	text[0] = "Adjust focus";
+	text[1] = "This wizard will help you";
+	text[2] = "to adjust the focus of your";
+	text[3] = "visual camera. Rotate the lense";
+	text[4] = "of the camera module, until";
+	text[5] = "the shown image is really sharp.";
+	text[6] = "Then touch the screen to continue.";
+	infoScreen(text);
+	//Set text color
+	display.setFont(smallFont);
+	display.setColor(VGA_WHITE);
+	display.setBackColor(VGA_TRANSPARENT);
+	//Show the camera image until touch
+	while (true) {
+		//Send capture command
+		captureVisualImage();
+		//Get the visual image and decompress it
+		getVisualImage();
+		//Display on screen
+		display.drawBitmap(0, 0, 160, 120, image, 2);
+		//Show touch hint
+		display.print((char*)"Touch screen to continue", CENTER, 210);
+		//Abort if screen touched
+		if (touch.touched())
+			break;
+	}
+}
+
+/* Helps to adjust the alignment to the thermal image */
+void adjustCamAlignment() {
+	String text[7];
+	//Hint screen for the live mode #1 
+	text[0] = "Adjust alignment";
+	text[1] = "In the next step, you can";
+	text[2] = "check and improve the alignment";
+	text[3] = "of the visual to the thermal image.";
+	text[4] = "Use some of the beveled washers and";
+	text[5] = "put them between the camera and the";
+	text[6] = "PCB on the four corners to adjust it.";
+	infoScreen(text);
+	//Wait until touch release
+	while (touch.touched());
+	//Show the combined image until touch
+	combined = true;
+	//Change color scheme
+	colorMap = colorMap_rainbow;
+	colorElements = 256;
+	//Set text color
+	display.setFont(smallFont);
+	display.setColor(VGA_WHITE);
+	display.setBackColor(VGA_TRANSPARENT);
+	while (true) {
+		//Send capture command
+		captureVisualImage();
+		//Receive the temperatures over SPI
+		getTemperatures();
+		//Find min and max
+		limitValues();
+		//Scale the values
+		scaleValues();
+		//Convert lepton data to RGB565 colors
+		convertColors();
+		//Get the visual image and decompress it combined
+		getVisualImage();
+		//Display on screen
+		display.drawBitmap(0, 0, 160, 120, image, 2);
+		//Show touch hint
+		display.print((char*)"Touch screen to continue", CENTER, 210);
+		//Abort if screen touched
+		if (touch.touched())
+			break;
+	}
+	combined = false;
+}
+
+/* Helps to adjust the visual camera */
+void adjustCam() {
+	//Set camera resolution to small
+	changeCamRes(false);
+	//Allocate arrays
+	image = (unsigned short*)calloc(19200, sizeof(unsigned short));
+	jdwork = malloc(3100);
+	//Adjust the focus
+	adjustCamFocus();
+	//Adjust the alignment
+	adjustCamAlignment();
+	//Free arrays
+	free(image);
+	free(jdwork);
+	//Restore camera resolution to big
+	changeCamRes(true);
 }
 
 /* Set the EEPROM values to default for the first time */
 void firstEEPROMSet() {
+	drawMessage((char*) "Flashing spot EEPROM settings..");
+	//Set spot maximum temp to 380°C
+	mlx90614SetMaxTemp();
+	//Set spot minimum temp to -70°
+	mlx90614CheckMinTemp();
+	//Set spot filter settings
+	mlx90614SetFilterTemp();
+	//Set device EEPROM settings
 	EEPROM.write(eeprom_spotEnabled, spotEnabled);
 	EEPROM.write(eeprom_filterEnabled, filterEnabled);
 	EEPROM.write(eeprom_colorbarEnabled, colorbarEnabled);
@@ -80,102 +310,33 @@ void firstEEPROMSet() {
 	EEPROM.write(eeprom_dateEnabled, dateEnabled);
 	EEPROM.write(eeprom_pointsEnabled, pointsEnabled);
 	EEPROM.write(eeprom_storageEnabled, storageEnabled);
-	EEPROM.write(eeprom_firstStart, 100);
+	//Set Color Scheme to Rainbow
+	EEPROM.write(eeprom_colorScheme, 12);
+	//For Lepton3, disable filter
+	if (leptonVersion == 1)
+		EEPROM.write(eeprom_filterEnabled, false);
+	//Set first start marker to true
+	EEPROM.write(eeprom_firstStart, eeprom_setValue);
 }
 
 /* First start setup*/
 void firstStart() {
 	//Welcome screen
 	welcomeScreen();
-	//Array to store up to 7 lines of text
-	String text[7];
-	//Welcome screen
-	text[0] = "First time setup";
-	text[1] = "Welcome to the";
-	text[2] = "DIY-Thermocam!";
-	text[3] = "";
-	text[4] = "This is the first time setup";
-	text[5] = "that will guide you through";
-	text[6] = "the basic settings for the cam.";
 	//Hint screen for the time and date settings
-	text[0] = "Set Time & Date";
-	text[1] = "In the next screen, you have";
-	text[2] = "to set the time and date so ";
-	text[3] = "that it matches your current";
-	text[4] = "time zone. This only has to be";
-	text[5] = "done once, as the coin cell battery";
-	text[6] = "powers the real-time-clock permanent.";
-	infoScreen(text);
-	//Adjust Time & Date settings
-	setTime(12, 30, 30, 15, 6, 2016);
-	timeAndDateMenu(true);
-	timeAndDateMenuHandler(true);
+	timeDateScreen();
 	//Hint screen for temperature format setting
-	text[0] = "Set Temp. Format";
-	text[1] = "In the next screen, you have";
-	text[2] = "to set the temperature format ";
-	text[3] = "for the temperature display.";
-	text[4] = "Choose either Celcius or";
-	text[5] = "Fahrenheit, the conversion will";
-	text[6] = "be done automatically.";
-	infoScreen(text);
-	//Temperature format
-	tempFormatMenu(true);
+	tempFormatScreen();
 	//Hint screen for display rotation setting
-	text[0] = "Set Disp. rotation";
-	text[1] = "In the next screen, you can";
-	text[2] = "enable the display rotation.";
-	text[3] = "Activate this option for a ";
-	text[4] = "180 degree rotated view, for";
-	text[5] = "example when you mount the";
-	text[6] = "device under a drone.";
-	infoScreen(text);
-	//Display rotation
-	rotateDisplayMenu(true);
-	//Hint screen for the image storage settings
-	text[0] = "Convert image";
-	text[1] = "In the next screen, please select";
-	text[2] = "if you want to create a bitmap";
-	text[3] = "file for every saved thermal";
-	text[4] = "image automatically on the device.";
-	text[5] = "You can also convert images man-";
-	text[6] = "ually in the Load Menu later.";
-	infoScreen(text);;
-	//Convert image
-	convertImageMenu(true);
-	//Hint screen for the video storage settings
-	text[0] = "Visual image";
-	text[1] = "In the next screen, choose";
-	text[2] = "whether you want to save";
-	text[3] = "a visual image together";
-	text[4] = "with the thermal image each";
-	text[5] = "time. Enable this if you want";
-	text[6] = "to create combined images.";
-	infoScreen(text);
-	//Visual image
-	visualImageMenu(true);
-	//Set Color Scheme to Rainbow
-	EEPROM.write(eeprom_colorScheme, 12);
-	//For Lepton3, disable filter
-	if(leptonVersion == 1)
-		EEPROM.write(eeprom_filterEnabled, false);
-	drawMessage((char*) "Flashing spot EEPROM settings..");
-	//Set spot maximum temp to 380°C
-	mlx90614SetMaxTemp();
-	//Set spot minimum temp to -70°
-	mlx90614CheckMinTemp();
-	//Set filter settings
-	mlx90614SetFilterTemp();
-	//Hint screen for the video storage settings
-	text[0] = "Setup completed !";
-	text[1] = "The first-time setup is";
-	text[2] = "now complete. Please reboot";
-	text[3] = "the device by turning the";
-	text[4] = "power switch off and on again.";
-	text[5] = "Afterwards, you will be able";
-	text[6] = "to use the Thermocam normally.";
-	infoScreen(text, false);
+	dispRotationScreen();
+	//Hint screen for the convert image settings
+	convertImageScreen();
+	//Hint screen for the visual image settings
+	visualImageScreen();
+	//Adjust camera wizard
+	adjustCam();
 	//Set EEPROM values
 	firstEEPROMSet();
-	while (true);
+	//Show completion message
+	firstStartComplete();
 }

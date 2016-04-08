@@ -164,8 +164,11 @@ void setDisplayRotation() {
 /* Reads the old settings from EEPROM */
 void readEEPROM() {
 	byte read;
-	//Read settings if first start is done
-	if ((EEPROM.read(eeprom_firstStart) == eeprom_setValue) || (EEPROM.read(eeprom_firstStart) == 100)) {
+	//Do the first start setup
+	if (EEPROM.read(eeprom_firstStart) != eeprom_setValue)
+		firstStart();
+	//Load settings from EEPROM
+	else{
 		//Temperature format
 		read = EEPROM.read(eeprom_tempFormat);
 		if ((read == 0) || (read == 1))
@@ -228,16 +231,15 @@ void readEEPROM() {
 			calStatus = 1;
 		}
 	}
-	//Do first start
-	else
-		firstStart();
-	//Show hint screen
-	if (EEPROM.read(eeprom_firstStart) == 100)
+	//Show the live mode helper
+	if (EEPROM.read(eeprom_liveHelper) != eeprom_setValue)
 		liveModeHelper();
 }
 
 /* Startup procedure for the Hardware */
 void initHardware() {
+	//Start serial for debugging
+	Serial.begin(115200);
 	//Laser off
 	pinMode(pin_laser, OUTPUT);
 	digitalWrite(pin_laser, LOW);

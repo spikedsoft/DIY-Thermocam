@@ -740,6 +740,47 @@ void rotateDisplayMenu(bool firstStart = false) {
 	}
 }
 
+/* Adjust the visual camera menu */
+void adjustVisualCamMenu() {
+	//Title & Background
+	drawTitle((char*) "Display");
+	display.setColor(VGA_WHITE);
+	display.setFont(smallFont);
+	display.setBackColor(127, 127, 127);
+	display.print((char*)"Do you want to adjust the camera?", CENTER, 66);
+	display.print((char*)"This wizard will help you to adjust", CENTER, 105);
+	display.print((char*)"the focus and the alignment.", CENTER, 125);
+	//Draw the buttons
+	touchButtons.deleteAllButtons();
+	touchButtons.setTextFont(bigFont);
+	touchButtons.addButton(15, 160, 140, 55, (char*) "No");
+	touchButtons.addButton(165, 160, 140, 55, (char*) "Yes");
+	touchButtons.drawButtons();
+	touchButtons.setTextFont(smallFont);
+	updateInfos(true);
+	//Touch handler
+	while (true) {
+		updateInfos(false);
+		//If touch pressed
+		if (touch.touched() == true) {
+			int pressedButton = touchButtons.checkButtons(true);
+			//YES - Go to the adjust cam wizard
+			if (pressedButton == 1) {
+				adjustCam();
+				drawMessage((char*) "Adjust cam wizard completed!");
+				delay(1000);
+				displayMenu();
+				break;
+			}
+			//NO - Go back to display menu
+			else if (pressedButton == 0) {
+				displayMenu();
+				break;
+			}
+		}
+	}
+}
+
 /* Display menu handler*/
 void displayMenuHandler() {
 	while (1) {
@@ -755,8 +796,12 @@ void displayMenuHandler() {
 			else if (pressedButton == 1) {
 				rotateDisplayMenu();
 			}
-			//Back
+			//Adjust camera
 			else if (pressedButton == 2) {
+				adjustVisualCamMenu();
+			}
+			//Back
+			else if (pressedButton == 3) {
 				settingsMenu();
 				break;
 			}
@@ -770,7 +815,8 @@ void displayMenu() {
 	touchButtons.deleteAllButtons();
 	touchButtons.addButton(20, 60, 130, 70, (char*) "Temp. format");
 	touchButtons.addButton(170, 60, 130, 70, (char*) "Disp. rotation");
-	touchButtons.addButton(20, 150, 280, 70, (char*) "Back");
+	touchButtons.addButton(20, 150, 130, 70, (char*) "Adjust camera");
+	touchButtons.addButton(170, 150, 130, 70, (char*) "Back");
 	touchButtons.drawButtons();
 	updateInfos(true);
 

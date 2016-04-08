@@ -41,6 +41,7 @@
 #define eeprom_storageEnabled 115
 #define eeprom_rotationEnabled 116
 #define eeprom_firstStart 150
+#define eeprom_liveHelper 151
 #define eeprom_setValue 200
 
 /* Variables */

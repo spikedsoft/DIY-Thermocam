@@ -10,12 +10,13 @@
 */
 
 /* Current firmware version */
-#define Version "Firmware 1.15 from 30.03.2016"
+#define Version "Firmware 1.16 from 08.04.2016"
 
 /* Libraries */
 #include <ADC.h>
 #include <i2c_t3.h>
 #include <SdFat.h>
+#include <tjpgd.h>
 #include <SPI.h>
 #include <TimeLib.h>
 #include <EEPROM.h>
