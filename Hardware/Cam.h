@@ -20,13 +20,9 @@ bool combined = false;
 
 
 /* Change the resolution of the device */
-void changeCamRes(bool big) {
-	//Big resolution, 640x480 pixel
-	if(big)
-		cam.setImageSize(VC0706_640x480);
-	//Small resoltion, 160x120 pixel
-	else
-		cam.setImageSize(VC0706_160x120);
+void changeCamRes(byte size) {
+	//Change resolution
+	cam.setImageSize(size);
 	//Reset the device to change the resolution
 	cam.reset();
 	//Wait some time
@@ -44,15 +40,13 @@ void initCamera() {
 	//Set camera compression
 	cam.setCompression(95);
 	//Test if the camera works
-	if (!cam.takePicture()) {
-		drawMessage((char*) "Error connecting to camera!");
-		while (1);
-	}
+	if (!cam.takePicture())
+		setDiagnostic(diag_camera);
 	//Skip the picture
 	cam.end();
 	//Check if the resolution is set to big
 	if (cam.getImageSize() != VC0706_640x480)
-		changeCamRes(true);
+		changeCamRes(VC0706_640x480);
 }
 
 /* Send the capture command to the camera*/
@@ -162,8 +156,12 @@ void getVisualImage() {
 	iodev.joffset = 0;
 	//Prepare the image for convertion to RGB565
 	jd_prepare(&jd, input_func, jdwork, 3100, &iodev);
-	//Decompile the JPEG image
-	jd_decomp(&jd, output_func, 0);
+	//Small image, do not downsize
+	if(cam.getImageSize() == VC0706_160x120)
+		jd_decomp(&jd, output_func, 0);
+	//320x240, do downsize to 160x120
+	else
+		jd_decomp(&jd, output_func, 1);
 	//Free the jpeg data array
 	free(jpegData);
 }

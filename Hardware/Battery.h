@@ -56,6 +56,9 @@ void checkBattery(bool start = false) {
 	float vBat = (batMeasure->analogRead(pin_bat_measure) * 1.47 * 3.3) / batMeasure->getMaxValue(ADC_0) + 0.25;
 	//Check if the USB is connected
 	float vUSB = (batMeasure->analogRead(pin_usb_measure) * 1.47 * 3.3) / batMeasure->getMaxValue(ADC_0);
+	//If the battery gauge is not working
+	if((vBat == -1) && (vUSB <= 4.0))
+		setDiagnostic(diag_bat);
 	//If not connected, add some value to correct it
 	if (vUSB <= 4.0)
 		vBat += 0.1;

@@ -57,6 +57,59 @@ void UTFT::InitLCD(byte orientation) {
 	setRotation(45);
 }
 
+uint8_t UTFT::readcommand8(uint8_t c, uint8_t index)
+{
+	uint16_t wTimeout = 0xffff;
+	uint8_t r = 0;
+
+	SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
+	while (((KINETISK_SPI0.SR) & (15 << 12)) && (--wTimeout)); // wait until empty
+
+															   // Make sure the last frame has been sent...
+	KINETISK_SPI0.SR = SPI_SR_TCF;   // dlear it out;
+	wTimeout = 0xffff;
+	while (!((KINETISK_SPI0.SR) & SPI_SR_TCF) && (--wTimeout)); // wait until it says the last frame completed
+
+																// clear out any current received bytes
+	wTimeout = 0x10;    // should not go more than 4...
+	while ((((KINETISK_SPI0.SR) >> 4) & 0xf) && (--wTimeout)) {
+		r = KINETISK_SPI0.POPR;
+	}
+
+	//writecommand(0xD9); // sekret command
+	KINETISK_SPI0.PUSHR = 0xD9 | (pcs_command << 16) | SPI_PUSHR_CTAS(0) | SPI_PUSHR_CONT;
+	//	while (((KINETISK_SPI0.SR) & (15 << 12)) > (3 << 12)) ; // wait if FIFO full
+
+	// writedata(0x10 + index);
+	KINETISK_SPI0.PUSHR = (0x10 + index) | (pcs_data << 16) | SPI_PUSHR_CTAS(0);
+	//	while (((KINETISK_SPI0.SR) & (15 << 12)) > (3 << 12)) ; // wait if FIFO full
+
+	// writecommand(c);
+	KINETISK_SPI0.PUSHR = c | (pcs_command << 16) | SPI_PUSHR_CTAS(0) | SPI_PUSHR_CONT;
+	//	while (((KINETISK_SPI0.SR) & (15 << 12)) > (3 << 12)) ; // wait if FIFO full
+
+	// readdata
+	KINETISK_SPI0.PUSHR = 0 | (pcs_data << 16) | SPI_PUSHR_CTAS(0);
+	//	while (((KINETISK_SPI0.SR) & (15 << 12)) > (3 << 12)) ; // wait if FIFO full
+
+	// Now wait until completed.
+	wTimeout = 0xffff;
+	while (((KINETISK_SPI0.SR) & (15 << 12)) && (--wTimeout)); // wait until empty
+
+															   // Make sure the last frame has been sent...
+	KINETISK_SPI0.SR = SPI_SR_TCF;   // dlear it out;
+	wTimeout = 0xffff;
+	while (!((KINETISK_SPI0.SR) & SPI_SR_TCF) && (--wTimeout)); // wait until it says the last frame completed
+
+	wTimeout = 0x10;    // should not go more than 4...
+						// lets get all of the values on the FIFO
+	while ((((KINETISK_SPI0.SR) >> 4) & 0xf) && (--wTimeout)) {
+		r = KINETISK_SPI0.POPR;
+	}
+	SPI.endTransaction();
+	return r;  // get the received byte... should check for it first...
+}
+
 void UTFT::setXY(word x1, word y1, word x2, word y2) {
 	if (orient == LANDSCAPE) {
 		swap(word, x1, y1);

@@ -238,51 +238,93 @@ void getTemperatures(bool save) {
 }
 
 /* Scale the values from 0 - 255 */
-void scaleValues() {
+void scaleValues(bool small) {
 	//Calculate the scale
 	float scale = (colorElements - 1.0) / (maxTemp - minTemp);
-	for (int i = 0; i < 19200; i++) {
-		//Limit values if not in AGC mode
-		if (!agcEnabled) {
+	//Go through rawValues array
+	if (small) {
+		for (int i = 0; i < 4800; i++) {
+			//Limit values
+			if (rawValues[i] > maxTemp)
+				rawValues[i] = maxTemp;
+			if (rawValues[i] < minTemp)
+				rawValues[i] = minTemp;
+			rawValues[i] = (rawValues[i] - minTemp) * scale;
+		}
+	}
+	//Go through image array
+	else {
+		for (int i = 0; i < 19200; i++) {
+			//Limit values
 			if (image[i] > maxTemp)
 				image[i] = maxTemp;
 			if (image[i] < minTemp)
 				image[i] = minTemp;
+			image[i] = (image[i] - minTemp) * scale;
 		}
-		image[i] = (image[i] - minTemp) * scale;
 	}
-
 }
 
 /* Go through the array of temperatures and find min and max temp */
-void limitValues() {
+void limitValues(bool small) {
 	maxTemp = 0;
 	minTemp = 65535;
 	uint16_t temp;
-	for (int i = 0; i < 19200; i++) {
-		//Get value
-		temp = image[i];
-		//Find maximum temp
-		if (temp > maxTemp)
-			maxTemp = temp;
-		//Find minimum temp
-		if (temp < minTemp)
-			minTemp = temp;
+	//Go through small rawValues array
+	if (small) {
+		for (int i = 0; i < 4800; i++) {
+			//Get value
+			temp = rawValues[i];
+			//Find maximum temp
+			if (temp > maxTemp)
+				maxTemp = temp;
+			//Find minimum temp
+			if (temp < minTemp)
+				minTemp = temp;
+		}
+	}
+	//Go through big image array
+	else {
+		for (int i = 0; i < 19200; i++) {
+			//Get value
+			temp = image[i];
+			//Find maximum temp
+			if (temp > maxTemp)
+				maxTemp = temp;
+			//Find minimum temp
+			if (temp < minTemp)
+				minTemp = temp;
+		}
 	}
 }
 
 /* Convert the lepton values to RGB colors */
-void convertColors() {
-	//Go through the array
-	for (int i = 0; i < 19200; i++) {
-		uint16_t value = image[i];
-		//Look for the corresponding RGB values
-		uint8_t red = colorMap[3 * value];
-		uint8_t green = colorMap[3 * value + 1];
-		uint8_t blue = colorMap[3 * value + 2];
-		//Convert to RGB565
-		image[i] = (((red & 248) | green >> 5) << 8) | ((green & 28) << 3 | blue >> 3);
+void convertColors(bool small) {
+	//Go through the rawValues array
+	if (small) {
+		for (int i = 0; i < 4800; i++) {
+			uint16_t value = rawValues[i];
+			//Look for the corresponding RGB values
+			uint8_t red = colorMap[3 * value];
+			uint8_t green = colorMap[3 * value + 1];
+			uint8_t blue = colorMap[3 * value + 2];
+			//Convert to RGB565
+			rawValues[i] = (((red & 248) | green >> 5) << 8) | ((green & 28) << 3 | blue >> 3);
+		}
 	}
+	//Go through the image array
+	else {
+		for (int i = 0; i < 19200; i++) {
+			uint16_t value = image[i];
+			//Look for the corresponding RGB values
+			uint8_t red = colorMap[3 * value];
+			uint8_t green = colorMap[3 * value + 1];
+			uint8_t blue = colorMap[3 * value + 2];
+			//Convert to RGB565
+			image[i] = (((red & 248) | green >> 5) << 8) | ((green & 28) << 3 | blue >> 3);
+		}
+	}
+
 }
 
 /* Creates a thermal image and stores it in the array */

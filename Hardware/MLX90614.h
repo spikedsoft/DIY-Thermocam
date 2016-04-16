@@ -190,9 +190,10 @@ void mlx90614Init() {
 	byte count = 0;
 	do {
 		mlx90614Measure(0, &check);
+		//If we cannot connect, set error and continue
 		if (count == 100) {
-			drawMessage((char*) "Error connecting to IR sensor!");
-			while (1);
+			setDiagnostic(diag_spot);
+			return;
 		}
 		count++;
 		delay(10);

@@ -175,6 +175,7 @@ public:
 	void drawBitmap(int x, int y, int sx, int sy, bitmapdatatype data, int deg, int rox, int roy);
 	void lcdOff();
 	void lcdOn();
+	uint8_t readcommand8(uint8_t reg, uint8_t index = 0);
 	void setRotation(uint8_t m);
 	//void setContrast(char c);
 	int  getDisplayXSize();

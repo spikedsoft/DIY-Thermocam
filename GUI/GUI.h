@@ -21,6 +21,75 @@ void drawTitle(char* name) {
 	display.setFont(smallFont);
 }
 
+/* Shows the hadware diagnostics */
+void showDiagnostic() {
+	//Display title & background
+	display.fillScr(127, 127, 127);
+	display.setFont(bigFont);
+	display.setBackColor(127, 127, 127);
+	display.setColor(VGA_YELLOW);
+	display.print((char*) "Self-diagnostic", CENTER, 10);
+	//Display hint
+	display.setFont(smallFont);
+	display.print((char*) "Fix the issues to use the device", CENTER, 220);
+	display.setColor(VGA_WHITE);
+	//Display hardware module names
+	display.print((char*) "Spot sensor  ", 50, 50);
+	display.print((char*) "Display      ", 50, 70);
+	display.print((char*) "Visual camera", 50, 90);
+	display.print((char*) "Touch screen ", 50, 110);
+	display.print((char*) "SD card      ", 50, 130);
+	display.print((char*) "Battery gauge", 50, 150);
+	display.print((char*) "Lepton config", 50, 170);
+	display.print((char*) "Lepton data  ", 50, 190);
+	//Check spot sensor
+	if(checkDiagnostic(diag_spot))
+		display.print((char*) "OK    ", 220, 50);
+	else {
+		display.print((char*) "Failed", 220, 50);
+		//We disable the spot sensor, so the user can go on
+		spotEnabled = false;
+	}
+	//Check display
+	if (checkDiagnostic(diag_display))
+		display.print((char*) "OK    ", 220, 70);
+	else
+		display.print((char*) "Failed", 220, 70);
+	//Check visual camera
+	if (checkDiagnostic(diag_camera))
+		display.print((char*) "OK    ", 220, 90);
+	else {
+		display.print((char*) "Failed", 220, 90);
+		//We disable the camera, so the user can go on
+		visualEnabled = false;
+	}
+	//Check touch screen
+	if (checkDiagnostic(diag_touch))
+		display.print((char*) "OK    ", 220, 110);
+	else
+		display.print((char*) "Failed", 220, 110);
+	//Check sd card
+	if (checkDiagnostic(diag_sd))
+		display.print((char*) "OK    ", 220, 130);
+	else
+		display.print((char*) "Failed", 220, 130);
+	//Check battery gauge
+	if (checkDiagnostic(diag_bat))
+		display.print((char*) "OK    ", 220, 150);
+	else
+		display.print((char*) "Failed", 220, 150);
+	//Check lepton config
+	if (checkDiagnostic(diag_lep_conf))
+		display.print((char*) "OK    ", 220, 170);
+	else
+		display.print((char*) "Failed", 220, 170);
+	//Check lepton data
+	if (checkDiagnostic(diag_lep_data))
+		display.print((char*) "OK    ", 220, 190);
+	else
+		display.print((char*) "Failed", 220, 190);
+}
+
 /* Draw a BigFont Text in the center of a menu*/
 void drawCenterElement(int element) {
 	display.setFont(bigFont);

@@ -58,29 +58,33 @@ void refreshFreeSpace() {
 	sdInfo = String((int)(getSDSpace() / 1024)) + "/" + String((int)(getCardSize() - 1)) + " MB";
 }
 
-/* Initializes the SD card */
-void initSD() {
-	sdInfo = " - / - MB";
-	//Init the SD Card except for Early-Bird #1
-	if (mlx90614Version == 1) {
-		startAltClockline();
-		if (!sd.begin(pin_sd_cs, SPI_FULL_SPEED)) {
-			drawMessage((char*) "Problem with internal space!");
-			while (!sd.begin(pin_sd_cs, SPI_FULL_SPEED));
-		}
-		card.begin(pin_sd_cs, SPI_FULL_SPEED);
-		endAltClockline();
-		//Calc free space
-		refreshFreeSpace();
-	}
-}
-
 /* Timestamp set for SDFat */
 void dateTime(uint16_t* date, uint16_t* time) {
 	// return date using FAT_DATE macro to format fields
 	*date = FAT_DATE(year(), month(), day());
 	// return time using FAT_TIME macro to format fields
 	*time = FAT_TIME(hour(), minute(), second());
+}
+
+/* Initializes the SD card */
+void initSD() {
+	//Storage info string
+	sdInfo = " - / - MB";
+	//Init the SD Card except for Early-Bird #1
+	if (mlx90614Version == 1) {
+		startAltClockline();
+		//Check if the sd card works
+		if (!sd.begin(pin_sd_cs, SPI_FULL_SPEED))
+			setDiagnostic(diag_sd);
+		else
+			//Begin card
+			card.begin(pin_sd_cs, SPI_FULL_SPEED);
+		endAltClockline();
+		//Calc free space
+		refreshFreeSpace();
+	}
+	//Set SD Timestamp to current time
+	SdFile::dateTimeCallback(dateTime);
 }
 
 /* Zero cache and optionally set the sector signature */

@@ -4,8 +4,8 @@ http://www.diy-thermocam.net
 
 Download and install the following programs:
 
-1. Arduino 1.6.7: https://www.arduino.cc/en/Main/OldSoftwareReleases#previous
-2. Teensyduino 1.27: https://www.pjrc.com/teensy/td_download.html
+1. Arduino 1.6.8: https://www.arduino.cc/en/Main/OldSoftwareReleases#previous
+2. Teensyduino 1.28: https://www.pjrc.com/teensy/td_download.html
 3. Visual Studio 2015 Community Edition: https://www.visualstudio.com/en-us/products/visual-studio-community-vs.aspx
 4. Visual Micro: http://www.visualmicro.com/page/Arduino-Visual-Studio-Downloads.aspx
 

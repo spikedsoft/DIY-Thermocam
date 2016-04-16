@@ -348,25 +348,6 @@ void proccessVideoFrames(uint16_t framesCaptured, char* dirname) {
 	delay(1000);
 }
 
-/* Get raw values from FLIR Lepton to save them */
-void limitLeptonSaveValues(uint16_t valueCount, unsigned short* valueArray) {
-	//Find min and max
-	if ((agcEnabled) && (!limitsLocked) && (colorScheme != 3) && (colorScheme != 8)) {
-		maxTemp = 0;
-		minTemp = 65535;
-		uint16_t temp;
-		for (int i = 0; i < valueCount; i++) {
-			temp = valueArray[i];
-			//Find maximum temp
-			if (temp > maxTemp)
-				maxTemp = temp;
-			//Find minimum temp
-			if (temp < minTemp)
-				minTemp = temp;
-		}
-	}
-}
-
 /* Saves raw data for an image or an video frame */
 void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	uint16_t valueCount;
@@ -384,7 +365,12 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	//Get temperatures
 	getTemperatures(true);
 	//Limit the raw values from FLIR Lepton
-	limitLeptonSaveValues(valueCount, valueArray);
+	if ((agcEnabled) && (!limitsLocked) && (colorScheme != 3) && (colorScheme != 8)) {
+		if (leptonVersion == 1)
+			limitValues();
+		else
+			limitValues(true);
+	}
 	//Start SD
 	startAltClockline(true);
 	//Create filename for image

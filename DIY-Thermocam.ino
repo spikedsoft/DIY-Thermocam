@@ -10,7 +10,7 @@
 */
 
 /* Current firmware version */
-#define Version "Firmware 1.16 from 08.04.2016"
+#define Version "Firmware 1.17 from 16.04.2016"
 
 /* Libraries */
 #include <ADC.h>
@@ -42,6 +42,19 @@ void setup()
 {
 	//Init Hardware
 	initHardware();
+	//Check for hardware issues
+	if (diagnostic != 0xFF) {
+		//Show the diagnostics over serial
+		printDiagnostic();
+		//Show it on the screen
+		showDiagnostic();
+		//Wait for touch press
+		while (!touch.touched());	
+		//Wait for touch release
+		while (touch.touched());
+	}
+	//Read EEPROM settings
+	readEEPROM();
 	//Go to the live Mode
 	liveMode();
 }

@@ -15,8 +15,13 @@ public:
 
 	/* Check if the capacitive touch can be started, otherwise use resistive */
 	void begin() {
-		if (capTouch.begin()) capacitive = true;
-		else resTouch.begin();
+		//Capacitive screen
+		if (capTouch.begin()) 
+			capacitive = true;
+		//Resistive screen or none
+		else {
+			resTouch.begin();
+		}
 	}
 
 	/* Returns if the screen is currently touched */

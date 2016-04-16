@@ -59,7 +59,6 @@ bool leptonReadFrame(byte line, byte seg) {
 void leptonRunCalibration() {
 	byte error;
 	byte errorCounter = 0;
-	bool showError = false;
 	do {
 		Wire.beginTransmission(0x2A);
 		Wire.write(0x00);
@@ -71,10 +70,10 @@ void leptonRunCalibration() {
 			errorCounter++;
 			delay(10);
 		}
-		//Show an error message on screen
-		if ((error) && (!showError) && (errorCounter > 10)) {
-			showError = true;
-			drawMessage((char*) "Please check Lepton I2C connection !");
+		//Trigger error and continue
+		if ((error) && (errorCounter > 10)) {
+			setDiagnostic(diag_lep_conf);
+			return;
 		}
 	} while (error != 0);
 	//Wait some time
@@ -109,9 +108,10 @@ void leptonCheckVersion() {
 	Wire.write(0x48);
 	Wire.write(0x1C);
 	byte error = Wire.endTransmission();
+	//Lepton I2C error, continue
 	if (error != 0) {
-		drawMessage((char*) "FLIR Lepton I2C error!");
-		while (1);
+		setDiagnostic(diag_lep_conf);
+		return;
 	}
 	while (leptonReadReg(0x2) & 0x01);
 	Wire.requestFrom(0x2A, leptonReadReg(0x6));
@@ -153,8 +153,6 @@ void initLepton() {
 	while (((leptonFrame[0] & 0x0F) == 0x0F) && ((millis() - calTimer) < 1000));
 	leptonEndSPI();
 	//If sync not received after a second, show error message
-	if ((leptonFrame[0] & 0x0F) == 0x0F) {
-		drawMessage((char*)"FLIR Lepton SPI error!");
-		while (true);
-	}
+	if ((leptonFrame[0] & 0x0F) == 0x0F)
+		setDiagnostic(diag_lep_data);
 }

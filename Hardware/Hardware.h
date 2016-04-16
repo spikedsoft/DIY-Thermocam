@@ -25,6 +25,15 @@ void toggleLaser() {
 	}
 }
 
+/* Initializes the Laser and the button */
+void initGPIO() {
+	//Deactivate the laser
+	pinMode(pin_laser, OUTPUT);
+	digitalWrite(pin_laser, LOW);
+	//Set button as input
+	pinMode(pin_button, INPUT);
+}
+
 /* Disables all Chip-Select lines on the SPI bus */
 void initSPI() {
 	pinMode(pin_lcd_dc, OUTPUT);
@@ -128,6 +137,62 @@ bool checkScreenLight() {
 	return digitalRead(pin_lcd_backlight);
 }
 
+/* Checks the specific devic from the diagnostic variable */
+bool checkDiagnostic(byte device) {
+	return (diagnostic >> device) & 1;
+}
+
+/* Sets the status of a specific device from the diagnostic variable */
+void setDiagnostic(byte device) {
+	diagnostic &= ~(1 << device);
+}
+
+/* Prints the diagnostic infos on the serial console in case the display is not there*/
+
+void printDiagnostic() {
+	Serial.println("*** Diagnostic Infos ***");
+	//Check spot sensor
+	if (checkDiagnostic(diag_spot))
+		Serial.println("Spot sensor - OK");
+	else
+		Serial.println("Spot sensor - Failed");
+	//Check display
+	if (checkDiagnostic(diag_display))
+		Serial.println("Display - OK");
+	else
+		Serial.println("Display - Failed");
+	//Check visual camera
+	if (checkDiagnostic(diag_camera))
+		Serial.println("Visual camera - OK");
+	else
+		Serial.println("Visual camera - Failed");
+	//Check touch screen
+	if (checkDiagnostic(diag_touch))
+		Serial.println("Touch screen - OK");
+	else
+		Serial.println("Touch screen - Failed");
+	//Check sd card
+	if (checkDiagnostic(diag_sd))
+		Serial.println("SD card - OK");
+	else
+		Serial.println("SD card - Failed");
+	//Check battery gauge
+	if (checkDiagnostic(diag_bat))
+		Serial.println("Battery gauge - OK");
+	else
+		Serial.println("Battery gauge - Failed");
+	//Check lepton config
+	if (checkDiagnostic(diag_lep_conf))
+		Serial.println("Lepton config - OK");
+	else
+		Serial.println("Lepton config - Failed");
+	//Check lepton data
+	if (checkDiagnostic(diag_lep_data))
+		Serial.println("Lepton data - OK");
+	else
+		Serial.println("Lepton data - Failed");
+}
+
 /* Checks if the sd card is inserted for Early Bird Hardware */
 bool checkSDCard() {
 	//Early-Bird #1
@@ -161,6 +226,37 @@ void setDisplayRotation() {
 	}
 }
 
+/* Initializes the display and checks if it is working */
+void initDisplay() {
+	//Init the display
+	display.InitLCD();
+	//Get the display status
+	byte status = display.readcommand8(ILI9341_RDSELFDIAG);
+	//If the display works
+	if ((status == 0) || (status == 224))
+		//Set rotation
+		setDisplayRotation();
+	//In case there is an error
+	else
+		setDiagnostic(diag_display);
+}
+
+/* Initializes the touch module and checks if it is working */
+void initTouch() {
+	//Init the touch
+	touch.begin();
+	//If not capacitive, check if working
+	if (!touch.capacitive) {
+		TS_Point point = touch.getPoint();
+		//No touch, working
+		if ((point.x == 0) && (point.y == 0))
+			return;
+		//Not working
+		else
+			setDiagnostic(diag_touch);
+	}
+}
+
 /* Reads the old settings from EEPROM */
 void readEEPROM() {
 	byte read;
@@ -168,7 +264,7 @@ void readEEPROM() {
 	if (EEPROM.read(eeprom_firstStart) != eeprom_setValue)
 		firstStart();
 	//Load settings from EEPROM
-	else{
+	else {
 		//Temperature format
 		read = EEPROM.read(eeprom_tempFormat);
 		if ((read == 0) || (read == 1))
@@ -238,33 +334,28 @@ void readEEPROM() {
 
 /* Startup procedure for the Hardware */
 void initHardware() {
-	//Start serial for debugging
+	//Start serial
 	Serial.begin(115200);
-	//Laser off
-	pinMode(pin_laser, OUTPUT);
-	digitalWrite(pin_laser, LOW);
+	//Init GPIO
+	initGPIO();
 	//SPI startup
 	initSPI();
-	//Init Time
+	//Init RTC
 	setTime(Teensy3Clock.get());
-	//Set SD Timestamp to current time
-	SdFile::dateTimeCallback(dateTime);
 	//Init I2C
 	initI2C();
 	//Init the MLX90614
 	mlx90614Init();
 	//Init Display
-	display.InitLCD();
+	initDisplay();
 	//Show Boot Screen
 	bootScreen();
-	//Push Button
-	pinMode(pin_button, INPUT);
 	//Init ADC
 	initADC();
 	//Init Camera module
 	initCamera();
 	//Init Touch screen
-	touch.begin();
+	initTouch();
 	//Init SD card
 	initSD();
 	//Check battery for the first time
@@ -273,8 +364,4 @@ void initHardware() {
 	initLepton();
 	//Disable I2C timeout
 	Wire.setDefaultTimeout(0);
-	//Read EEPROM settings
-	readEEPROM();
-	//Set rotation
-	setDisplayRotation();
 }

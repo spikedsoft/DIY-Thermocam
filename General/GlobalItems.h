@@ -44,7 +44,20 @@
 #define eeprom_liveHelper 151
 #define eeprom_setValue 200
 
+/* HW diagnostics define */
+#define diag_spot 0
+#define diag_display 1
+#define diag_camera 2
+#define diag_touch 3
+#define diag_sd 4
+#define diag_bat 5
+#define diag_lep_conf 6
+#define diag_lep_data 7
+
 /* Variables */
+
+//HW diagnostic information
+byte diagnostic = 0xFF;
 
 //160x120 image storage
 unsigned short* image;

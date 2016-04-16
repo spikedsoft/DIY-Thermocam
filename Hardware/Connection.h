@@ -5,6 +5,8 @@
 /* Defines */
 
 #define CMD_VERSION 86
+#define CMD_VIDEOMODULE 85
+#define CMD_THERMALVIEWER 84
 #define CMD_START 83
 #define CMD_ROTATED 82
 #define CMD_GET 71
@@ -21,6 +23,9 @@
 
 //Command, default send frame
 byte sendCmd = SEND_FRAME;
+//Video out type - 0 = ThermalViewer, 1 = Video out module
+bool videoOutType;
+
 
 /* Mass storage - jump to end of hex file */
 
@@ -116,16 +121,9 @@ void serialClear() {
 /* Send the config data */
 void sendConfigData() {
 	uint8_t farray[4];
-	//For the Lepton2 sensor
-	if (leptonVersion != 1)
-		limitLeptonSaveValues(4800, rawValues);
-	//For the Lepton3 sensor
-	else
-		limitLeptonSaveValues(19200, image);
 	//Send min
 	Serial.write((minTemp & 0xFF00) >> 8);
 	Serial.write(minTemp & 0x00FF);
-	//Send max
 	Serial.write((maxTemp & 0xFF00) >> 8);
 	Serial.write(maxTemp & 0x00FF);
 	//Send object temp
@@ -169,7 +167,7 @@ void sendConfigData() {
 	else {
 		//Write dummy data if not enabled
 		for (int i = 0; i < 384; i++) {
-			sdFile.write((byte)0);
+			Serial.write((byte)0);
 		}
 	}
 	//Send adjust bar allowed
@@ -292,6 +290,28 @@ void videoOutput() {
 			break;
 		//Get the temps
 		getTemperatures(true);
+		//For 160x120 Lepton3
+		if (leptonVersion == 1) {
+			//Find min and max if required
+			if ((agcEnabled) && (!limitsLocked) && (colorScheme != 3) && (colorScheme != 8))
+				limitValues();
+			//Convert to colors for video out module
+			if (videoOutType == 1) {
+				scaleValues();
+				convertColors();
+			}
+		}
+		//For 80x60 Lepton2
+		else {
+			//Find min and max if required
+			if ((agcEnabled) && (!limitsLocked) && (colorScheme != 3) && (colorScheme != 8))
+				limitValues(true);
+			//Convert to colors for video out module
+			if(videoOutType == 1) {
+				scaleValues(true);
+				convertColors(true);
+			}
+		}
 		//Refresh the temp points if enabled
 		if (pointsEnabled)
 			refreshTempPoints(true);
@@ -325,15 +345,30 @@ void videoConnect() {
 	byte colorSchemeOld = colorScheme;
 	//Allocate space
 	rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
-	//Start serial connection
-	Serial.begin(115200);
+	//Show message
 	drawMessage((char*)"Waiting for connection..");
 	display.print((char*) "Touch screen to return", CENTER, 170);
 	delay(1000);
 	//Wait for device
 	while (true) {
-		//Check for serial connection
+		//Serial start command send
 		if ((Serial.available() > 0) && (Serial.read() == CMD_START)) {
+			//Wait for next byte
+			while (Serial.available() == 0) {
+				if (touch.touched())
+					break;
+			}
+			//Next byte should be the mode
+			byte readMode = Serial.read();
+			//We detected the thermal viewer
+			if (readMode == CMD_THERMALVIEWER)
+				videoOutType = 0;
+			//We detected the video output module
+			else if (readMode == CMD_VIDEOMODULE)
+				videoOutType = 1;
+			//None of the both, return
+			else
+				break;
 			//Clear input buffer
 			serialClear();
 			//Send start byte
@@ -342,14 +377,16 @@ void videoConnect() {
 			videoOutput();
 			break;
 		}
+		//Another command received, discard it
+		else if ((Serial.available() > 0))
+			Serial.read();
 		//Abort search
 		if (touch.touched())
 			break;
 	}
-	//End serial connection
+	//Show message
 	drawMessage((char*)"Connection ended, return..");
 	delay(1000);
-	Serial.end();
 	//Clear all serial buffers
 	serialClear();
 	//Free space again
