@@ -57,8 +57,14 @@ void buttonIRQ() {
 		imgSave = 2;
 	//Long press - start video
 	else {
-		detachInterrupts();
-		videoSave = true;
+		if (displayMode != mode_thermal) {
+			drawMessage((char*) "Video only possible in thermal mode!");
+			delay(1000);
+		}
+		else {
+			detachInterrupts();
+			videoSave = true;
+		}
 	}
 }
 
@@ -331,8 +337,8 @@ void displayInfos() {
 	//Show the spot in the middle
 	if (spotEnabled)
 		showSpot();
-	//Show the color bar when warmup is over and if enabled
-	if ((colorbarEnabled) && (calStatus > 0))
+	//Show the color bar when warmup is over and if enabled, not in visual mode
+	if ((colorbarEnabled) && (calStatus > 0) && (displayMode != mode_visual))
 		showColorBar();
 	//Show the temperature points
 	if (pointsEnabled)
@@ -357,6 +363,16 @@ void liveModeInit() {
 		digitalWrite(pin_laser, HIGH);
 	//Select color scheme
 	selectColorScheme();
+	//Change camera resolution
+	if (displayMode == mode_thermal)
+		changeCamRes(VC0706_640x480);
+	else
+		changeCamRes(VC0706_160x120);
+	//Activate or deactivate combined mode
+	if (displayMode != mode_combined)
+		combinedDecomp = false;
+	else
+		combinedDecomp = true;
 	//Attach the interrupts
 	attachInterrupts();
 	//Allocate space
@@ -390,8 +406,21 @@ void liveMode() {
 			if (liveMenu())
 				break;
 		}
-		//Create and display the thermal image
-		displayThermalImg();
+		//Show the content depending on the mode
+		switch (displayMode) {
+		//Thermal only
+		case mode_thermal:
+			displayThermalImg();
+			break;
+		//Visual only
+		case mode_visual:
+			displayVisualImg();
+			break;
+		//Combined
+		case mode_combined:
+			displayCombinedImg();
+			break;
+		}
 		//Display additional information on the screen
 		if (imgSave != 2)
 			displayInfos();

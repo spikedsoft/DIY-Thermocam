@@ -27,6 +27,23 @@ byte sendCmd = SEND_FRAME;
 bool videoOutType;
 
 
+/*  code to process time sync messages from the serial port   */
+#define TIME_HEADER  "T"   // Header tag for serial time sync message
+
+unsigned long processSyncMessage() {
+	unsigned long pctime = 0L;
+	const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013 
+
+	if (Serial.find((char*)TIME_HEADER)) {
+		pctime = Serial.parseInt();
+		return pctime;
+		if (pctime < DEFAULT_TIME) { // check the value is a valid time (greater than Jan 1 2013)
+			pctime = 0L; // return 0 to indicate that the time is not valid
+		}
+	}
+	return pctime;
+}
+
 /* Mass storage - jump to end of hex file */
 
 // default flag is EEPROM Address 0x00 set to 0xAE
@@ -360,7 +377,7 @@ void videoConnect() {
 			}
 			//Next byte should be the mode
 			byte readMode = Serial.read();
-			//We detected the thermal viewer
+			//We detected the thermal viewer, get the current time
 			if (readMode == CMD_THERMALVIEWER)
 				videoOutType = 0;
 			//We detected the video output module
@@ -416,6 +433,9 @@ void massStorage() {
 		//No warmup needed after restart if done previously
 		if (calStatus != 0)
 			EEPROM.write(eeprom_massStorage, eeprom_setValue);
+		//Fix display diagnostic error
+		else
+			EEPROM.write(eeprom_massStorage, eeprom_massStorage);
 		restartAndJumpToApp();
 	}
 }

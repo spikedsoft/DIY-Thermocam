@@ -55,7 +55,11 @@ uint16_t getCardSize() {
 
 //Refresh free space of the internal space
 void refreshFreeSpace() {
-	sdInfo = String((int)(getSDSpace() / 1024)) + "/" + String((int)(getCardSize() - 1)) + " MB";
+	uint16_t cardSize = getCardSize();
+	if (cardSize == 0)
+		sdInfo = "No card";
+	else
+		sdInfo = String((int)(getSDSpace() / 1024)) + "/" + String((int)(cardSize - 1)) + " MB";
 }
 
 /* Timestamp set for SDFat */

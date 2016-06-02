@@ -172,8 +172,8 @@ void saveVideoFrame(char* filename, char* dirname) {
 	endAltClockline();
 }
 
-/* Saves a thermal image to the sd card */
-void saveThermalImage(char* filename, char* dirname) {
+/* Saves a thermal or combined image to the sd card */
+void saveDisplayImage(char* filename, char* dirname) {
 	//Begin SD Transmission
 	startAltClockline(true);
 	//Switch to video folder if video
@@ -218,6 +218,9 @@ void saveThermalImage(char* filename, char* dirname) {
 
 /* Saves images to the internal storage */
 void saveImage() {
+	//Filename
+	char filename[20];
+
 	//For Early Bird HW, check if the SD card is there
 	if (mlx90614Version == 0) {
 		if (!checkSDCard()) {
@@ -225,44 +228,60 @@ void saveImage() {
 			return;
 		}
 	}
+
 	//Check if there is at least 1MB of space left
 	if (getSDSpace() < 1000) {
 		showMsg((char*) "Int. space full!");
 		imgSave = false;
 		return;
 	}
+
 	//Detach the interrupts
 	detachInterrupts();
-	//Wake camera up if needed and take image
-	if (visualEnabled == 1)
-		//Capture image command
+
+	//Capture image command if we are in thermal mode
+	if ((visualEnabled == true) && (displayMode == mode_thermal))
 		captureVisualImage();
+
 	//Build filename from the current time & date
-	char filename[20];
 	createSDName(filename);
-	//Allocate space for raw values
-	rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
-	//Save Raw Values
-	saveRawData(true, filename);
-	//Deallocate space again
-	free(rawValues);
-	//Save Bitmap image if activated
-	if (convertEnabled == 1)
-		saveThermalImage(filename);
+
+	//Save Raw file when in Thermal mode
+	if (displayMode == mode_thermal) {
+		//Allocate space for raw values
+		rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
+		//Save Raw Values
+		saveRawData(true, filename);
+		//Deallocate space again
+		free(rawValues);
+	}
+
+	//Save Bitmap image if activated or in visual / combined mode
+	if ((convertEnabled == true) || (displayMode == mode_visual) || (displayMode == mode_combined)) {
+		saveDisplayImage(filename);
+	}
+		
 	//Eventually save optical image
-	if (visualEnabled == 1) {
+	if ((visualEnabled == true) && (displayMode == mode_thermal)){
 		//Create file
 		createJPGFile(filename);
 		//Display message
-		showMsg((char*) "Save Visual..");
+		showMsg((char*) "Save Visual JPG..");
 		//Save visual image
 		saveVisualImage();
 	}
+
 	//Show Message on screen
-	if (visualEnabled == 1)
+	if (((visualEnabled == true) || (convertEnabled)) && (displayMode == mode_thermal))
 		showMsg((char*) "All saved!", true);
-	else
-		showMsg((char*) "Thermal saved!");
+	else if(displayMode == mode_thermal)
+		showMsg((char*) "Thermal Raw saved!");
+	else if(displayMode == mode_visual)
+		showMsg((char*) "Visual BMP saved!");
+	else if(displayMode == mode_combined)
+		showMsg((char*) "Combined BMP saved!");
+
+	//Disable image save marker
 	imgSave = false;
 	//Re-attach the interrupts
 	attachInterrupts();

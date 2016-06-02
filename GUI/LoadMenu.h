@@ -242,7 +242,7 @@ void convertImage(char* filename) {
 	//Show additional information
 	displayInfos();
 	//Save image
-	saveThermalImage(filename);
+	saveDisplayImage(filename);
 	drawMessage((char*) "Image converted !");
 	delay(500);
 	strcpy(&filename[14], ".DAT");

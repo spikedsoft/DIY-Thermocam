@@ -223,6 +223,40 @@ public:
 		SPI.endTransaction();
 	}
 
+	// Read Pixel at x,y and get back 16-bit packed color
+	uint16_t readPixel(int16_t x, int16_t y)
+	{
+		uint8_t dummy __attribute__((unused));
+		uint8_t r, g, b;
+
+		SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
+
+		setAddr(x, y, x, y);
+		writecommand_cont(ILI9341_RAMRD); // read from RAM
+		waitTransmitComplete();
+
+		// Push 4 bytes over SPI
+		KINETISK_SPI0.PUSHR = 0 | (pcs_data << 16) | SPI_PUSHR_CTAS(0) | SPI_PUSHR_CONT;
+		waitFifoEmpty();    // wait for both queues to be empty.
+
+		KINETISK_SPI0.PUSHR = 0 | (pcs_data << 16) | SPI_PUSHR_CTAS(0) | SPI_PUSHR_CONT;
+		KINETISK_SPI0.PUSHR = 0 | (pcs_data << 16) | SPI_PUSHR_CTAS(0) | SPI_PUSHR_CONT;
+		KINETISK_SPI0.PUSHR = 0 | (pcs_data << 16) | SPI_PUSHR_CTAS(0) | SPI_PUSHR_EOQ;
+
+		// Wait for End of Queue
+		while ((KINETISK_SPI0.SR & SPI_SR_EOQF) == 0);
+		KINETISK_SPI0.SR = SPI_SR_EOQF;  // make sure it is clear
+
+										 // Read Pixel Data
+		dummy = KINETISK_SPI0.POPR;	// Read a DUMMY byte of GRAM
+		r = KINETISK_SPI0.POPR;		// Read a RED byte of GRAM
+		g = KINETISK_SPI0.POPR;		// Read a GREEN byte of GRAM
+		b = KINETISK_SPI0.POPR;		// Read a BLUE byte of GRAM
+
+		SPI.endTransaction();
+		return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
+	}
+
 	//Write RGB565 data to the screen
 	void writeScreen(unsigned short *pcolors)
 	{

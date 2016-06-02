@@ -25,6 +25,11 @@
 #define pin_bat_measure 23
 #define pin_usb_measure A14
 
+//Mode defines
+#define mode_thermal 0
+#define mode_visual 1
+#define mode_combined 2
+
 /* EEPROM defines */
 #define eeprom_tempFormat 101
 #define eeprom_colorScheme 102
@@ -40,9 +45,11 @@
 #define eeprom_pointsEnabled 114
 #define eeprom_storageEnabled 115
 #define eeprom_rotationEnabled 116
+#define eeprom_displayMode 117
 #define eeprom_firstStart 150
 #define eeprom_liveHelper 151
 #define eeprom_setValue 200
+#define eeprom_fwVersion 250
 
 /* HW diagnostics define */
 #define diag_spot 0
@@ -90,11 +97,13 @@ Camera cam(&Serial1);
 int8_t batPercentage = -1;
 
 //MLX90614 sensor version - 0 = BCI (Early-Bird #1), 1 = DCH (All other)
-bool mlx90614Version;
+bool mlx90614Version = 0;
 //FLIR Lepton sensor version - 0 = Lepton2 Shuttered, 1 = Lepton3 Shuttered, 2 = Lepton2 No-Shutter 
-byte leptonVersion;
+byte leptonVersion = 0;
 //Temperature format - 0 = dec, 1 = fahrenheit
 bool tempFormat = 0;
+//Display mode - 0 = thermal, 1 = visual, 2 = combined
+byte displayMode = mode_thermal;
 //Current color scheme - 0 = rainbow, 1 = ironblack, 2 = grayscale, 3 = hot, 4 = cold
 byte colorScheme = 0;
 //Pointer to the current color scheme
@@ -130,7 +139,7 @@ bool laserEnabled = false;
 
 //Calibration coefficients
 float calOffset;
-float calSlope = 0.025;
+float calSlope = 0.0217;
 //Calibration status - 0 = warmup, 1 = standard coeff, 2 = manual coeff
 byte calStatus = 0;
 //Calibration warmup timer

@@ -13,6 +13,12 @@
 
 /* Methods */
 
+/* Get time from the RTC */
+time_t getTeensy3Time()
+{
+	return Teensy3Clock.get();
+}
+
 /* Switches the laser on or off*/
 void toggleLaser() {
 	if (laserEnabled) {
@@ -230,15 +236,21 @@ void setDisplayRotation() {
 void initDisplay() {
 	//Init the display
 	display.InitLCD();
-	//Get the display status
-	byte status = display.readcommand8(ILI9341_RDSELFDIAG);
-	//If the display works
-	if ((status == 0) || (status == 224))
-		//Set rotation
-		setDisplayRotation();
-	//In case there is an error
-	else
-		setDiagnostic(diag_display);
+	//Set the display rotation
+	setDisplayRotation();
+	//If not returning from mass storage, check display
+	byte val = EEPROM.read(eeprom_massStorage);
+	if ((val != eeprom_massStorage) && (val != eeprom_setValue)) {
+		//Check status by writing test pixel red to 10/10
+		display.setXY(10, 10, 10, 10);
+		display.setPixel(VGA_RED);
+		uint16_t color = display.readPixel(10, 10);
+		if (color != VGA_RED)
+			setDiagnostic(diag_display);
+	}
+	//Clear flag
+	if(val == eeprom_massStorage)
+		EEPROM.write(eeprom_massStorage, 0);
 }
 
 /* Initializes the touch module and checks if it is working */
@@ -260,76 +272,72 @@ void initTouch() {
 /* Reads the old settings from EEPROM */
 void readEEPROM() {
 	byte read;
-	//Do the first start setup
-	if (EEPROM.read(eeprom_firstStart) != eeprom_setValue)
-		firstStart();
-	//Load settings from EEPROM
-	else {
-		//Temperature format
-		read = EEPROM.read(eeprom_tempFormat);
-		if ((read == 0) || (read == 1))
-			tempFormat = read;
-		//Color scheme
-		read = EEPROM.read(eeprom_colorScheme);
-		if ((read >= 0) && (read <= 17))
-			colorScheme = read;
-		//If Hot or Cold on startup, switch to Rainbow
-		if ((colorScheme == 3) || (colorScheme == 8))
-			colorScheme = 12;
-		//Convert Enabled
-		read = EEPROM.read(eeprom_convertEnabled);
-		if ((read == 0) || (read == 1))
-			convertEnabled = read;
-		//Visual Enabled
-		read = EEPROM.read(eeprom_visualEnabled);
-		if ((read == 0) || (read == 1))
-			visualEnabled = read;
-		//Battery Enabled
-		read = EEPROM.read(eeprom_batteryEnabled);
-		if ((read == 0) || (read == 1))
-			batteryEnabled = read;
-		//Time Enabled
-		read = EEPROM.read(eeprom_timeEnabled);
-		if ((read == 0) || (read == 1))
-			timeEnabled = read;
-		//Date Enabled
-		read = EEPROM.read(eeprom_dateEnabled);
-		if ((read == 0) || (read == 1))
-			dateEnabled = read;
-		//Points Enabled
-		read = EEPROM.read(eeprom_pointsEnabled);
-		if ((read == 0) || (read == 1))
-			pointsEnabled = read;
-		//Storage Enabled
-		read = EEPROM.read(eeprom_storageEnabled);
-		if ((read == 0) || (read == 1))
-			storageEnabled = read;
-		//Spot Enabled
-		read = EEPROM.read(eeprom_spotEnabled);
-		if ((read == 0) || (read == 1))
-			spotEnabled = read;
-		//Filter Enabled
-		read = EEPROM.read(eeprom_filterEnabled);
-		if ((read == 0) || (read == 1))
-			filterEnabled = read;
-		//Colorbar Enabled
-		read = EEPROM.read(eeprom_colorbarEnabled);
-		if ((read == 0) || (read == 1))
-			colorbarEnabled = read;
-		//Rotation Enabled
-		read = EEPROM.read(eeprom_rotationEnabled);
-		if ((read == 0) || (read == 1))
-			rotationEnabled = read;
-		//Return from Mass Storage reboot, no warmup required
-		read = EEPROM.read(eeprom_massStorage);
-		if (read == eeprom_setValue) {
-			EEPROM.write(eeprom_massStorage, 0);
-			calStatus = 1;
-		}
+	//Temperature format
+	read = EEPROM.read(eeprom_tempFormat);
+	if ((read == 0) || (read == 1))
+		tempFormat = read;
+	//Color scheme
+	read = EEPROM.read(eeprom_colorScheme);
+	if ((read >= 0) && (read <= 17))
+		colorScheme = read;
+	//If Hot or Cold on startup, switch to Rainbow
+	if ((colorScheme == 3) || (colorScheme == 8))
+		colorScheme = 12;
+	//Convert Enabled
+	read = EEPROM.read(eeprom_convertEnabled);
+	if ((read == 0) || (read == 1))
+		convertEnabled = read;
+	//Visual Enabled
+	read = EEPROM.read(eeprom_visualEnabled);
+	if ((read == 0) || (read == 1))
+		visualEnabled = read;
+	//Battery Enabled
+	read = EEPROM.read(eeprom_batteryEnabled);
+	if ((read == 0) || (read == 1))
+		batteryEnabled = read;
+	//Time Enabled
+	read = EEPROM.read(eeprom_timeEnabled);
+	if ((read == 0) || (read == 1))
+		timeEnabled = read;
+	//Date Enabled
+	read = EEPROM.read(eeprom_dateEnabled);
+	if ((read == 0) || (read == 1))
+		dateEnabled = read;
+	//Points Enabled
+	read = EEPROM.read(eeprom_pointsEnabled);
+	if ((read == 0) || (read == 1))
+		pointsEnabled = read;
+	//Storage Enabled
+	read = EEPROM.read(eeprom_storageEnabled);
+	if ((read == 0) || (read == 1))
+		storageEnabled = read;
+	//Spot Enabled
+	read = EEPROM.read(eeprom_spotEnabled);
+	if ((read == 0) || (read == 1))
+		spotEnabled = read;
+	//Filter Enabled
+	read = EEPROM.read(eeprom_filterEnabled);
+	if ((read == 0) || (read == 1))
+		filterEnabled = read;
+	//Colorbar Enabled
+	read = EEPROM.read(eeprom_colorbarEnabled);
+	if ((read == 0) || (read == 1))
+		colorbarEnabled = read;
+	//Rotation Enabled
+	read = EEPROM.read(eeprom_rotationEnabled);
+	if ((read == 0) || (read == 1))
+		rotationEnabled = read;
+	//Display Mode
+	read = EEPROM.read(eeprom_displayMode);
+	if ((read == mode_thermal) || (read == mode_visual) || (read == mode_combined))
+		displayMode = read;
+	//Return from Mass Storage reboot, no warmup required
+	read = EEPROM.read(eeprom_massStorage);
+	if (read == eeprom_setValue) {
+		EEPROM.write(eeprom_massStorage, 0);
+		calStatus = 1;
 	}
-	//Show the live mode helper
-	if (EEPROM.read(eeprom_liveHelper) != eeprom_setValue)
-		liveModeHelper();
+
 }
 
 /* Startup procedure for the Hardware */
@@ -341,11 +349,9 @@ void initHardware() {
 	//SPI startup
 	initSPI();
 	//Init RTC
-	setTime(Teensy3Clock.get());
+	setSyncProvider(getTeensy3Time);
 	//Init I2C
 	initI2C();
-	//Init the MLX90614
-	mlx90614Init();
 	//Init Display
 	initDisplay();
 	//Show Boot Screen
@@ -356,12 +362,14 @@ void initHardware() {
 	initCamera();
 	//Init Touch screen
 	initTouch();
-	//Init SD card
-	initSD();
 	//Check battery for the first time
 	checkBattery();
 	//Check Lepton HW Revision
 	initLepton();
+	//Init the MLX90614
+	mlx90614Init();
+	//Init SD card
+	initSD();
 	//Disable I2C timeout
 	Wire.setDefaultTimeout(0);
 }

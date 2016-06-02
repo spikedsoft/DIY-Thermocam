@@ -10,7 +10,8 @@
 */
 
 /* Current firmware version */
-#define Version "Firmware 1.17 from 16.04.2016"
+#define Version "Firmware 1.18 from 02.06.2016"
+#define fwVersion 118
 
 /* Libraries */
 #include <ADC.h>
@@ -49,12 +50,25 @@ void setup()
 		//Show it on the screen
 		showDiagnostic();
 		//Wait for touch press
-		while (!touch.touched());	
+		while (!touch.touched());
 		//Wait for touch release
 		while (touch.touched());
 	}
+	//Do the first start setup
+	if (EEPROM.read(eeprom_firstStart) != eeprom_setValue)
+		firstStart();
+	//Show message after firmware upgrade
+	if (EEPROM.read(eeprom_fwVersion) != fwVersion) {
+		drawMessage((char*)"FW update complete, pls restart!");
+		//Set EEPROM firmware version to current one
+		EEPROM.write(eeprom_fwVersion, fwVersion);
+		while (true);
+	}
 	//Read EEPROM settings
 	readEEPROM();
+	//Show the live mode helper
+	if (EEPROM.read(eeprom_liveHelper) != eeprom_setValue)
+		liveModeHelper();
 	//Go to the live Mode
 	liveMode();
 }

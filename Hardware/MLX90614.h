@@ -192,6 +192,7 @@ void mlx90614Init() {
 		mlx90614Measure(0, &check);
 		//If we cannot connect, set error and continue
 		if (count == 100) {
+			Serial.println("FAILED");
 			setDiagnostic(diag_spot);
 			return;
 		}

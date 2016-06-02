@@ -12,9 +12,14 @@ float celciusToFahrenheit(float Tc) {
 float calFunction(uint16_t rawValue) {
 	//Calculate offset out of ambient temp when no calib is done
 	if (calStatus != 2) 
-		calOffset = mlx90614Amb - 204.8;
+		calOffset = mlx90614Amb - 177.77;
 	//Calculate the temperature in Celcius out of the coefficients
 	float temp = (calSlope * rawValue) + calOffset;
+	//Limit to minimum and maximum value
+	if (temp > 200)
+		temp = 200;
+	if (temp < -40)
+		temp = -40;
 	//Convert to Fahrenheit if needed
 	if (tempFormat)
 		temp = celciusToFahrenheit(temp);

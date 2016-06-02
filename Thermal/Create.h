@@ -419,14 +419,68 @@ void displayThermalImg() {
 	//If the image save marker was set
 	if (imgSave == 2) {
 		//Show message on screen
-		showMsg((char*) "Save Thermal..");
+		if(!convertEnabled)
+			showMsg((char*) "Save Thermal Raw..");
+		else
+			showMsg((char*) "Save Thermal BMP..");
 		//Set marker to create image
 		imgSave = 3;
 	}
 	//Create the thermal image
 	createThermalImg();
 	//Draw thermal image on screen if created previously
-	if (imgSave != 2) display.writeScreen(image);
+	if (imgSave != 2)
+		display.writeScreen(image);
+	//If the image has been created, set to save
+	if (imgSave == 3)
+		imgSave = 1;
+}
+
+/* Get and display the visual image on screen */
+void displayVisualImg() {
+	//If the image save marker was set
+	if (imgSave == 2) {
+		//Show message on screen
+		showMsg((char*) "Save Visual BMP..");
+		//Set marker to create image
+		imgSave = 3;
+	}
+	//Send capture command
+	captureVisualImage();
+	//Get the visual image and decompress it
+	getVisualImage();
+	//Display on screen if created previously
+	if (imgSave != 2)
+		display.drawBitmap(0, 0, 160, 120, image, 2);
+	//If the image has been created, set to save
+	if (imgSave == 3)
+		imgSave = 1;
+}
+
+/* Create and display the combined image on screen */
+void displayCombinedImg() {
+	//If the image save marker was set
+	if (imgSave == 2) {
+		//Show message on screen
+		showMsg((char*) "Save Combined BMP..");
+		//Set marker to create image
+		imgSave = 3;
+	}
+	//Send capture command
+	captureVisualImage();
+	//Receive the temperatures over SPI
+	getTemperatures();
+	//Find min and max
+	limitValues();
+	//Scale the values
+	scaleValues();
+	//Convert lepton data to RGB565 colors
+	convertColors();
+	//Get the visual image and decompress it combined
+	getVisualImage();
+	//Display on screen if created previously
+	if (imgSave != 2)
+		display.drawBitmap(0, 0, 160, 120, image, 2);
 	//If the image has been created, set to save
 	if (imgSave == 3)
 		imgSave = 1;

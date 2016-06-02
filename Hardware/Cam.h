@@ -10,11 +10,14 @@ typedef struct {
 	unsigned short jsize;
 	unsigned short joffset;
 } IODEV;
+
 //JPEG Decompressor
 void* jdwork;
 JDEC jd;
 IODEV iodev;
-bool combined = false;
+
+//Combined mode for decompressor
+bool combinedDecomp = false;
 
 /* Methods */
 
@@ -86,7 +89,7 @@ unsigned int output_func(JDEC * jd, void * bitmap, JRECT * rect) {
 	for (y = rect->top; y <= rect->bottom; y++) {
 		for (x = rect->left; x <= rect->right; x++) {
 			//Write into the array with transparency if combined activated
-			if (combined) {
+			if (combinedDecomp) {
 				//Get the visual image color
 				pixel = bmp[i++];
 				//And extract the RGB values out of it
@@ -130,10 +133,11 @@ unsigned int input_func(JDEC * jd, byte* buff, unsigned int ndata) {
 void getVisualImage() {
 	//Get frame length
 	uint16_t jpglen = cam.frameLength();
+	Serial.println(jpglen);
 	//Define array for the jpeg data
 	uint8_t* jpegData = (uint8_t*)calloc(jpglen, sizeof(uint8_t));
 	//Buffer to store the data of up to 64 byte
-	uint8_t *buffer;
+	uint8_t *buffer = (uint8_t*)calloc(64, sizeof(uint8_t));
 	//Count variable
 	uint16_t counter = 0;
 	//Transfer data
@@ -154,6 +158,8 @@ void getVisualImage() {
 	iodev.jsize = jpglen;
 	//the offset is zero
 	iodev.joffset = 0;
+	//Define space for the decompressor
+	jdwork = malloc(3100);
 	//Prepare the image for convertion to RGB565
 	jd_prepare(&jd, input_func, jdwork, 3100, &iodev);
 	//Small image, do not downsize
@@ -164,4 +170,6 @@ void getVisualImage() {
 		jd_decomp(&jd, output_func, 1);
 	//Free the jpeg data array
 	free(jpegData);
+	//Free space for the decompressor
+	free(jdwork);
 }

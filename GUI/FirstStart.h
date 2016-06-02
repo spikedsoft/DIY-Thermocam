@@ -175,31 +175,9 @@ void adjustCamComplete() {
 	while (true);
 }
 
-/* Shows a message that the resolution needs to be changed */
-void adjustCamResChange() {
-	String text[7];
-	//Hint screen for the live mode #1 
-	text[0] = "Adjust camera";
-	text[1] = "In this firmware version,";
-	text[2] = "a wizard has been added to";
-	text[3] = "help you to adjust the ";
-	text[4] = "visual camera module.";
-	text[5] = "Hard-reset the device in order ";
-	text[6] = "to change the resolution.";
-	infoScreen(text, false);
-	//Set camera to small resolution for adjust wizard
-	cam.setImageSize(VC0706_160x120);
-	//Set camera compression
-	cam.setCompression(95);
-	//Wait forever
-	while (true);
-}
-
 /* Helps to adjust the focus */
 void adjustCamFocus() {
 	String text[7];
-	//Set camera resolution to 320x240
-	changeCamRes(VC0706_320x240);
 	//Hint screen for the live mode #1 
 	text[0] = "Adjust focus";
 	text[1] = "This wizard will help you";
@@ -215,12 +193,8 @@ void adjustCamFocus() {
 	display.setBackColor(VGA_TRANSPARENT);
 	//Show the camera image until touch
 	while (true) {
-		//Send capture command
-		captureVisualImage();
-		//Get the visual image and decompress it
-		getVisualImage();
-		//Display on screen
-		display.drawBitmap(0, 0, 160, 120, image, 2);
+		//Display visual img
+		displayVisualImg();
 		//Show touch hint
 		display.print((char*)"Touch screen to continue", CENTER, 210);
 		//Abort if screen touched
@@ -232,8 +206,6 @@ void adjustCamFocus() {
 /* Helps to adjust the alignment to the thermal image */
 void adjustCamAlignment() {
 	String text[7];
-	//Set camera resolution to 160x120
-	changeCamRes(VC0706_160x120);
 	//Hint screen for the live mode #1 
 	text[0] = "Adjust alignment";
 	text[1] = "In the next step, you can";
@@ -246,7 +218,7 @@ void adjustCamAlignment() {
 	//Wait until touch release
 	while (touch.touched());
 	//Show the combined image until touch
-	combined = true;
+	combinedDecomp = true;
 	//Change color scheme
 	colorMap = colorMap_rainbow;
 	colorElements = 256;
@@ -255,41 +227,29 @@ void adjustCamAlignment() {
 	display.setColor(VGA_WHITE);
 	display.setBackColor(VGA_TRANSPARENT);
 	while (true) {
-		//Send capture command
-		captureVisualImage();
-		//Receive the temperatures over SPI
-		getTemperatures();
-		//Find min and max
-		limitValues();
-		//Scale the values
-		scaleValues();
-		//Convert lepton data to RGB565 colors
-		convertColors();
-		//Get the visual image and decompress it combined
-		getVisualImage();
-		//Display on screen
-		display.drawBitmap(0, 0, 160, 120, image, 2);
+		//Display combined img
+		displayCombinedImg();
 		//Show touch hint
 		display.print((char*)"Touch screen to continue", CENTER, 210);
 		//Abort if screen touched
 		if (touch.touched())
 			break;
 	}
-	combined = false;
+	combinedDecomp = false;
 }
 
 /* Helps to adjust the visual camera */
 void adjustCam() {
-	//Allocate arrays
+	//Allocate array
 	image = (unsigned short*)calloc(19200, sizeof(unsigned short));
-	jdwork = malloc(3100);
+	//Change camera resolution to 160x120
+	changeCamRes(VC0706_160x120);
 	//Adjust the focus
 	adjustCamFocus();
 	//Adjust the alignment
 	adjustCamAlignment();
 	//Free arrays
 	free(image);
-	free(jdwork);
 	//Restore camera resolution to 640x480
 	changeCamRes(VC0706_640x480);
 }
@@ -312,6 +272,7 @@ void firstEEPROMSet() {
 	EEPROM.write(eeprom_dateEnabled, dateEnabled);
 	EEPROM.write(eeprom_pointsEnabled, pointsEnabled);
 	EEPROM.write(eeprom_storageEnabled, storageEnabled);
+	EEPROM.write(eeprom_displayMode, displayMode);
 	//Set Color Scheme to Rainbow
 	EEPROM.write(eeprom_colorScheme, 12);
 	//For Lepton3, disable filter
@@ -319,6 +280,8 @@ void firstEEPROMSet() {
 		EEPROM.write(eeprom_filterEnabled, false);
 	//Set first start marker to true
 	EEPROM.write(eeprom_firstStart, eeprom_setValue);
+	//Set current firmware version
+	EEPROM.write(eeprom_fwVersion, fwVersion);
 }
 
 /* First start setup*/

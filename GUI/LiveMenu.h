@@ -620,6 +620,83 @@ bool changeColor() {
 	}
 }
 
+/* Switch the current display mode menu item */
+void liveMenuModeString(int pos) {
+	char* text = (char*) "";
+	switch (pos) {
+	case 0:
+		text = (char*) "Thermal";
+		break;
+	case 1:
+		text = (char*) "Visual";
+		break;
+	case 2:
+		text = (char*) "Combined";
+		break;
+	}
+	liveMenuSelection(text);
+}
+
+/* Choose the current display mode */
+bool changeMode() {
+	//Save the current position inside the menu
+	byte changeDisplayMode = displayMode;
+	//Background
+	liveMenuBackground();
+	//Title
+	liveMenuTitle((char*) "Change Mode");
+	//Remove Exit button
+	touchButtons.deleteButton(4);
+	touchButtons.drawButtons();
+	//Border
+	display.setColor(255, 106, 0);
+	display.drawRect(65, 57, 257, 111);
+	//Draw the current item
+	liveMenuModeString(changeDisplayMode);
+	while (true) {
+		//Touch screen pressed
+		if (touch.touched() == true) {
+			int pressedButton = touchButtons.checkButtons(true);
+			//SELECT
+			if (pressedButton == 3) {
+				//Change camera resolution
+				if(changeDisplayMode == mode_thermal)
+					changeCamRes(VC0706_640x480);
+				else
+					changeCamRes(VC0706_160x120);
+				//Activate or deactivate combined mode
+				if (changeDisplayMode != mode_combined)
+					combinedDecomp = false;
+				else
+					combinedDecomp = true;
+				//Save display mode
+				displayMode = changeDisplayMode;
+				EEPROM.write(eeprom_displayMode, displayMode);
+				return true;
+			}
+			//BACK
+			if (pressedButton == 2)
+				return false;
+			//BACKWARD
+			else if (pressedButton == 0) {
+				if (changeDisplayMode > 0)
+					changeDisplayMode--;
+				else if (changeDisplayMode == 0)
+					changeDisplayMode = 2;
+			}
+			//FORWARD
+			else if (pressedButton == 1) {
+				if (changeDisplayMode < 2)
+					changeDisplayMode++;
+				else if (changeDisplayMode == 2)
+					changeDisplayMode = 0;
+			}
+			//Change the menu name
+			liveMenuModeString(changeDisplayMode);
+		}
+	}
+}
+
 /* Switch the current display option item */
 void liveMenuDisplayString(int pos) {
 	char* text = (char*) "";
@@ -742,28 +819,32 @@ bool liveMenuSelect(byte* pos) {
 	case 0:
 		return changeColor();
 		break;
-		//Temperature limits
+		//Change Mode
 	case 1:
+		return changeMode();
+		break;
+		//Temperature limits
+	case 2:
 		return tempLimits();
 		break;
 		//Calibration
-	case 2:
+	case 3:
 		return calibrate();
 		break;
 		//Temp. points
-	case 3:
+	case 4:
 		return tempMenu();
 		break;
 		//Display options
-	case 4:
+	case 5:
 		return displayOptions();
 		break;
 		//Toggle Laser
-	case 5:
+	case 6:
 		toggleLaser();
 		break;
 		//Display off
-	case 6:
+	case 7:
 		disableScreenLight();
 		//Wait for touch press
 		while (!touch.touched());
@@ -771,7 +852,7 @@ bool liveMenuSelect(byte* pos) {
 		return false;
 		break;
 		//Video output
-	case 7:
+	case 8 :
 		videoConnect();
 		break;
 	}
@@ -786,35 +867,39 @@ void liveMenuMainString(byte* pos) {
 	case 0:
 		text = (char*) "Chg. Color";
 		break;
-		//Temperature limits
+		//Change mode
 	case 1:
+		text = (char*) "Chg. Mode";
+		break;
+		//Temperature limits
+	case 2:
 		text = (char*) "Chg. Limits";
 		break;
 		//Calibration
-	case 2:
+	case 3:
 		text = (char*) "Calibration";
 		break;
 		//Temp points
-	case 3:
+	case 4:
 		text = (char*) "Set Points";
 		break;
 		//Display options
-	case 4:
+	case 5:
 		text = (char*) "Disp. Opt.";
 		break;
 		//Laser On/Off
-	case 5:
+	case 6:
 		if (laserEnabled)
 			text = (char*) "Laser Off";
 		else
 			text = (char*) "Laser On";
 		break;
 		//Turn Display off
-	case 6:
+	case 7:
 		text = (char*) "Display Off";
 		break;
 		//Video output
-	case 7:
+	case 8:
 		text = (char*) "Video Out";
 		break;
 	}
@@ -874,13 +959,13 @@ bool liveMenuHandler(byte* pos) {
 				if (*pos > 0)
 					*pos = *pos - 1;
 				else if (*pos == 0)
-					*pos = 7;
+					*pos = 8;
 			}
 			//FORWARD
 			else if (pressedButton == 1) {
-				if (*pos < 7)
+				if (*pos < 8)
 					*pos = *pos + 1;
-				else if (*pos == 7)
+				else if (*pos == 8)
 					*pos = 0;
 			}
 			//Change the menu name
