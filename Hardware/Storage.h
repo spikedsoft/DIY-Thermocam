@@ -74,12 +74,15 @@ void dateTime(uint16_t* date, uint16_t* time) {
 void initSD() {
 	//Storage info string
 	sdInfo = " - / - MB";
-	//Init the SD Card except for Early-Bird #1
-	if (mlx90614Version == 1) {
+	//Init the SD Card except for old HW
+	if (mlx90614Version == mlx90614Version_new) {
 		startAltClockline();
 		//Check if the sd card works
-		if (!sd.begin(pin_sd_cs, SPI_FULL_SPEED))
+		if (!sd.begin(pin_sd_cs, SPI_FULL_SPEED)) {
+			drawMessage((char*) "Init SD card failed!");
+			delay(1000);
 			setDiagnostic(diag_sd);
+		}
 		else
 			//Begin card
 			card.begin(pin_sd_cs, SPI_FULL_SPEED);

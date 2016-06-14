@@ -11,13 +11,13 @@ byte leptonFrame[164];
 /* Start Lepton SPI Transmission */
 void leptonBeginSPI() {
 	//Lepton3 - 40 Mhz minimum and SPI mode 0
-	if (leptonVersion == 1)
+	if (leptonVersion == leptonVersion_3_Shutter)
 		SPI.beginTransaction(SPISettings(40000000, MSBFIRST, SPI_MODE0));
 	//Lepton2 - 20 Mhz maximum and SPI mode 1
 	else
 		SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE1));
-	//Start alternative clock line expcept for Early-Bird #1
-	if (mlx90614Version == 1)
+	//Start alternative clock line, except for old HW
+	if (mlx90614Version == mlx90614Version_new)
 		startAltClockline();
 	//Start transfer  - CS LOW
 	digitalWrite(pin_lepton_cs, LOW);
@@ -29,8 +29,8 @@ void leptonEndSPI() {
 	digitalWriteFast(pin_lepton_cs, HIGH);
 	//End SPI Transaction
 	SPI.endTransaction();
-	//End alternative clock line except for Early-Bird #2
-	if (mlx90614Version == 1)
+	//End alternative clock line, except for old HW
+	if (mlx90614Version == mlx90614Version_new)
 		endAltClockline();
 }
 
@@ -47,7 +47,7 @@ bool leptonReadFrame(byte line, byte seg) {
 		return false;
 	}
 	//For the Lepton3, check if the segment number matches
-	if ((line == 20) && (leptonVersion == 1)) {
+	if ((line == 20) && (leptonVersion == leptonVersion_3_Shutter)) {
 		byte segment = (leptonFrame[0] >> 4);
 		if (segment != seg)
 			return false;
@@ -72,6 +72,8 @@ void leptonRunCalibration() {
 		}
 		//Trigger error and continue
 		if ((error) && (errorCounter > 10)) {
+			drawMessage((char*) "Lepton I2C FFC not working!");
+			delay(1000);
 			setDiagnostic(diag_lep_conf);
 			return;
 		}
@@ -110,6 +112,8 @@ void leptonCheckVersion() {
 	byte error = Wire.endTransmission();
 	//Lepton I2C error, continue
 	if (error != 0) {
+		drawMessage((char*) "Lepton I2C getVersion not working!");
+		delay(1000);
 		setDiagnostic(diag_lep_conf);
 		return;
 	}
@@ -119,15 +123,15 @@ void leptonCheckVersion() {
 	Wire.readBytes(leptonhw, 32);
 	//Detected Lepton2 Shuttered
 	if (strstr(leptonhw, "05-060") != NULL) {
-		leptonVersion = 0;
+		leptonVersion = leptonVersion_2_Shutter;
 	}
 	//Detected Lepton3 Shuttered
 	else if (strstr(leptonhw, "05-070") != NULL) {
-		leptonVersion = 1;
+		leptonVersion = leptonVersion_3_Shutter;
 	}
 	//Detected Lepton2 No-Shutter
 	else {
-		leptonVersion = 2;
+		leptonVersion = leptonVersion_2_NoShutter;
 	}
 }
 
@@ -135,13 +139,14 @@ void leptonCheckVersion() {
 void initLepton() {
 	//Short delay
 	delay(1500);
+
 	//Check the Lepton HW Revision
 	leptonCheckVersion();
+
 	//Perform FFC if shutter is attached
-	if (leptonVersion != 2)
+	if (leptonVersion != leptonVersion_2_NoShutter)
 		leptonRunCalibration();
-	//Set the calibration timer
-	calTimer = millis();
+
 	//Check if SPI works
 	leptonBeginSPI();
 	do {
@@ -153,6 +158,20 @@ void initLepton() {
 	while (((leptonFrame[0] & 0x0F) == 0x0F) && ((millis() - calTimer) < 1000));
 	leptonEndSPI();
 	//If sync not received after a second, show error message
-	if ((leptonFrame[0] & 0x0F) == 0x0F)
+	if ((leptonFrame[0] & 0x0F) == 0x0F) {
+		drawMessage((char*) "Lepton SPI is not working!");
+		delay(1000);
 		setDiagnostic(diag_lep_data);
+	}
+	//Set the calibration timer
+	calTimer = millis();
+	//Set calibration status to warmup
+	calStatus = cal_warmup;
+	//Set the calibration slope to standard
+	calSlope = cal_stdSlope;
+
+	//Activate AGC
+	agcEnabled = true;
+	//Deactivate limits Locked
+	limitsLocked = false;
 }

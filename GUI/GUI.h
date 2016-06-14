@@ -156,8 +156,8 @@ void displayDate() {
 
 /* Display free space on screen*/
 void displayFreeSpace() {
-	//Early-Bird #1 - Display Version
-	if (mlx90614Version == 0)
+	//Old hw generation - Display FW version
+	if (mlx90614Version == mlx90614Version_old)
 		display.print((char*)Version, 200, 228);
 	//All other - Display free space on internal storage
 	else

@@ -113,8 +113,8 @@ bool calibrationChooser() {
 			}
 			//DELETE
 			else if (pressedButton == 1) {
-				calSlope = 0.025;
-				calStatus = 1;
+				calSlope = cal_stdSlope;
+				calStatus = cal_standard;
 				return true;
 				break;
 			}
@@ -134,17 +134,17 @@ void hotColdChooserHandler() {
 	int temp;
 	float limit;
 	//Cold mode, limit is 30 of 224
-	if (colorScheme == 3)
+	if (colorScheme == colorScheme_coldest)
 		limit = 0.134;
-	//Hot mpde, limit is 194 of 224
-	if (colorScheme == 8)
+	//Hot mode, limit is 194 of 224
+	if (colorScheme == colorScheme_hottest)
 		limit = 0.866;
 	while (1) {
 		display.setFont(smallFont);
 		value = (limit * (maxTemp - minTemp)) + minTemp;
 		temp = round(calFunction(value));
 		//Display Fahrenheit or Celcius
-		if (!tempFormat) {
+		if (tempFormat == tempFormat_celcius) {
 			sprintf(margin, "Margin: %dC", temp);
 		}
 		else {
@@ -227,11 +227,11 @@ void limitChooserHandler() {
 	char minC[10];
 	char maxC[10];
 	//Touch handler
-	while (1) {
+	while (true) {
 		display.setFont(smallFont);
 		min = (int)calFunction(minTemp);
 		max = (int)calFunction(maxTemp);
-		if (!tempFormat) {
+		if (tempFormat == tempFormat_celcius) {
 			sprintf(minC, "Min:%dC", min);
 			sprintf(maxC, "Max:%dC", max);
 		}
@@ -377,7 +377,7 @@ void limitChooser() {
 /* Temperature Limit Mode Selection */
 bool tempLimits() {
 	//Still in warmup, do not let the user do this
-	if (calStatus == 0) {
+	if (calStatus == cal_warmup) {
 		drawMessage((char*) "Please wait for sensor warmup!");
 		delay(1500);
 		return true;
@@ -437,7 +437,7 @@ bool tempMenu() {
 	//Save the current position inside the menu
 	static byte tempMenuPos = 0;
 	//Still in warmup, do not add points
-	if (calStatus == 0) {
+	if (calStatus == cal_warmup) {
 		drawMessage((char*) "Please wait for sensor warmup!");
 		delay(1500);
 		return true;
@@ -506,58 +506,61 @@ bool tempMenu() {
 void liveMenuColorString(int pos) {
 	char* text = (char*) "";
 	switch (pos) {
-	case 0:
+	case colorScheme_arctic:
 		text = (char*) "Arctic";
 		break;
-	case 1:
+	case colorScheme_blackHot:
 		text = (char*) "Black-Hot";
 		break;
-	case 2:
+	case colorScheme_blueRed:
 		text = (char*) "Blue-Red";
 		break;
-	case 3:
+	case colorScheme_coldest:
 		text = (char*) "Coldest";
 		break;
-	case 4:
+	case colorScheme_contrast:
 		text = (char*) "Contrast";
 		break;
-	case 5:
+	case colorScheme_doubleRainbow:
 		text = (char*) "Double-Rain";
 		break;
-	case 6:
+	case colorScheme_grayRed:
 		text = (char*) "Gray-Red";
 		break;
-	case 7:
+	case colorScheme_glowBow:
 		text = (char*) "Glowbow";
 		break;
-	case 8:
+	case colorScheme_grayscale:
+		text = (char*) "Grayscale";
+		break;
+	case colorScheme_hottest:
 		text = (char*) "Hottest";
 		break;
-	case 9:
+	case colorScheme_ironblack:
 		text = (char*) "Ironblack";
 		break;
-	case 10:
+	case colorScheme_lava:
 		text = (char*) "Lava";
 		break;
-	case 11:
+	case colorScheme_medical:
 		text = (char*) "Medical";
 		break;
-	case 12:
+	case colorScheme_rainbow:
 		text = (char*) "Rainbow";
 		break;
-	case 13:
+	case colorScheme_wheel1:
 		text = (char*) "Wheel 1";
 		break;
-	case 14:
+	case colorScheme_wheel2:
 		text = (char*) "Wheel 2";
 		break;
-	case 15:
+	case colorScheme_wheel3:
 		text = (char*) "Wheel 3";
 		break;
-	case 16:
+	case colorScheme_whiteHot:
 		text = (char*) "White-Hot";
 		break;
-	case 17:
+	case colorScheme_yellow:
 		text = (char*) "Yellow";
 		break;
 	}
@@ -588,7 +591,7 @@ bool changeColor() {
 			//SELECT
 			if (pressedButton == 3) {
 				//If hot or cold chosen and still in warmup
-				if (((changeColorPos == 3) || (changeColorPos == 8)) && (calStatus == 0)){
+				if (((changeColorPos == colorScheme_coldest) || (changeColorPos == colorScheme_hottest)) && (calStatus == cal_warmup)){
 					drawMessage((char*) "Please wait for sensor warmup!");
 					delay(1500);
 					goto redraw;
@@ -605,13 +608,13 @@ bool changeColor() {
 				if (changeColorPos > 0)
 					changeColorPos--;
 				else if (changeColorPos == 0)
-					changeColorPos = 17;
+					changeColorPos = colorSchemeTotal - 1;
 			}
 			//FORWARD
 			else if (pressedButton == 1) {
-				if (changeColorPos < 17)
+				if (changeColorPos < (colorSchemeTotal - 1))
 					changeColorPos++;
-				else if (changeColorPos == 17)
+				else if (changeColorPos == (colorSchemeTotal - 1))
 					changeColorPos = 0;
 			}
 			//Change the menu name
@@ -660,12 +663,12 @@ bool changeMode() {
 			//SELECT
 			if (pressedButton == 3) {
 				//Change camera resolution
-				if(changeDisplayMode == mode_thermal)
+				if(changeDisplayMode == displayMode_thermal)
 					changeCamRes(VC0706_640x480);
 				else
 					changeCamRes(VC0706_160x120);
 				//Activate or deactivate combined mode
-				if (changeDisplayMode != mode_combined)
+				if (changeDisplayMode != displayMode_combined)
 					combinedDecomp = false;
 				else
 					combinedDecomp = true;

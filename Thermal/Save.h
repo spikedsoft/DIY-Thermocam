@@ -221,10 +221,10 @@ void saveImage() {
 	//Filename
 	char filename[20];
 
-	//For Early Bird HW, check if the SD card is there
-	if (mlx90614Version == 0) {
+	//Old hardware
+	if (mlx90614Version == mlx90614Version_old) {
 		if (!checkSDCard()) {
-			imgSave = false;
+			imgSave = imgSave_disabled;
 			return;
 		}
 	}
@@ -232,7 +232,7 @@ void saveImage() {
 	//Check if there is at least 1MB of space left
 	if (getSDSpace() < 1000) {
 		showMsg((char*) "Int. space full!");
-		imgSave = false;
+		imgSave = imgSave_disabled;
 		return;
 	}
 
@@ -240,14 +240,14 @@ void saveImage() {
 	detachInterrupts();
 
 	//Capture image command if we are in thermal mode
-	if ((visualEnabled == true) && (displayMode == mode_thermal))
+	if ((visualEnabled == true) && (displayMode == displayMode_thermal))
 		captureVisualImage();
 
 	//Build filename from the current time & date
 	createSDName(filename);
 
 	//Save Raw file when in Thermal mode
-	if (displayMode == mode_thermal) {
+	if (displayMode == displayMode_thermal) {
 		//Allocate space for raw values
 		rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
 		//Save Raw Values
@@ -257,12 +257,12 @@ void saveImage() {
 	}
 
 	//Save Bitmap image if activated or in visual / combined mode
-	if ((convertEnabled == true) || (displayMode == mode_visual) || (displayMode == mode_combined)) {
+	if ((convertEnabled == true) || (displayMode == displayMode_visual) || (displayMode == displayMode_combined)) {
 		saveDisplayImage(filename);
 	}
 		
 	//Eventually save optical image
-	if ((visualEnabled == true) && (displayMode == mode_thermal)){
+	if ((visualEnabled == true) && (displayMode == displayMode_thermal)){
 		//Create file
 		createJPGFile(filename);
 		//Display message
@@ -272,17 +272,17 @@ void saveImage() {
 	}
 
 	//Show Message on screen
-	if (((visualEnabled == true) || (convertEnabled)) && (displayMode == mode_thermal))
+	if (((visualEnabled == true) || (convertEnabled)) && (displayMode == displayMode_thermal))
 		showMsg((char*) "All saved!", true);
-	else if(displayMode == mode_thermal)
+	else if(displayMode == displayMode_thermal)
 		showMsg((char*) "Thermal Raw saved!");
-	else if(displayMode == mode_visual)
+	else if(displayMode == displayMode_visual)
 		showMsg((char*) "Visual BMP saved!");
-	else if(displayMode == mode_combined)
+	else if(displayMode == displayMode_combined)
 		showMsg((char*) "Combined BMP saved!");
 
 	//Disable image save marker
-	imgSave = false;
+	imgSave = imgSave_disabled;
 	//Re-attach the interrupts
 	attachInterrupts();
 }
@@ -372,7 +372,7 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	uint16_t valueCount;
 	unsigned short* valueArray;
 	//For the Lepton2 sensor, use 4800 raw values
-	if (leptonVersion != 1) {
+	if (leptonVersion != leptonVersion_3_Shutter) {
 		valueCount = 4800;
 		valueArray = rawValues;
 	}
@@ -384,8 +384,8 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	//Get temperatures
 	getTemperatures(true);
 	//Limit the raw values from FLIR Lepton
-	if ((agcEnabled) && (!limitsLocked) && (colorScheme != 3) && (colorScheme != 8)) {
-		if (leptonVersion == 1)
+	if ((agcEnabled) && (!limitsLocked) && (colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest)) {
+		if (leptonVersion == leptonVersion_3_Shutter)
 			limitValues();
 		else
 			limitValues(true);
@@ -429,12 +429,12 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	//Write the show spot attribute
 	sdFile.write(spotEnabled);
 	//Write the show colorbar attribute
-	if (calStatus == 0)
+	if (calStatus == cal_warmup)
 		sdFile.write((byte)0);
 	else
 		sdFile.write(colorbarEnabled);
 	//Write the temperature points enabled attribute
-	if (calStatus == 0)
+	if (calStatus == cal_warmup)
 		sdFile.write((byte)0);
 	else
 		sdFile.write(pointsEnabled);

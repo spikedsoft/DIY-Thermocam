@@ -543,8 +543,8 @@ void convertImageMenu(bool firstStart = false) {
 
 /* Asks the user if he really wants to format */
 void formatStorage() {
-	//Early-Bird #1
-	if (mlx90614Version == 0){
+	//Old HW generation, check SD card
+	if (mlx90614Version == mlx90614Version_old){
 		drawMessage((char*) "Checking SD card..");
 		if (!checkSDCard()) {
 			storageMenu();
@@ -643,10 +643,10 @@ void tempFormatMenu(bool firstStart = false) {
 	if (firstStart)
 		touchButtons.relabelButton(2, (char*) "Set", false);
 	touchButtons.drawButtons();
-	if (tempFormat == 0)
-		touchButtons.setActive(0);
+	if (tempFormat == tempFormat_celcius)
+		touchButtons.setActive(tempFormat_celcius);
 	else
-		touchButtons.setActive(1);
+		touchButtons.setActive(tempFormat_fahrenheit);
 	if (!firstStart)
 		updateInfos(true);
 	while (1) {
@@ -657,16 +657,16 @@ void tempFormatMenu(bool firstStart = false) {
 			int pressedButton = touchButtons.checkButtons();
 			//Celcius
 			if (pressedButton == 0) {
-				if (tempFormat == 1) {
-					tempFormat = 0;
+				if (tempFormat == tempFormat_fahrenheit) {
+					tempFormat = tempFormat_celcius;
 					touchButtons.setActive(0);
 					touchButtons.setInactive(1);
 				}
 			}
 			//Fahrenheit
 			else if (pressedButton == 1) {
-				if (tempFormat == 0) {
-					tempFormat = 1;
+				if (tempFormat == tempFormat_celcius) {
+					tempFormat = tempFormat_fahrenheit;
 					touchButtons.setActive(1);
 					touchButtons.setInactive(0);
 				}

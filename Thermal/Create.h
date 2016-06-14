@@ -15,7 +15,7 @@ void gaussianBlur() {
 	nu = (float)dnu;
 	boundaryscale = (float)(1.0 / (1.0 - dnu));
 	//For Lepton2 sensor or image save
-	if ((imgSave == 3) || (leptonVersion != 1))
+	if ((imgSave == imgSave_create) || (leptonVersion != leptonVersion_3_Shutter))
 		postscale = (float)(pow(dnu / lambda, 2));
 	//For Lepton3 sensor
 	else
@@ -28,7 +28,7 @@ void gaussianBlur() {
 		for (x = 1; x < 160; x++)
 			ptr[x] += nu * ptr[x - 1];
 		//For Lepton2 sensor or image save
-		if ((imgSave == 3) || (leptonVersion != 1)) {
+		if ((imgSave == imgSave_create) || (leptonVersion != leptonVersion_3_Shutter)) {
 			ptr[x = 159] *= boundaryscale;
 			//Filter leftwards
 			for (; x > 0; x--)
@@ -43,7 +43,7 @@ void gaussianBlur() {
 		for (i = 160; i < numpixels; i += 160)
 			ptr[i] += nu * ptr[i - 160];
 		//For Lepton2 sensor or image save
-		if ((imgSave == 3) || (leptonVersion != 1)) {
+		if ((imgSave == imgSave_create) || (leptonVersion != leptonVersion_3_Shutter)) {
 			ptr[i = numpixels - 160] *= boundaryscale;
 			//Filter upwards
 			for (; i > 0; i -= 160)
@@ -67,7 +67,7 @@ bool savePackage(byte line, byte segment = 0, bool save = false) {
 			return false;
 		}
 		//Lepton2 Rotated (ThermocamV4)
-		if ((mlx90614Version == 0) && (leptonVersion != 1)) {
+		if ((mlx90614Version == mlx90614Version_old) && (leptonVersion != leptonVersion_3_Shutter)) {
 			//For saving raw data, use small array
 			if (save) {
 				if (!rotationEnabled)
@@ -91,7 +91,7 @@ bool savePackage(byte line, byte segment = 0, bool save = false) {
 			}
 		}
 		//Lepton2 Non-Rotated
-		else if ((mlx90614Version == 1) && (leptonVersion != 1)) {
+		else if ((mlx90614Version == mlx90614Version_new) && (leptonVersion != leptonVersion_3_Shutter)) {
 			//For saving raw data, use small array
 			if (save) {
 				if (!rotationEnabled)
@@ -115,7 +115,7 @@ bool savePackage(byte line, byte segment = 0, bool save = false) {
 			}
 		}
 		//Lepton3
-		else if (leptonVersion == 1) {
+		else if (leptonVersion == leptonVersion_3_Shutter) {
 			//Fill array non rotated
 			if (!rotationEnabled) {
 				switch (segment) {
@@ -158,7 +158,7 @@ bool savePackage(byte line, byte segment = 0, bool save = false) {
 /* Refresh the temperature points*/
 void refreshTempPoints(bool save) {
 	//Lepton2
-	if (leptonVersion != 1) {
+	if (leptonVersion != leptonVersion_3_Shutter) {
 		for (int y = 0; y < 60; y = y + 5) {
 			for (int x = 0; x < 80; x = x + 5) {
 				if (showTemp[(x / 5) + (16 * (y / 5))] != 0) {
@@ -186,7 +186,7 @@ void refreshTempPoints(bool save) {
 void getTemperatures(bool save) {
 	byte leptonError, segmentNumbers, line;
 	//For Lepton2 sensor, get only one segment per frame
-	if (leptonVersion != 1)
+	if (leptonVersion != leptonVersion_3_Shutter)
 		segmentNumbers = 1;
 	//For Lepton3 sensor, get four packages per frame
 	else
@@ -337,13 +337,13 @@ void createThermalImg(bool menu) {
 	//Find min and max if not in manual mode and limits not locked
 	if ((agcEnabled) && (!limitsLocked)) {
 		//Limit values if we are in the menu or not in cold/hot mode
-		if (menu || ((colorScheme != 3) && (colorScheme != 8)))
+		if (menu || ((colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest)))
 			limitValues();
 	}
 	//Scale the values
 	scaleValues();
 	//Apply filter if enabled, in menu or when saving the image to bitmap
-	if ((filterEnabled) || menu || ((imgSave == 3) && convertEnabled))
+	if ((filterEnabled) || menu || ((imgSave == imgSave_create) && convertEnabled))
 		gaussianBlur();
 	//Convert lepton data to RGB565 colors
 	convertColors();
@@ -417,54 +417,54 @@ void tempPointFunction(bool remove) {
 /* Create and display the thermal image on screen */
 void displayThermalImg() {
 	//If the image save marker was set
-	if (imgSave == 2) {
+	if (imgSave == imgSave_set) {
 		//Show message on screen
 		if(!convertEnabled)
 			showMsg((char*) "Save Thermal Raw..");
 		else
 			showMsg((char*) "Save Thermal BMP..");
 		//Set marker to create image
-		imgSave = 3;
+		imgSave = imgSave_create;
 	}
 	//Create the thermal image
 	createThermalImg();
 	//Draw thermal image on screen if created previously
-	if (imgSave != 2)
+	if ((imgSave != imgSave_set) && (showMenu == false))
 		display.writeScreen(image);
 	//If the image has been created, set to save
-	if (imgSave == 3)
-		imgSave = 1;
+	if (imgSave == imgSave_create)
+		imgSave = imgSave_save;
 }
 
 /* Get and display the visual image on screen */
 void displayVisualImg() {
 	//If the image save marker was set
-	if (imgSave == 2) {
+	if (imgSave == imgSave_set) {
 		//Show message on screen
 		showMsg((char*) "Save Visual BMP..");
 		//Set marker to create image
-		imgSave = 3;
+		imgSave = imgSave_create;
 	}
 	//Send capture command
 	captureVisualImage();
 	//Get the visual image and decompress it
 	getVisualImage();
 	//Display on screen if created previously
-	if (imgSave != 2)
+	if (imgSave != imgSave_set)
 		display.drawBitmap(0, 0, 160, 120, image, 2);
 	//If the image has been created, set to save
-	if (imgSave == 3)
-		imgSave = 1;
+	if (imgSave == imgSave_create)
+		imgSave = imgSave_save;
 }
 
 /* Create and display the combined image on screen */
 void displayCombinedImg() {
 	//If the image save marker was set
-	if (imgSave == 2) {
+	if (imgSave == imgSave_set) {
 		//Show message on screen
 		showMsg((char*) "Save Combined BMP..");
 		//Set marker to create image
-		imgSave = 3;
+		imgSave = imgSave_create;
 	}
 	//Send capture command
 	captureVisualImage();
@@ -479,11 +479,11 @@ void displayCombinedImg() {
 	//Get the visual image and decompress it combined
 	getVisualImage();
 	//Display on screen if created previously
-	if (imgSave != 2)
+	if (imgSave != imgSave_set)
 		display.drawBitmap(0, 0, 160, 120, image, 2);
 	//If the image has been created, set to save
-	if (imgSave == 3)
-		imgSave = 1;
+	if (imgSave == imgSave_create)
+		imgSave = imgSave_save;
 }
 
 /* Clears the show temperatures array */

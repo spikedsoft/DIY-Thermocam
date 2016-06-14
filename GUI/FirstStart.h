@@ -196,7 +196,7 @@ void adjustCamFocus() {
 		//Display visual img
 		displayVisualImg();
 		//Show touch hint
-		display.print((char*)"Touch screen to continue", CENTER, 210);
+		display.print((char*)"Hold touch to continue", CENTER, 210);
 		//Abort if screen touched
 		if (touch.touched())
 			break;
@@ -230,7 +230,7 @@ void adjustCamAlignment() {
 		//Display combined img
 		displayCombinedImg();
 		//Show touch hint
-		display.print((char*)"Touch screen to continue", CENTER, 210);
+		display.print((char*)"Hold touch to continue", CENTER, 210);
 		//Abort if screen touched
 		if (touch.touched())
 			break;
@@ -258,30 +258,35 @@ void adjustCam() {
 void firstEEPROMSet() {
 	drawMessage((char*) "Flashing spot EEPROM settings..");
 	//Set spot maximum temp to 380°C
-	mlx90614SetMaxTemp();
+	mlx90614SetMax();
 	//Set spot minimum temp to -70°
-	mlx90614CheckMinTemp();
+	mlx90614SetMin();
 	//Set spot filter settings
-	mlx90614SetFilterTemp();
+	mlx90614SetFilter();
 	//Set device EEPROM settings
-	EEPROM.write(eeprom_spotEnabled, spotEnabled);
-	EEPROM.write(eeprom_filterEnabled, filterEnabled);
-	EEPROM.write(eeprom_colorbarEnabled, colorbarEnabled);
-	EEPROM.write(eeprom_batteryEnabled, batteryEnabled);
-	EEPROM.write(eeprom_timeEnabled, timeEnabled);
-	EEPROM.write(eeprom_dateEnabled, dateEnabled);
-	EEPROM.write(eeprom_pointsEnabled, pointsEnabled);
-	EEPROM.write(eeprom_storageEnabled, storageEnabled);
-	EEPROM.write(eeprom_displayMode, displayMode);
+	EEPROM.write(eeprom_spotEnabled, true);
+	EEPROM.write(eeprom_colorbarEnabled, true);
+	EEPROM.write(eeprom_batteryEnabled, false);
+	EEPROM.write(eeprom_timeEnabled, false);
+	EEPROM.write(eeprom_dateEnabled, false);
+	EEPROM.write(eeprom_pointsEnabled, false);
+	EEPROM.write(eeprom_storageEnabled, false);
+	EEPROM.write(eeprom_displayMode, displayMode_thermal);
 	//Set Color Scheme to Rainbow
-	EEPROM.write(eeprom_colorScheme, 12);
+	EEPROM.write(eeprom_colorScheme, colorScheme_rainbow);
 	//For Lepton3, disable filter
-	if (leptonVersion == 1)
+	if (leptonVersion == leptonVersion_3_Shutter)
 		EEPROM.write(eeprom_filterEnabled, false);
-	//Set first start marker to true
-	EEPROM.write(eeprom_firstStart, eeprom_setValue);
+	else
+		EEPROM.write(eeprom_filterEnabled, true);
+	//Set mass storage to false
+	EEPROM.write(eeprom_massStorage, false);
+	//Set live helper to false
+	EEPROM.write(eeprom_liveHelper, false);
 	//Set current firmware version
 	EEPROM.write(eeprom_fwVersion, fwVersion);
+	//Set first start marker to true
+	EEPROM.write(eeprom_firstStart, eeprom_setValue);
 }
 
 /* First start setup*/

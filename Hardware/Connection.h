@@ -155,18 +155,18 @@ void sendConfigData() {
 	//Send the show spot attribute
 	Serial.write(spotEnabled);
 	//Send the show colorbar attribute
-	if (calStatus == 0)
+	if (calStatus == cal_warmup)
 		Serial.write((byte)0);
 	else
 		Serial.write(colorbarEnabled);
 	//Send the temperature points enabled attribute
-	if (calStatus == 0)
+	if (calStatus == cal_warmup)
 		Serial.write((byte)0);
 	else
 		Serial.write(pointsEnabled);
 	//Send the calibration offset
-	if (calStatus != 2)
-		calOffset = mlx90614GetAmb() - 204.8;
+	if (calStatus != cal_manual)
+		calOffset = mlx90614GetAmb() - (calSlope * 8192);
 	floatToBytes(farray, (float)calOffset);
 	for (int i = 0; i < 4; i++)
 		Serial.write(farray[i]);
@@ -197,7 +197,7 @@ void sendConfigData() {
 void sendLeptonData() {
 	byte MSB, LSB;
 	//Send Lepton2 data
-	if (leptonVersion != 1) {
+	if (leptonVersion != leptonVersion_3_Shutter) {
 		for (int i = 0; i < 4800; i++) {
 			MSB = (byte)(rawValues[i] & 0xff);
 			LSB = (byte)((rawValues[i] >> 8) & 0xff);
@@ -246,9 +246,9 @@ bool serialHandler() {
 		break;
 		//C - Change color scheme
 	case CMD_COLORSCHEME:
-		if (colorScheme < 17)
+		if (colorScheme < (colorSchemeTotal - 1))
 			colorScheme++;
-		else if (colorScheme == 17)
+		else if (colorScheme == (colorSchemeTotal - 1))
 			colorScheme = 0;
 		break;
 		//R - Get rotation
@@ -308,9 +308,9 @@ void videoOutput() {
 		//Get the temps
 		getTemperatures(true);
 		//For 160x120 Lepton3
-		if (leptonVersion == 1) {
+		if (leptonVersion == leptonVersion_3_Shutter) {
 			//Find min and max if required
-			if ((agcEnabled) && (!limitsLocked) && (colorScheme != 3) && (colorScheme != 8))
+			if ((agcEnabled) && (!limitsLocked) && (colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest))
 				limitValues();
 			//Convert to colors for video out module
 			if (videoOutType == 1) {
@@ -321,7 +321,7 @@ void videoOutput() {
 		//For 80x60 Lepton2
 		else {
 			//Find min and max if required
-			if ((agcEnabled) && (!limitsLocked) && (colorScheme != 3) && (colorScheme != 8))
+			if ((agcEnabled) && (!limitsLocked) && (colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest))
 				limitValues(true);
 			//Convert to colors for video out module
 			if(videoOutType == 1) {
@@ -333,12 +333,12 @@ void videoOutput() {
 		if (pointsEnabled)
 			refreshTempPoints(true);
 		//Activate the calibration after warmup
-		if (calStatus == 0) {
+		if (calStatus == cal_warmup) {
 			if (millis() - calTimer > 60000) {
 				//Perform FFC if shutter is attached
-				if (leptonVersion != 2)
+				if (leptonVersion != leptonVersion_2_NoShutter)
 					leptonRunCalibration();
-				calStatus = 1;
+				calStatus = cal_standard;
 			}
 		}
 		//Check buttton press
@@ -418,10 +418,10 @@ void videoConnect() {
 
 /* Go into mass storage mode */
 void massStorage() {
-	//Early-Bird #1
-	if (mlx90614Version == 0) {
+	//Old hardware
+	if (mlx90614Version == mlx90614Version_old) {
 		//Display error msg for 1sec
-		drawMessage((char*) "Does not work with Early-Bird HW !");
+		drawMessage((char*) "Your HW does not support this!");
 		delay(1000);
 		//Go back
 		mainMenu();
@@ -431,7 +431,7 @@ void massStorage() {
 		drawMessage((char*) "Disconnect USB cable to return !");
 		delay(1500);
 		//No warmup needed after restart if done previously
-		if (calStatus != 0)
+		if (calStatus != cal_warmup)
 			EEPROM.write(eeprom_massStorage, eeprom_setValue);
 		//Fix display diagnostic error
 		else

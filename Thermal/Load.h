@@ -74,13 +74,13 @@ void loadRawData(char* filename, char* dirname) {
 	if ((sdFile.fileSize() == 9621) || (sdFile.fileSize() == 10005)) {
 		valueCount = 4800;
 		valueArray = rawValues;
-		leptonVersion = 0;
+		leptonVersion = leptonVersion_2_Shutter;
 	}
 	//For the Lepton3 sensor, use 19200 raw values
 	else if ((sdFile.fileSize() == 38421) || (sdFile.fileSize() == 38805)) {
 		valueCount = 19200;
 		valueArray = image;
-		leptonVersion = 1;
+		leptonVersion = leptonVersion_3_Shutter;
 	}
 	//Invalid data
 	else {
@@ -818,8 +818,8 @@ void loadDeAlloc() {
 
 /* Main entry point for loading images/videos*/
 void loadThermal() {
-	//Early-Bird #1
-	if (mlx90614Version == 0) {
+	//Old hardware
+	if (mlx90614Version == mlx90614Version_old) {
 		drawMessage((char*) "Checking SD card..");
 		if (!checkSDCard()) {
 			mainMenu();
@@ -836,7 +836,7 @@ void loadThermal() {
 	float old_calOffset = calOffset;
 	float old_calSlope = calSlope;
 	//Set calibration status to manual
-	calStatus = 2;
+	calStatus = cal_manual;
 	//Do not show additional information that are not required
 	batteryEnabled = false;
 	dateEnabled = false;

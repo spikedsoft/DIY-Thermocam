@@ -87,9 +87,6 @@
     <ClInclude Include="General\ColorSchemes.h">
       <Filter>Resource Files\General</Filter>
     </ClInclude>
-    <ClInclude Include="General\GlobalItems.h">
-      <Filter>Resource Files\General</Filter>
-    </ClInclude>
     <ClInclude Include="GUI\FirstStart.h">
       <Filter>Resource Files\GUI</Filter>
     </ClInclude>
@@ -137,9 +134,6 @@
     </ClInclude>
     <ClInclude Include="Thermal\Thermal.h">
       <Filter>Resource Files\Thermal</Filter>
-    </ClInclude>
-    <ClInclude Include="General\MethodDefines.h">
-      <Filter>Resource Files\General</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\Arduino.h">
       <Filter>_core</Filter>
@@ -464,6 +458,15 @@
     </ClInclude>
     <ClInclude Include="libraries\tjpgd\tjpgd.h">
       <Filter>_libraries\tjpgd</Filter>
+    </ClInclude>
+    <ClInclude Include="General\GlobalVariables.h">
+      <Filter>Resource Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="General\GlobalMethods.h">
+      <Filter>Resource Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="General\GlobalDefines.h">
+      <Filter>Resource Files\General</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

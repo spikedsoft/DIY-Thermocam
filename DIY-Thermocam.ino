@@ -10,8 +10,8 @@
 */
 
 /* Current firmware version */
-#define Version "Firmware 1.18 from 02.06.2016"
-#define fwVersion 118
+#define Version "Firmware 1.19 from 10.06.2016"
+#define fwVersion 119
 
 /* Libraries */
 #include <ADC.h>
@@ -29,8 +29,8 @@
 
 /* General Includes */
 #include "General/ColorSchemes.h"
-#include "General/GlobalItems.h"
-#include "General/MethodDefines.h"
+#include "General/GlobalVariables.h"
+#include "General/GlobalMethods.h"
 
 /* Modules */
 #include "Hardware/Hardware.h"
@@ -44,26 +44,12 @@ void setup()
 	//Init Hardware
 	initHardware();
 	//Check for hardware issues
-	if (diagnostic != 0xFF) {
-		//Show the diagnostics over serial
-		printDiagnostic();
-		//Show it on the screen
-		showDiagnostic();
-		//Wait for touch press
-		while (!touch.touched());
-		//Wait for touch release
-		while (touch.touched());
-	}
+	checkDiagnostic();
 	//Do the first start setup
 	if (EEPROM.read(eeprom_firstStart) != eeprom_setValue)
 		firstStart();
-	//Show message after firmware upgrade
-	if (EEPROM.read(eeprom_fwVersion) != fwVersion) {
-		drawMessage((char*)"FW update complete, pls restart!");
-		//Set EEPROM firmware version to current one
-		EEPROM.write(eeprom_fwVersion, fwVersion);
-		while (true);
-	}
+	//Check FW upgrade
+	checkFWUpgrade();
 	//Read EEPROM settings
 	readEEPROM();
 	//Show the live mode helper

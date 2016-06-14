@@ -156,7 +156,7 @@ bool videoIntervalChooser() {
 /* Display the video capture screen contents */
 void refreshCapture() {
 	//Fill image array for Lepton2 sensor
-	if (leptonVersion != 1)
+	if (leptonVersion != leptonVersion_3_Shutter)
 		fillImageArray();
 	//Scale values
 	scaleValues();
@@ -312,8 +312,8 @@ void videoCapture() {
 
 /* Video mode chooser, normal or interval */
 bool videoModeChooser() {
-	//For Early Bird HW, check if the SD card is there
-	if (mlx90614Version == 0) {
+	//For old HW, check if the SD card is there
+	if (mlx90614Version == mlx90614Version_old) {
 		if (!checkSDCard()) {
 			//Re-attach the interrupts
 			attachInterrupts();

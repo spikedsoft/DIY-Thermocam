@@ -11,8 +11,8 @@ float celciusToFahrenheit(float Tc) {
 /* Function to calculate temperature out of Lepton value */
 float calFunction(uint16_t rawValue) {
 	//Calculate offset out of ambient temp when no calib is done
-	if (calStatus != 2) 
-		calOffset = mlx90614Amb - 177.77;
+	if (calStatus != cal_manual) 
+		calOffset = mlx90614Amb - (calSlope * 8192);
 	//Calculate the temperature in Celcius out of the coefficients
 	float temp = (calSlope * rawValue) + calOffset;
 	//Limit to minimum and maximum value
@@ -21,7 +21,7 @@ float calFunction(uint16_t rawValue) {
 	if (temp < -40)
 		temp = -40;
 	//Convert to Fahrenheit if needed
-	if (tempFormat)
+	if (tempFormat == tempFormat_fahrenheit)
 		temp = celciusToFahrenheit(temp);
 	return temp;
 }
@@ -111,7 +111,7 @@ void calibrationProcess() {
 		//Reset counter to zero
 		int counter = 0;
 		//Perform FFC if shutter is attached
-		if (leptonVersion != 2)
+		if (leptonVersion != leptonVersion_2_NoShutter)
 			leptonRunCalibration();
 		//Get 100 different calibration samples
 		while (counter < 100) {
@@ -155,11 +155,11 @@ void calibrationProcess() {
 		}
 		//Calculate the calibration formula
 		linreg(100, calLepton, calMLX90614, &calSlope, &calOffset, &calCorrelation);
-		calStatus = 2;
+		calStatus = cal_manual;
 		if (calCorrelation < 0.5) {
 			if (!calibrationRepeat()) {
-				calSlope = 0.025;
-				calStatus = 1;
+				calSlope = cal_stdSlope;
+				calStatus = cal_standard;
 				break;
 			}
 		}
@@ -176,7 +176,7 @@ bool calibrate() {
 		return false;
 	}
 	//If there is a calibration
-	else if (calStatus == 2)
+	else if (calStatus == cal_manual)
 		return calibrationChooser();
 	//If there is none, do a new one
 	else

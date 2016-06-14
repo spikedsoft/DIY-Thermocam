@@ -43,8 +43,11 @@ void initCamera() {
 	//Set camera compression
 	cam.setCompression(95);
 	//Test if the camera works
-	if (!cam.takePicture())
+	if (!cam.takePicture()) {
+		drawMessage((char*) "Visual camera is not working!");
+		delay(1000);
 		setDiagnostic(diag_camera);
+	}
 	//Skip the picture
 	cam.end();
 	//Check if the resolution is set to big

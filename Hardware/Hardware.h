@@ -36,6 +36,7 @@ void initGPIO() {
 	//Deactivate the laser
 	pinMode(pin_laser, OUTPUT);
 	digitalWrite(pin_laser, LOW);
+	laserEnabled = false;
 	//Set button as input
 	pinMode(pin_button, INPUT);
 }
@@ -69,6 +70,8 @@ void initI2C() {
 
 /* Init the Analog-Digital-Converter for the battery measure */
 void initADC() {
+	//Init ADC
+	batMeasure = new ADC();
 	//set number of averages
 	batMeasure->setAveraging(4);
 	//set bits of resolution
@@ -201,8 +204,8 @@ void printDiagnostic() {
 
 /* Checks if the sd card is inserted for Early Bird Hardware */
 bool checkSDCard() {
-	//Early-Bird #1
-	if (mlx90614Version == 0) {
+	//Old hardware, begin SD transaction
+	if (mlx90614Version == mlx90614Version_old) {
 		startAltClockline();
 		if (!sd.begin(pin_sd_cs, SPI_FULL_SPEED)) {
 			//Show error message if there is no card inserted
@@ -264,8 +267,42 @@ void initTouch() {
 		if ((point.x == 0) && (point.y == 0))
 			return;
 		//Not working
-		else
+		else {
+			drawMessage((char*) "Touch screen is not working!");
+			delay(1000);
 			setDiagnostic(diag_touch);
+		}
+	}
+}
+
+/* Checks for hardware issues */
+void checkDiagnostic() {
+	if (diagnostic != diag_ok) {
+		//Show the diagnostics over serial
+		printDiagnostic();
+		//Show it on the screen
+		showDiagnostic();
+		//Wait for touch press
+		while (!touch.touched());
+		//Wait for touch release
+		while (touch.touched());
+	}
+}
+
+/* Checks if a FW upgrade has been done */
+void checkFWUpgrade(){
+	byte eepromVersion = EEPROM.read(eeprom_fwVersion);
+	//Show message after firmware upgrade
+	if (eepromVersion != fwVersion) {
+		//Upgrade
+		if (fwVersion > eepromVersion)
+			drawMessage((char*)"FW update completed, pls restart!");
+		//Downgrade
+		else
+			drawMessage((char*)"FW downgrade completed, pls restart!");
+		//Set EEPROM firmware version to current one
+		EEPROM.write(eeprom_fwVersion, fwVersion);
+		while (true);
 	}
 }
 
@@ -274,70 +311,97 @@ void readEEPROM() {
 	byte read;
 	//Temperature format
 	read = EEPROM.read(eeprom_tempFormat);
-	if ((read == 0) || (read == 1))
+	if ((read == tempFormat_celcius) || (read == tempFormat_fahrenheit))
 		tempFormat = read;
+	else
+		tempFormat = tempFormat_celcius;
 	//Color scheme
 	read = EEPROM.read(eeprom_colorScheme);
-	if ((read >= 0) && (read <= 17))
+	if ((read >= 0) && (read <= (colorSchemeTotal - 1)))
 		colorScheme = read;
+	else
+		colorScheme = colorScheme_rainbow;
 	//If Hot or Cold on startup, switch to Rainbow
-	if ((colorScheme == 3) || (colorScheme == 8))
-		colorScheme = 12;
+	if ((colorScheme == colorScheme_coldest) || (colorScheme == colorScheme_hottest))
+		colorScheme = colorScheme_rainbow;
 	//Convert Enabled
 	read = EEPROM.read(eeprom_convertEnabled);
-	if ((read == 0) || (read == 1))
+	if ((read == false) || (read == true))
 		convertEnabled = read;
+	else
+		convertEnabled = false;
 	//Visual Enabled
 	read = EEPROM.read(eeprom_visualEnabled);
-	if ((read == 0) || (read == 1))
+	if ((read == false) || (read == true))
 		visualEnabled = read;
+	else
+		visualEnabled = false;
 	//Battery Enabled
 	read = EEPROM.read(eeprom_batteryEnabled);
-	if ((read == 0) || (read == 1))
+	if ((read == false) || (read == true))
 		batteryEnabled = read;
+	else
+		batteryEnabled = false;
 	//Time Enabled
 	read = EEPROM.read(eeprom_timeEnabled);
-	if ((read == 0) || (read == 1))
+	if ((read == false) || (read == true))
 		timeEnabled = read;
+	else
+		timeEnabled = false;
 	//Date Enabled
 	read = EEPROM.read(eeprom_dateEnabled);
-	if ((read == 0) || (read == 1))
+	if ((read == false) || (read == true))
 		dateEnabled = read;
+	else
+		dateEnabled = false;
 	//Points Enabled
 	read = EEPROM.read(eeprom_pointsEnabled);
-	if ((read == 0) || (read == 1))
+	if ((read == false) || (read == true))
 		pointsEnabled = read;
+	else
+		pointsEnabled = false;
 	//Storage Enabled
 	read = EEPROM.read(eeprom_storageEnabled);
-	if ((read == 0) || (read == 1))
+	if ((read == false) || (read == true))
 		storageEnabled = read;
+	else
+		storageEnabled = false;
 	//Spot Enabled
 	read = EEPROM.read(eeprom_spotEnabled);
-	if ((read == 0) || (read == 1))
+	if ((read == false) || (read == true))
 		spotEnabled = read;
+	else
+		spotEnabled = true;
 	//Filter Enabled
 	read = EEPROM.read(eeprom_filterEnabled);
-	if ((read == 0) || (read == 1))
+	if ((read == false) || (read == true))
 		filterEnabled = read;
+	else
+		filterEnabled = true;
 	//Colorbar Enabled
 	read = EEPROM.read(eeprom_colorbarEnabled);
-	if ((read == 0) || (read == 1))
+	if ((read == false) || (read == true))
 		colorbarEnabled = read;
+	else
+		colorbarEnabled = true;
 	//Rotation Enabled
 	read = EEPROM.read(eeprom_rotationEnabled);
-	if ((read == 0) || (read == 1))
+	if ((read == false) || (read == true))
 		rotationEnabled = read;
+	else
+		rotationEnabled = false;
 	//Display Mode
 	read = EEPROM.read(eeprom_displayMode);
-	if ((read == mode_thermal) || (read == mode_visual) || (read == mode_combined))
+	if ((read == displayMode_thermal) || (read == displayMode_visual) || (read == displayMode_combined))
 		displayMode = read;
+	else
+		displayMode = displayMode_thermal;
 	//Return from Mass Storage reboot, no warmup required
 	read = EEPROM.read(eeprom_massStorage);
 	if (read == eeprom_setValue) {
 		EEPROM.write(eeprom_massStorage, 0);
-		calStatus = 1;
+		calStatus = cal_standard;
 	}
-
 }
 
 /* Startup procedure for the Hardware */
@@ -352,6 +416,8 @@ void initHardware() {
 	setSyncProvider(getTeensy3Time);
 	//Init I2C
 	initI2C();
+	//Reset diagnostic status
+	diagnostic = diag_ok;
 	//Init Display
 	initDisplay();
 	//Show Boot Screen

@@ -18,9 +18,9 @@ const unsigned char mlx90614CrcTable[] = { 0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0
 0xA0, 0xA7, 0xB2, 0xB5, 0xBC, 0xBB, 0x96, 0x91, 0x98, 0x9F, 0x8A, 0x8D, 0x84, 0x83, 0xDE, 0xD9, 0xD0, 0xD7, 0xC2, 0xC5, 0xCC, 0xCB, 0xE6,
 0xE1, 0xE8, 0xEF, 0xFA, 0xFD, 0xF4, 0xF3 };
 //Stores the object temp
-float mlx90614Temp;
+float mlx90614Temp = 0;
 //Stores the ambient temp
-float mlx90614Amb;
+float mlx90614Amb = 0;
 
 /* Methods */
 
@@ -114,95 +114,215 @@ void mlx90614Measure(bool TaTo, bool* check) {
 }
 
 /* Set the maximum temp to 380°C */
-void mlx90614SetMaxTemp() {
-	while (mlx90614Receive(0x20) != 65315) {
-		//set it to zero first
+void mlx90614SetMax() {
+	byte count = 0;
+	do {
+		//Set it to zero first
 		mlx90614Send(0x20, 0x00, 0x00);
 		delay(100);
 		//Then write the new value
 		mlx90614Send(0x20, 0x23, 0xFF);
 		delay(100);
-	}
+		//If we failed after 10 retries, set error and continue
+		if (count == 10) {
+			drawMessage((char*) "Spot sensor setMax not working!");
+			delay(1000);
+			setDiagnostic(diag_spot);
+			return;
+		}
+		count++;
+	} while (mlx90614Receive(0x20) != 65315);
+}
+
+/* Check if the maximum temp is 380°C */
+bool mlx90614CheckMax() {
+	//Check if maximum temp setting is correct
+	if (mlx90614Receive(0x20) != 65315)
+		return false;
+	//Everything was fine
+	return true;
 }
 
 /* Set the minimum temp to -70°C */
-void mlx90614CheckMinTemp() {
-	while (mlx90614Receive(0x21) != 20315) {
+void mlx90614SetMin() {
+	byte count = 0;
+	do {
 		//Set it to zero first
 		mlx90614Send(0x21, 0x00, 0x00);
 		delay(100);
 		//Then write the new value
 		mlx90614Send(0x21, 0x5B, 0x4F);
 		delay(100);
-	}
+		//If we failed after 10 retries, set error and continue
+		if (count == 10) {
+			drawMessage((char*) "Spot sensor setMin not working!");
+			delay(1000);
+			setDiagnostic(diag_spot);
+			return;
+		}
+		count++;
+	} while (mlx90614Receive(0x21) != 20315);
+}
+
+/* Check if the minimum temp is -70°C */
+bool mlx90614CheckMin() {
+	//Check if minimum temp setting is correct
+	if (mlx90614Receive(0x21) != 20315)
+		return false;
+	//Everything was fine
+	return true;
 }
 
 /* Check if the filter settings match for noise-reduction (50% IIR, max settling time) */
-void mlx90614SetFilterTemp() {
+void mlx90614SetFilter() {
 	byte MSB, LSB;
 	uint16_t filterSettings;
-	//MLX90614-BCI with gain factor of 12.5
-	if (mlx90614Version == 0) {
+	//Old MLX90614 with gain factor of 12.5
+	if (mlx90614Version == mlx90614Version_old) {
 		filterSettings = 40816;
 		MSB = 0x70;
 		LSB = 0x9F;
 	}
-	//MLX90614-DCI or MLX90614-DCH with gain factor of 100
-	else if (mlx90614Version == 1) {
+	//New MLX90614 with gain factor of 100
+	else if (mlx90614Version == mlx90614Version_new) {
 		filterSettings = 46960;
 		MSB = 0x70;
 		LSB = 0xB7;
 	}
-	while (mlx90614Receive(0x25) != filterSettings) {
+	//Try to set the new filter settings
+	byte count = 0;
+	do {
 		//Set it to zero first
 		mlx90614Send(0x25, 0x00, 0x00);
 		delay(100);
 		//Then write the new value
 		mlx90614Send(0x25, MSB, LSB);
 		delay(100);
-	}
+		//If we failed after 10 retries, set error and continue
+		if (count == 10) {
+			drawMessage((char*) "Spot sensor setFilter not working!");
+			delay(1000);
+			setDiagnostic(diag_spot);
+			return;
+		}
+		count++;
+	} while (mlx90614Receive(0x25) != filterSettings);
+}
+
+/* Check if the filter settings match for fast measurement */
+bool mlx90614CheckFilter() {
+	uint16_t filter = mlx90614Receive(0x25);
+	//Old MLX90614 with gain factor of 12.5
+	if ((mlx90614Version == mlx90614Version_old) && (filter != 40816))
+		return false;
+	//New MLX90614 with gain factor of 100
+	else if ((mlx90614Version == mlx90614Version_new) && (filter != 46960))
+		return false;
+	///Everything was fine
+	return true;
 }
 
 /* Read and return the ambient temperature */
 float mlx90614GetAmb() {
-	bool check;
+	bool check = true;
+	byte count = 0;
 	do {
-		check = true;
 		mlx90614Measure(1, &check);
+		//If we cannot connect, set error and continue
+		if (count == 100) {
+			drawMessage((char*) "Error reading ambient temperature!");
+			return 0;
+		}
+		count++;
+		delay(10);
 	} while (check == false);
 	return mlx90614Amb;
 }
 
 /* Read and return the object temperature */
 float mlx90614GetTemp() {
-	bool check;
-	do {
-		check = true;
-		mlx90614Measure(0, &check);
-	} while (check == false);
-	return mlx90614Temp;
-}
-
-/* Initializes the sensor */
-void mlx90614Init() {
-	//Check if the MLX90614 is connected
 	bool check = true;
 	byte count = 0;
 	do {
 		mlx90614Measure(0, &check);
 		//If we cannot connect, set error and continue
 		if (count == 100) {
-			Serial.println("FAILED");
-			setDiagnostic(diag_spot);
-			return;
+			drawMessage((char*) "Error reading object temperature!");
+			return 0;
 		}
 		count++;
 		delay(10);
-	} while (!check);
+	} while (check == false);
+	return mlx90614Temp;
+}
+
+/* Initializes the sensor */
+void mlx90614Init() {
 	//Get MLX90614Version
 	uint16_t filter = mlx90614Receive(0x25);
 	mlx90614Version = (filter >> 13) & 1;
-	//Set Temp & Amb to zero
-	mlx90614Temp = 0;
-	mlx90614Amb = 0;
+	//Check if version is valid
+	if ((mlx90614Version != mlx90614Version_old) && (mlx90614Version != mlx90614Version_new)) {
+		drawMessage((char*)"Unsupported spot sensor !");
+		delay(1000);
+		setDiagnostic(diag_spot);
+		return;
+	}
+	//If first start has been completed before, do checks
+	if (EEPROM.read(eeprom_firstStart) == eeprom_setValue) {
+		//Check Filter Temp
+		if (mlx90614CheckFilter() == false) {
+			drawMessage((char*)"Spot sensor filter invalid, rewrite..");
+			delay(1000);
+			mlx90614SetFilter();
+			setDiagnostic(diag_spot);
+			return;
+		}
+		//Check Min Temp
+		if (mlx90614CheckMin() == false) {
+			drawMessage((char*)"Spot sensor minTemp invalid, rewrite..");
+			delay(1000);
+			mlx90614SetMin();
+			setDiagnostic(diag_spot);
+			return;
+		}
+		//Check Max Temp
+		if (mlx90614CheckMax() == false) {
+			drawMessage((char*)"Spot sensor maxTemp invalid, rewrite..");
+			delay(1000);
+			mlx90614SetMax();
+			setDiagnostic(diag_spot);
+			return;
+		}
+	}
+	//Check if the object temp is valid
+	bool check = true;
+	byte count = 0;
+	do {
+		mlx90614Measure(0, &check);
+		//If we cannot connect, set error and continue
+		if (count == 100) {
+			drawMessage((char*) "Spot sensor objTemp internal error!");
+			delay(1000);
+			setDiagnostic(diag_spot);
+			break;
+		}
+		count++;
+		delay(10);
+	} while (check == false);
+	//Check if the ambient temp is valid
+	check = true;
+	count = 0;
+	do {
+		mlx90614Measure(1, &check);
+		//If we cannot connect, set error and continue
+		if (count == 100) {
+			drawMessage((char*)"Spot sensor ambTemp internal error!");
+			delay(1000);
+			setDiagnostic(diag_spot);
+			break;
+		}
+		count++;
+		delay(10);
+	} while (check == false);
 }

@@ -8,7 +8,6 @@
 #include "Load.h"
 #include "Save.h"
 
-
 /* If the touch has been pressed, enable menu */
 void touchIRQ() {
 	//When not in menu, show menu or lock/release limits
@@ -54,10 +53,10 @@ void buttonIRQ() {
 	//Short press - save image to SD Card
 	if (endTime < 1000)
 		//Prepare image save but let screen refresh first
-		imgSave = 2;
+		imgSave = imgSave_set;
 	//Long press - start video
 	else {
-		if (displayMode != mode_thermal) {
+		if (displayMode != displayMode_thermal) {
 			drawMessage((char*) "Video only possible in thermal mode!");
 			delay(1000);
 		}
@@ -96,9 +95,9 @@ void showColorBar() {
 	float max = calFunction(maxTemp);
 	//Check if spot temp is out of range
 	if ((agcEnabled) && (!limitsLocked)) {
-		if ((mlx90614Temp < min) && (colorScheme != 8))
+		if ((mlx90614Temp < min) && (colorScheme != colorScheme_hottest))
 			min = mlx90614Temp;
-		if ((mlx90614Temp > max) && (colorScheme != 3))
+		if ((mlx90614Temp > max) && (colorScheme != colorScheme_coldest))
 			max = mlx90614Temp;
 	}
 	//Calculate step
@@ -137,92 +136,97 @@ void selectColorScheme() {
 	//Select the right color scheme
 	switch (colorScheme) {
 		//Arctic
-	case 0:
+	case colorScheme_arctic:
 		colorMap = colorMap_arctic;
 		colorElements = 240;
 		break;
 		//Black-Hot
-	case 1:
+	case colorScheme_blackHot:
 		colorMap = colorMap_blackHot;
 		colorElements = 224;
 		break;
 		//Blue-Red
-	case 2:
+	case colorScheme_blueRed:
 		colorMap = colorMap_blueRed;
 		colorElements = 192;
 		break;
 		//Coldest
-	case 3:
+	case colorScheme_coldest:
 		colorMap = colorMap_coldest;
 		colorElements = 224;
 		break;
 		//Contrast
-	case 4:
+	case colorScheme_contrast:
 		colorMap = colorMap_contrast;
 		colorElements = 224;
 		break;
 		//Double-Rainbow
-	case 5:
+	case colorScheme_doubleRainbow:
 		colorMap = colorMap_doubleRainbow;
 		colorElements = 256;
 		break;
 		//Gray-Red
-	case 6:
+	case colorScheme_grayRed:
 		colorMap = colorMap_grayRed;
 		colorElements = 224;
 		break;
 		//Glowbow
-	case 7:
+	case colorScheme_glowBow:
 		colorMap = colorMap_glowBow;
 		colorElements = 224;
 		break;
+		//Grayscale
+	case colorScheme_grayscale:
+		colorMap = colorMap_grayscale;
+		colorElements = 256;
+		break;
 		//Hottest
-	case 8:
+	case colorScheme_hottest:
 		colorMap = colorMap_hottest;
 		colorElements = 224;
 		break;
 		//Ironblack
-	case 9:
+	case colorScheme_ironblack:
 		colorMap = colorMap_ironblack;
 		colorElements = 256;
 		break;
 		//Lava
-	case 10:
+	case colorScheme_lava:
 		colorMap = colorMap_lava;
 		colorElements = 240;
 		break;
 		//Medical
-	case 11:
+	case colorScheme_medical:
 		colorMap = colorMap_medical;
 		colorElements = 224;
 		break;
 		//Rainbow
-	case 12:
+	case colorScheme_rainbow:
 		colorMap = colorMap_rainbow;
 		colorElements = 256;
 		break;
 		//Wheel 1
-	case 13:
+	case colorScheme_wheel1:
 		colorMap = colorMap_wheel1;
 		colorElements = 256;
 		break;
 		//Wheel 2
-	case 14:
+	case colorScheme_wheel2:
 		colorMap = colorMap_wheel2;
 		colorElements = 256;
 		break;
 		//Wheel 3
-	case 15:
+	case colorScheme_wheel3:
 		colorMap = colorMap_wheel3;
 		colorElements = 256;
 		break;
 		//White-Hot
-	case 16:
+	case colorScheme_whiteHot:
 		colorMap = colorMap_whiteHot;
 		colorElements = 224;
 		break;
 		//Yellow
-	case 17:
+	case colorScheme_yellow:
 		colorMap = colorMap_yellow;
 		colorElements = 224;
 		break;
@@ -284,7 +288,7 @@ void changeColorScheme(byte* pos) {
 	//Map to the right color scheme
 	selectColorScheme();
 	//Choose limits for hot and cold mode
-	if ((colorScheme == 3) || (colorScheme == 8))
+	if ((colorScheme == colorScheme_coldest) || (colorScheme == colorScheme_hottest))
 		hotColdChooser();
 	//Save to EEPROM
 	EEPROM.write(eeprom_colorScheme, colorScheme);
@@ -293,7 +297,7 @@ void changeColorScheme(byte* pos) {
 /* Lock or release limits */
 void limitLock() {
 	//If not warmed, do nothing
-	if (calStatus == 0) {
+	if (calStatus == cal_warmup) {
 		showMsg((char*) "Wait for warmup");
 	}
 	//Unlock limits
@@ -316,40 +320,43 @@ void displayInfos() {
 	///Refresh object temperature
 	mlx90614GetTemp();
 	//Convert to Fahrenheit if needed
-	if (tempFormat)
+	if (tempFormat == tempFormat_fahrenheit)
 		mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
 	//Set text color, font and background
 	display.setColor(VGA_WHITE);
 	display.setBackColor(VGA_TRANSPARENT);
 	display.setFont(smallFont);
-	//Show battery status in percantage
-	if ((batteryEnabled) && (imgSave != 1) && (!videoSave))
-		displayBatteryStatus();
-	//Show the time
-	if ((timeEnabled) && (imgSave != 1) && (!videoSave))
-		displayTime();
-	//Show the date
-	if ((dateEnabled) && (imgSave != 1) && (!videoSave))
-		displayDate();
-	//Show storage information
-	if ((storageEnabled) && (imgSave != 1) && (!videoSave))
-		displayFreeSpace();
+	//If  not saving image or video
+	if ((imgSave != imgSave_save) && (videoSave == false)) {
+		//Show battery status in percantage
+		if (batteryEnabled)
+			displayBatteryStatus();
+		//Show the time
+		if (timeEnabled)
+			displayTime();
+		//Show the date
+		if (dateEnabled)
+			displayDate();
+		//Show storage information
+		if (storageEnabled)
+			displayFreeSpace();
+	}
 	//Show the spot in the middle
 	if (spotEnabled)
 		showSpot();
 	//Show the color bar when warmup is over and if enabled, not in visual mode
-	if ((colorbarEnabled) && (calStatus > 0) && (displayMode != mode_visual))
+	if ((colorbarEnabled) && (calStatus > cal_warmup) && (displayMode != displayMode_visual))
 		showColorBar();
 	//Show the temperature points
 	if (pointsEnabled)
 		showTemperatures();
 	//Activate the calibration after a warmup time of 60s
-	if ((calStatus == 0) && (imgSave != 1) && (!videoSave)) {
+	if ((calStatus == cal_warmup) && (imgSave != imgSave_save) && (!videoSave)) {
 		if (millis() - calTimer > 60000) {
 			//Perform FFC if shutter is attached
-			if (leptonVersion != 2)
+			if (leptonVersion != leptonVersion_2_NoShutter)
 				leptonRunCalibration();
-			calStatus = 1;
+			calStatus = cal_standard;
 		}
 		else
 			displayWarmup();
@@ -364,17 +371,22 @@ void liveModeInit() {
 	//Select color scheme
 	selectColorScheme();
 	//Change camera resolution
-	if (displayMode == mode_thermal)
+	if (displayMode == displayMode_thermal)
 		changeCamRes(VC0706_640x480);
 	else
 		changeCamRes(VC0706_160x120);
 	//Activate or deactivate combined mode
-	if (displayMode != mode_combined)
+	if (displayMode != displayMode_combined)
 		combinedDecomp = false;
 	else
 		combinedDecomp = true;
 	//Attach the interrupts
 	attachInterrupts();
+	//Clear markers
+	imgSave = false;
+	videoSave = false;
+	showMenu = false;
+	lockLimits = false;
 	//Allocate space
 	image = (unsigned short*)calloc(19200, sizeof(unsigned short));
 	showTemp = (uint16_t*)calloc(192, sizeof(uint16_t));
@@ -382,6 +394,8 @@ void liveModeInit() {
 	clearTemperatures();
 }
 
+
+/* Exit the live mode */
 void liveModeExit() {
 	//Deactivate laser if enabled
 	if (laserEnabled)
@@ -409,23 +423,23 @@ void liveMode() {
 		//Show the content depending on the mode
 		switch (displayMode) {
 		//Thermal only
-		case mode_thermal:
+		case displayMode_thermal:
 			displayThermalImg();
 			break;
 		//Visual only
-		case mode_visual:
+		case displayMode_visual:
 			displayVisualImg();
 			break;
 		//Combined
-		case mode_combined:
+		case displayMode_combined:
 			displayCombinedImg();
 			break;
 		}
 		//Display additional information on the screen
-		if (imgSave != 2)
+		if (imgSave != imgSave_set)
 			displayInfos();
 		//Save the image
-		if (imgSave == 1)
+		if (imgSave == imgSave_save)
 			saveImage();
 		//Start the video
 		if (videoSave) {
