@@ -13,9 +13,9 @@ void leptonBeginSPI() {
 	//Lepton3 - 40 Mhz minimum and SPI mode 0
 	if (leptonVersion == leptonVersion_3_Shutter)
 		SPI.beginTransaction(SPISettings(40000000, MSBFIRST, SPI_MODE0));
-	//Lepton2 - 20 Mhz maximum and SPI mode 1
+	//Lepton2 - 30 Mhz maximum and SPI mode 0
 	else
-		SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE1));
+		SPI.beginTransaction(SPISettings(30000000, MSBFIRST, SPI_MODE0));
 	//Start alternative clock line, except for old HW
 	if (mlx90614Version == mlx90614Version_new)
 		startAltClockline();
