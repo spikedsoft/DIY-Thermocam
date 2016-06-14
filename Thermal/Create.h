@@ -163,7 +163,7 @@ void refreshTempPoints(bool save) {
 			for (int x = 0; x < 80; x = x + 5) {
 				if (showTemp[(x / 5) + (16 * (y / 5))] != 0) {
 					if (save)
-						showTemp[(x / 5) + (16 * (y / 5))] = rawValues[x + (y * 160)];
+						showTemp[(x / 5) + (16 * (y / 5))] = rawValues[x + (y * 80)];
 					else
 						showTemp[(x / 5) + (16 * (y / 5))] = image[(x * 2) + (y * 2 * 160)];
 				}

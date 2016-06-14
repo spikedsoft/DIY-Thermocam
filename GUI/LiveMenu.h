@@ -464,11 +464,17 @@ bool tempMenu() {
 				switch (tempMenuPos) {
 					//Add point
 				case 0:
+					showMenu = false;
 					tempPointFunction();
+					showMenu = true;
+					//Enable points show
+					pointsEnabled = true;
 					break;
 					//Remove point
 				case 1:
+					showMenu = false;
 					tempPointFunction(true);
+					showMenu = true;
 					break;
 					//Clear all
 				case 2:

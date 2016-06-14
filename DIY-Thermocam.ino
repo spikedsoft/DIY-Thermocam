@@ -10,7 +10,7 @@
 */
 
 /* Current firmware version */
-#define Version "Firmware 1.19 from 10.06.2016"
+#define Version "Firmware 1.19 from 14.06.2016"
 #define fwVersion 119
 
 /* Libraries */

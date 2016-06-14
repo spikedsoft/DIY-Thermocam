@@ -307,6 +307,9 @@ void videoOutput() {
 			break;
 		//Get the temps
 		getTemperatures(true);
+		//Refresh the temp points if enabled
+		if (pointsEnabled)
+			refreshTempPoints(true);
 		//For 160x120 Lepton3
 		if (leptonVersion == leptonVersion_3_Shutter) {
 			//Find min and max if required
@@ -329,9 +332,6 @@ void videoOutput() {
 				convertColors(true);
 			}
 		}
-		//Refresh the temp points if enabled
-		if (pointsEnabled)
-			refreshTempPoints(true);
 		//Activate the calibration after warmup
 		if (calStatus == cal_warmup) {
 			if (millis() - calTimer > 60000) {
@@ -352,6 +352,15 @@ void videoOutput() {
 	}
 	//Enable display backlight
 	enableScreenLight();
+}
+
+/* Get integer out of a text string */
+int getInt(String text)
+{
+	char temp[6];
+	text.toCharArray(temp, 5);
+	int x = atoi(temp);
+	return x;
 }
 
 /* Tries to establish a connection to a thermal viewer or video output module*/
@@ -378,8 +387,17 @@ void videoConnect() {
 			//Next byte should be the mode
 			byte readMode = Serial.read();
 			//We detected the thermal viewer, get the current time
-			if (readMode == CMD_THERMALVIEWER)
+			if (readMode == CMD_THERMALVIEWER) {
+				String dateIn = Serial.readString();
+				//Check if valid
+				if (getInt(dateIn.substring(0, 4) >= 2016)) {
+					//Set the clock
+					setTime(getInt(dateIn.substring(11, 13)), getInt(dateIn.substring(14, 16)), getInt(dateIn.substring(17, 19)), getInt(dateIn.substring(8, 10)), getInt(dateIn.substring(5, 7)), getInt(dateIn.substring(0, 4)));
+					//Set the RTC
+					Teensy3Clock.set(now());
+				}
 				videoOutType = 0;
+			}
 			//We detected the video output module
 			else if (readMode == CMD_VIDEOMODULE)
 				videoOutType = 1;
