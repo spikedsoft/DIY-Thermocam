@@ -79,6 +79,7 @@ bool colorbarEnabled;
 bool pointsEnabled;
 bool storageEnabled;
 bool filterEnabled;
+bool ambientEnabled;
 
 //Calibration offset
 float calOffset;

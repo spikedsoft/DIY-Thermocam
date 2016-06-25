@@ -59,8 +59,8 @@
 #define eeprom_displayMode 117
 #define eeprom_firstStart 150
 #define eeprom_liveHelper 151
-#define eeprom_setValue 200
 #define eeprom_fwVersion 250
+#define eeprom_setValue 200
 
 //Hardware diagnostic bit codes
 #define diag_spot 0

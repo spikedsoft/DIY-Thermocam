@@ -7,9 +7,9 @@
 #include "Cam.h"
 #include "MLX90614.h"
 #include "Lepton.h"
-#include "Storage.h"
+#include "SD.h"
 #include "Connection.h"
-
+#include "MassStorage.h"
 
 /* Methods */
 

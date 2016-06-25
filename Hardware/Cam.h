@@ -136,7 +136,6 @@ unsigned int input_func(JDEC * jd, byte* buff, unsigned int ndata) {
 void getVisualImage() {
 	//Get frame length
 	uint16_t jpglen = cam.frameLength();
-	Serial.println(jpglen);
 	//Define array for the jpeg data
 	uint8_t* jpegData = (uint8_t*)calloc(jpglen, sizeof(uint8_t));
 	//Buffer to store the data of up to 64 byte

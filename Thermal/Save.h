@@ -416,9 +416,6 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	sdFile.write(maxTemp & 0x00FF);
 	//Write the object temp 
 	uint8_t farray[4];
-	//Get object temp
-	mlx90614GetTemp();
-	//Write object temp
 	floatToBytes(farray, mlx90614Temp);
 	for (int i = 0; i < 4; i++)
 		sdFile.write(farray[i]);
@@ -439,6 +436,9 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	else
 		sdFile.write(pointsEnabled);
 	//Write calibration offset
+	//Calculate offset out of ambient temp when no calib is done
+	if (calStatus != cal_manual)
+		calOffset = mlx90614Amb - (calSlope * 8192);
 	floatToBytes(farray, (float)calOffset);
 	for (int i = 0; i < 4; i++)
 		sdFile.write(farray[i]);

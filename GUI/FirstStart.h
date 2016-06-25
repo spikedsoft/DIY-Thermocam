@@ -255,7 +255,7 @@ void adjustCam() {
 }
 
 /* Set the EEPROM values to default for the first time */
-void firstEEPROMSet() {
+void stdEEPROMSet() {
 	drawMessage((char*) "Flashing spot EEPROM settings..");
 	//Set spot maximum temp to 380°C
 	mlx90614SetMax();
@@ -263,6 +263,8 @@ void firstEEPROMSet() {
 	mlx90614SetMin();
 	//Set spot filter settings
 	mlx90614SetFilter();
+	//Set spot emissivity to 1.0
+	mlx90614SetEmissivity();
 	//Set device EEPROM settings
 	EEPROM.write(eeprom_spotEnabled, true);
 	EEPROM.write(eeprom_colorbarEnabled, true);
@@ -281,8 +283,6 @@ void firstEEPROMSet() {
 		EEPROM.write(eeprom_filterEnabled, true);
 	//Set mass storage to false
 	EEPROM.write(eeprom_massStorage, false);
-	//Set live helper to false
-	EEPROM.write(eeprom_liveHelper, false);
 	//Set current firmware version
 	EEPROM.write(eeprom_fwVersion, fwVersion);
 	//Set first start marker to true
@@ -306,7 +306,9 @@ void firstStart() {
 	//Adjust camera wizard
 	adjustCam();
 	//Set EEPROM values
-	firstEEPROMSet();
+	stdEEPROMSet();
+	//Set live helper to false to show it the next time
+	EEPROM.write(eeprom_liveHelper, false);
 	//Show completion message
 	firstStartComplete();
 }

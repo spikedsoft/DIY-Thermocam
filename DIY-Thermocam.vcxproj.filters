@@ -120,9 +120,6 @@
     <ClInclude Include="Hardware\MLX90614.h">
       <Filter>Resource Files\Hardware</Filter>
     </ClInclude>
-    <ClInclude Include="Hardware\Storage.h">
-      <Filter>Resource Files\Hardware</Filter>
-    </ClInclude>
     <ClInclude Include="Thermal\Create.h">
       <Filter>Resource Files\Thermal</Filter>
     </ClInclude>
@@ -459,13 +456,19 @@
     <ClInclude Include="libraries\tjpgd\tjpgd.h">
       <Filter>_libraries\tjpgd</Filter>
     </ClInclude>
-    <ClInclude Include="General\GlobalVariables.h">
-      <Filter>Resource Files\General</Filter>
-    </ClInclude>
     <ClInclude Include="General\GlobalMethods.h">
       <Filter>Resource Files\General</Filter>
     </ClInclude>
     <ClInclude Include="General\GlobalDefines.h">
+      <Filter>Resource Files\General</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\SD.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="Hardware\MassStorage.h">
+      <Filter>Resource Files\Hardware</Filter>
+    </ClInclude>
+    <ClInclude Include="General\GlobalVariables.h">
       <Filter>Resource Files\General</Filter>
     </ClInclude>
   </ItemGroup>

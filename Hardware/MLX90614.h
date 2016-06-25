@@ -4,6 +4,18 @@
 
 /* Variables */
 
+//Registers
+#define mlx90614_EEPROM 0x00
+#define mlx90614_RAM 0x5A
+#define mlx90614_AmbientTemp 0x06
+#define mlx90614_ObjectTemp 0x07
+#define mlx90614_toMax 0x20
+#define mlx90614_toMin 0x21
+#define mlx90614_PWMCTRL 0x22
+#define mlx90614_TaRange 0x23
+#define mlx90614_Emissivity 0x24
+#define mlx90614_Filter 0x25
+
 //CRC Table to calculate I2C PEC
 const unsigned char mlx90614CrcTable[] = { 0x00, 0x07, 0x0E, 0x09, 0x1C, 0x1B, 0x12, 0x15, 0x38, 0x3F, 0x36, 0x31, 0x24, 0x23, 0x2A, 0x2D, 0x70, 0x77, 0x7E,
 0x79, 0x6C, 0x6B, 0x62, 0x65, 0x48, 0x4F, 0x46, 0x41, 0x54, 0x53, 0x5A, 0x5D, 0xE0, 0xE7, 0xEE, 0xE9, 0xFC, 0xFB, 0xF2, 0xF5, 0xD8, 0xDF,
@@ -38,16 +50,18 @@ char mlx90614CRC8(byte buffer[], int len) {
 /* Receive data from the RAM over I2C */
 uint16_t mlx90614GetRawData(bool TaTo, bool* check) {
 	// Store the two relevant bytes of data for temperature
-	byte dataLow = 0x00;
-	byte dataHigh = 0x00;
-	Wire.beginTransmission(0x5A);
+	byte dataLow, dataHigh;
+	Wire.beginTransmission(mlx90614_RAM);
+	//Measure Ambient Temp
 	if (TaTo)
-		Wire.send(0x06); //measure ambient temp
+		Wire.send(mlx90614_AmbientTemp);
+	//Measure Object Temp
 	else {
-		Wire.send(0x07); // measure objec temp
+		Wire.send(mlx90614_ObjectTemp); 
 	}
 	Wire.endTransmission(I2C_NOSTOP);
-	Wire.requestFrom(0x5A, 3);
+	//Receive data	
+	Wire.requestFrom(mlx90614_RAM, 3);
 	if (Wire.available() != 3)
 		*check = false;
 	dataLow = Wire.read();
@@ -60,13 +74,14 @@ uint16_t mlx90614GetRawData(bool TaTo, bool* check) {
 	if (pec == -1)
 		*check = false;
 	Wire.endTransmission();
+	//Convert data
 	uint16_t tempData = (((dataHigh & 0x007F) << 8) + dataLow);
 	return tempData;
 }
 
 /* Send data to the EEPROM over I2C*/
 void mlx90614Send(byte address, byte LSB, byte MSB) {
-	Wire.beginTransmission(0x00);
+	Wire.beginTransmission(mlx90614_EEPROM);
 	Wire.write(address);
 	Wire.write(LSB);
 	Wire.write(MSB);
@@ -74,20 +89,18 @@ void mlx90614Send(byte address, byte LSB, byte MSB) {
 	byte PEC = mlx90614CRC8(msg, 4);
 	Wire.write(PEC);
 	Wire.endTransmission();
-	delay(10);
 }
 
 /* Receive data from the EEPROM over I2C */
 uint16_t mlx90614Receive(byte address) {
-	Wire.beginTransmission(0x00);
+	Wire.beginTransmission(mlx90614_EEPROM);
 	Wire.write(address);
 	Wire.endTransmission(I2C_NOSTOP);
-	Wire.requestFrom(0x00, 3);
+	Wire.requestFrom(mlx90614_EEPROM, 3);
 	byte LSB = Wire.read();
 	byte MSB = Wire.read();
 	Wire.read();
 	Wire.endTransmission();
-	delay(10);
 	uint16_t regValue = (((MSB) << 8) + LSB);
 	return regValue;
 }
@@ -118,26 +131,26 @@ void mlx90614SetMax() {
 	byte count = 0;
 	do {
 		//Set it to zero first
-		mlx90614Send(0x20, 0x00, 0x00);
+		mlx90614Send(mlx90614_toMax, 0x00, 0x00);
 		delay(100);
 		//Then write the new value
-		mlx90614Send(0x20, 0x23, 0xFF);
+		mlx90614Send(mlx90614_toMax, 0x23, 0xFF);
 		delay(100);
 		//If we failed after 10 retries, set error and continue
 		if (count == 10) {
 			drawMessage((char*) "Spot sensor setMax not working!");
-			delay(1000);
+			delay(2000);
 			setDiagnostic(diag_spot);
 			return;
 		}
 		count++;
-	} while (mlx90614Receive(0x20) != 65315);
+	} while (mlx90614Receive(mlx90614_toMax) != 65315);
 }
 
 /* Check if the maximum temp is 380°C */
 bool mlx90614CheckMax() {
 	//Check if maximum temp setting is correct
-	if (mlx90614Receive(0x20) != 65315)
+	if (mlx90614Receive(mlx90614_toMax) != 65315)
 		return false;
 	//Everything was fine
 	return true;
@@ -148,26 +161,56 @@ void mlx90614SetMin() {
 	byte count = 0;
 	do {
 		//Set it to zero first
-		mlx90614Send(0x21, 0x00, 0x00);
+		mlx90614Send(mlx90614_toMin, 0x00, 0x00);
 		delay(100);
 		//Then write the new value
-		mlx90614Send(0x21, 0x5B, 0x4F);
+		mlx90614Send(mlx90614_toMin, 0x5B, 0x4F);
 		delay(100);
 		//If we failed after 10 retries, set error and continue
 		if (count == 10) {
 			drawMessage((char*) "Spot sensor setMin not working!");
-			delay(1000);
+			delay(2000);
 			setDiagnostic(diag_spot);
 			return;
 		}
 		count++;
-	} while (mlx90614Receive(0x21) != 20315);
+	} while (mlx90614Receive(mlx90614_toMin) != 20315);
 }
 
 /* Check if the minimum temp is -70°C */
 bool mlx90614CheckMin() {
 	//Check if minimum temp setting is correct
-	if (mlx90614Receive(0x21) != 20315)
+	if (mlx90614Receive(mlx90614_toMin) != 20315)
+		return false;
+	//Everything was fine
+	return true;
+}
+
+/* Set the emissivity to 0.9 */
+void mlx90614SetEmissivity() {
+	byte count = 0;
+	do {
+		//Set it to zero first
+		mlx90614Send(mlx90614_Emissivity, 0x00, 0x00);
+		delay(100);
+		//Then write the new value
+		mlx90614Send(mlx90614_Emissivity, 0x66, 0xE6);
+		delay(100);
+		//If we failed after 10 retries, set error and continue
+		if (count == 10) {
+			drawMessage((char*) "Spot sensor emissivity not working!");
+			delay(2000);
+			setDiagnostic(diag_spot);
+			return;
+		}
+		count++;
+	} while (mlx90614Receive(mlx90614_Emissivity) != 58982);
+}
+
+/* Check if the emissivity is set to 0.9 */
+bool mlx90614CheckEmissivity() {
+	//Check if emissivity setting is correct
+	if (mlx90614Receive(mlx90614_Emissivity) != 58982)
 		return false;
 	//Everything was fine
 	return true;
@@ -193,25 +236,25 @@ void mlx90614SetFilter() {
 	byte count = 0;
 	do {
 		//Set it to zero first
-		mlx90614Send(0x25, 0x00, 0x00);
+		mlx90614Send(mlx90614_Filter, 0x00, 0x00);
 		delay(100);
 		//Then write the new value
-		mlx90614Send(0x25, MSB, LSB);
+		mlx90614Send(mlx90614_Filter, MSB, LSB);
 		delay(100);
 		//If we failed after 10 retries, set error and continue
 		if (count == 10) {
 			drawMessage((char*) "Spot sensor setFilter not working!");
-			delay(1000);
+			delay(2000);
 			setDiagnostic(diag_spot);
 			return;
 		}
 		count++;
-	} while (mlx90614Receive(0x25) != filterSettings);
+	} while (mlx90614Receive(mlx90614_Filter) != filterSettings);
 }
 
 /* Check if the filter settings match for fast measurement */
 bool mlx90614CheckFilter() {
-	uint16_t filter = mlx90614Receive(0x25);
+	uint16_t filter = mlx90614Receive(mlx90614_Filter);
 	//Old MLX90614 with gain factor of 12.5
 	if ((mlx90614Version == mlx90614Version_old) && (filter != 40816))
 		return false;
@@ -259,12 +302,12 @@ float mlx90614GetTemp() {
 /* Initializes the sensor */
 void mlx90614Init() {
 	//Get MLX90614Version
-	uint16_t filter = mlx90614Receive(0x25);
+	uint16_t filter = mlx90614Receive(mlx90614_Filter);
 	mlx90614Version = (filter >> 13) & 1;
 	//Check if version is valid
 	if ((mlx90614Version != mlx90614Version_old) && (mlx90614Version != mlx90614Version_new)) {
 		drawMessage((char*)"Unsupported spot sensor !");
-		delay(1000);
+		delay(2000);
 		setDiagnostic(diag_spot);
 		return;
 	}
@@ -272,27 +315,37 @@ void mlx90614Init() {
 	if (EEPROM.read(eeprom_firstStart) == eeprom_setValue) {
 		//Check Filter Temp
 		if (mlx90614CheckFilter() == false) {
-			drawMessage((char*)"Spot sensor filter invalid, rewrite..");
+			drawMessage((char*)"Spot filter invalid, rewrite..");
 			delay(1000);
 			mlx90614SetFilter();
 			setDiagnostic(diag_spot);
-			return;
 		}
 		//Check Min Temp
 		if (mlx90614CheckMin() == false) {
-			drawMessage((char*)"Spot sensor minTemp invalid, rewrite..");
+			drawMessage((char*)"Spot minTemp invalid, rewrite..");
 			delay(1000);
 			mlx90614SetMin();
 			setDiagnostic(diag_spot);
-			return;
 		}
 		//Check Max Temp
 		if (mlx90614CheckMax() == false) {
-			drawMessage((char*)"Spot sensor maxTemp invalid, rewrite..");
+			drawMessage((char*)"Spot maxTemp invalid, rewrite..");
 			delay(1000);
 			mlx90614SetMax();
 			setDiagnostic(diag_spot);
+		}
+		//Check Emissivity
+		if (mlx90614CheckEmissivity() == false) {
+			drawMessage((char*)"Spot emissivity invalid, rewrite..");
+			delay(1000);
+			mlx90614SetEmissivity();
+			setDiagnostic(diag_spot);
 			return;
+		}
+		//Show message, if one of the settings had to be re-written
+		if (!checkDiagnostic(diag_spot)) {
+			drawMessage((char*)"Spot EEPROM updated, restart device!");
+			while (1);
 		}
 	}
 	//Check if the object temp is valid
@@ -303,7 +356,7 @@ void mlx90614Init() {
 		//If we cannot connect, set error and continue
 		if (count == 100) {
 			drawMessage((char*) "Spot sensor objTemp internal error!");
-			delay(1000);
+			delay(2000);
 			setDiagnostic(diag_spot);
 			break;
 		}
@@ -318,7 +371,7 @@ void mlx90614Init() {
 		//If we cannot connect, set error and continue
 		if (count == 100) {
 			drawMessage((char*)"Spot sensor ambTemp internal error!");
-			delay(1000);
+			delay(2000);
 			setDiagnostic(diag_spot);
 			break;
 		}
