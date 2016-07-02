@@ -16,6 +16,7 @@
 #define CMD_TERMINAL_SPOTTEMP 's'
 #define CMD_TERMINAL_AMBIENTTEMP 'a'
 #define CMD_TERMINAL_RAWDATA 'd'
+#define CMD_TERMINAL_OPTICALDATA 'o'
 #define CMD_TERMINAL_CALIBDATA 'c'
 #define CMD_TERMINAL_END 'e'
 
@@ -27,6 +28,7 @@
 #define CMD_START 'S'
 #define CMD_ROTATED 'R'
 #define CMD_SPOT 'Q'
+#define CMD_OPTICAL 'O'
 #define CMD_GET 'G'
 #define CMD_END 'E'
 #define CMD_COLORSCHEME 'C'
@@ -58,13 +60,11 @@ byte videoOutType;
 unsigned long processSyncMessage() {
 	unsigned long pctime = 0L;
 	const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013 
-
 	if (Serial.find((char*)"T")) {
 		pctime = Serial.parseInt();
 		return pctime;
-		if (pctime < DEFAULT_TIME) { // check the value is a valid time (greater than Jan 1 2013)
-			pctime = 0L; // return 0 to indicate that the time is not valid
-		}
+		if (pctime < DEFAULT_TIME)
+			pctime = 0L; 
 	}
 	return pctime;
 }
@@ -89,7 +89,6 @@ void sendConfigData() {
 		Serial.write((maxTemp & 0xFF00) >> 8);
 		Serial.write(maxTemp & 0x00FF);
 		//Send object temp
-		mlx90614GetTemp();
 		floatToBytes(farray, mlx90614Temp);
 		for (int i = 0; i < 4; i++)
 			Serial.write(farray[i]);
@@ -111,8 +110,6 @@ void sendConfigData() {
 			Serial.write(pointsEnabled);
 	}
 	//Send the calibration offset
-	if (calStatus != cal_manual)
-		calOffset = mlx90614GetAmb() - (calSlope * 8192);
 	floatToBytes(farray, (float)calOffset);
 	for (int i = 0; i < 4; i++)
 		Serial.write(farray[i]);
@@ -184,22 +181,18 @@ bool serialTerminal() {
 		break;
 		//Get ambient temp
 	case CMD_TERMINAL_AMBIENTTEMP:
-		mlx90614GetAmb();
 		floatToBytes(farray, mlx90614Amb);
 		for (int i = 0; i < 4; i++)
 			Serial.write(farray[i]);
 		break;
 		//Get spot object temp
 	case CMD_TERMINAL_SPOTTEMP:
-		mlx90614GetTemp();
 		floatToBytes(farray, mlx90614Temp);
 		for (int i = 0; i < 4; i++)
 			Serial.write(farray[i]);
 		break;
 		//Get calibration data
 	case CMD_TERMINAL_CALIBDATA:
-		if (calStatus != cal_manual)
-			calOffset = mlx90614Amb - (calSlope * 8192);
 		floatToBytes(farray, calOffset);
 		for (int i = 0; i < 4; i++)
 			Serial.write(farray[i]);
@@ -211,11 +204,15 @@ bool serialTerminal() {
 	case CMD_TERMINAL_RAWDATA:
 		sendLeptonData();
 		break;
+		//Send the visual image data
+	case CMD_TERMINAL_OPTICALDATA:
+			captureVisualImage();
+			transferVisualImage();
+			break;
 		//End connection
 	case CMD_TERMINAL_END:
 		return true;
 		break;
-	//TODO: Implement the rest of the commands	
 	}
 	Serial.flush();
 	return false;
@@ -269,10 +266,14 @@ bool serialHandler() {
 		break;
 		//Get spot temp
 	case CMD_SPOT:
-		mlx90614GetTemp();
 		floatToBytes(farray, mlx90614Temp);
 		for (int i = 0; i < 4; i++)
 			Serial.write(farray[i]);
+		break;
+		//Send the visual image data
+	case CMD_OPTICAL:
+		captureVisualImage();
+		transferVisualImage();
 		break;
 	}
 	Serial.flush();
@@ -288,18 +289,18 @@ void buttonHandler() {
 		endTime = millis() - startTime;
 	endTime = millis() - startTime;
 	//Short press - request to save an image
-	if (endTime < 1000) {
+	if ((endTime < 1000) && (sendCmd == SEND_FRAME)){
 		sendCmd = CAP_IMG;
 	}
 	//Long press - request to start or stop a video
 	else {
 		//Start video
-		if (!videoSave) {
+		if ((videoSave == false) && (sendCmd != STOP_VID)) {
 			sendCmd = START_VID;
 			videoSave = true;
 		}
 		//Stop video
-		else {
+		if ((videoSave == true) && (sendCmd != START_VID)){
 			sendCmd = STOP_VID;
 			videoSave = false;
 		}
@@ -320,24 +321,26 @@ void videoOutput() {
 		//Refresh the temp points if enabled
 		if (pointsEnabled)
 			refreshTempPoints(true);
-		//For 160x120 Lepton3
-		if (leptonVersion == leptonVersion_3_Shutter) {
-			//Find min and max if required
-			if ((agcEnabled) && (!limitsLocked) && (colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest))
+		//Find min and max if required
+		if ((agcEnabled) && (!limitsLocked) && (colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest)) {
+			//For 160x120 Lepton3
+			if (leptonVersion == leptonVersion_3_Shutter) 
 				limitValues();
-			//Convert to colors for video out module
-			if (videoOutType == videoOut_externalModule) {
+			//For 80x60 Lepton2
+			else 
+				limitValues(true);
+		}
+		//Compensate calibration with object temp
+		compensateCalib();
+		//Convert to colors for video out module
+		if (videoOutType == videoOut_externalModule) {
+			//For 160x120 Lepton3
+			if (leptonVersion == leptonVersion_3_Shutter){
 				scaleValues();
 				convertColors();
 			}
-		}
-		//For 80x60 Lepton2
-		else {
-			//Find min and max if required
-			if ((agcEnabled) && (!limitsLocked) && (colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest))
-				limitValues(true);
-			//Convert to colors for video out module
-			if(videoOutType == videoOut_externalModule) {
+			//For 80x60 Lepton2
+			else {
 				scaleValues(true);
 				convertColors(true);
 			}
@@ -387,16 +390,18 @@ void videoConnect() {
 	detachInterrupts();
 	//Save old color scheme selection
 	byte colorSchemeOld = colorScheme;
+	//Clear markers
+	videoSave = false;
+	showMenu = false;
 	//Allocate space
 	rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
+	//Set camera resolution to medium
+	changeCamRes(VC0706_320x240);
 	//Show message
 	drawMessage((char*)"Waiting for connection..");
 	display.print((char*) "Touch screen to return", CENTER, 170);
-	delay(1000);
 	//Wait for device
 	while (true) {
-		//Serial start command send
-		if ((Serial.available() > 0) && (Serial.read() == CMD_START)) {
 			//Wait for next byte
 			while (Serial.available() == 0) {
 				if (touch.touched())
@@ -452,9 +457,13 @@ void videoConnect() {
 				delay(1000);
 				videoOutType = videoOut_serialTerminal;
 			}
-			//None of the options, return
-			else
+			//None of the options, return to live mode
+			else {
+				drawMessage((char*)"Unknown device type!");
+				display.print((char*) "Returning to live mode..", CENTER, 170);
+				delay(1000);
 				break;
+			}
 			//Clear input buffer
 			serialClear();
 			//Send start byte if not in terminal mode
@@ -462,13 +471,6 @@ void videoConnect() {
 				Serial.write(START_SESSION);
 			//Start video output
 			videoOutput();
-			break;
-		}
-		//Another command received, discard it
-		else if ((Serial.available() > 0))
-			Serial.read();
-		//Abort search
-		if (touch.touched())
 			break;
 	}
 	//Show message
@@ -482,6 +484,11 @@ void videoConnect() {
 	colorScheme = colorSchemeOld;
 	videoSave = false;
 	showMenu = false;
+	//Change camera resolution
+	if (displayMode == displayMode_thermal)
+		changeCamRes(VC0706_640x480);
+	else
+		changeCamRes(VC0706_160x120);
 	//Enable interrupts
 	attachInterrupts();
 }

@@ -12,7 +12,7 @@ float celciusToFahrenheit(float Tc) {
 float calFunction(uint16_t rawValue) {
 	//Calculate offset out of ambient temp when no calib is done
 	if (calStatus != cal_manual) 
-		calOffset = mlx90614Amb - (calSlope * 8192);
+		calOffset = mlx90614Amb - (calSlope * 8192) + calComp;
 	//Calculate the temperature in Celcius out of the coefficients
 	float temp = (calSlope * rawValue) + calOffset;
 	//Limit to minimum and maximum value
@@ -26,33 +26,52 @@ float calFunction(uint16_t rawValue) {
 	return temp;
 }
 
-float weightArray[] = {
-	0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25,
-	0.25, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.25,
-	0.25, 0.50, 0.75, 0.75, 0.75, 0.75, 0.50, 0.25,
-	0.25, 0.50, 0.75, 1.00, 1.00, 0.75, 0.50, 0.25,
-	0.25, 0.50, 0.75, 1.00, 1.00, 0.75, 0.50, 0.25,
-	0.25, 0.50, 0.75, 0.75, 0.75, 0.75, 0.50, 0.25,
-	0.25, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.25,
-	0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25, 0.25
-};
-
-/* Calculates the average of the 64 pixels in the middle */
+/* Calculates the average of the 196 (14x14) pixels in the middle */
 uint16_t calcAverage() {
-	float sum = 0.0;
-	for (byte vert = 0; vert < 8; vert++) {
-		for (byte horiz = 0; horiz < 8; horiz++) {
-			uint16_t val = image[((vert + 26) * 160) + (horiz + 36) * 2];
+	int sum = 0;
+	for (byte vert = 52; vert < 66; vert++) {
+		for (byte horiz = 72; horiz < 86; horiz++) {
+			uint16_t val = image[(vert * 160) + horiz];
 			//If one of the values contains hotter or colder values than the lepton can handle
 			if ((val == 16383) || (val == 0))
 				//Do not use that calibration set!
 				return 0;
-			sum = sum + (val * weightArray[(vert * 8) + horiz]);
+			sum += val;
 		}
 	}
-	sum = sum / 30.5;
-	uint16_t avg = (uint16_t)sum;
+	uint16_t avg = (uint16_t) (sum / 196.0);
 	return avg;
+}
+
+/* Compensate the calibration with object temp */
+void compensateCalib() {
+	//Only apply, if agc is enabled and limits not locked
+	if ((agcEnabled) && (!limitsLocked)) {
+		///Refresh object temperature
+		mlx90614GetTemp();
+		//Convert to Fahrenheit if needed
+		if (tempFormat == tempFormat_fahrenheit)
+			mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
+		//Refresh MLX90614 ambient temp
+		mlx90614GetAmb();
+		//Calculate min, max & average without compensation
+		calComp = 0;
+		float min = calFunction(minTemp);
+		float max = calFunction(maxTemp);
+		//If spot temp is lower than current minimum, lower minimum
+		if ((mlx90614Temp < min) && (colorScheme != colorScheme_hottest)) {
+			calComp = mlx90614Temp - min;
+		}
+		//If spot temp is higher tha current maximum, raise maximum
+		else if ((mlx90614Temp > max) && (colorScheme != colorScheme_coldest)) {
+			calComp = mlx90614Temp - max;
+		}
+		//Compensate by average temp
+		float average = calcAverage();
+		if (average != 0) {
+			calComp += mlx90614Temp - calFunction(average);
+		}
+	}
 }
 
 /* Help function for least suqare fit */

@@ -2,60 +2,43 @@
 * Functions to create and display the thermal image
 */
 
-/* A method to create a gaussian blur filter over an image */
-void gaussianBlur() {
-	const long numpixels = 19200;
-	double lambda, dnu;
-	float nu, boundaryscale, postscale;
-	unsigned short *ptr;
-	long i, x, y;
-	float sigma = 1.5;
-	lambda = (sigma * sigma) / 2.0;
-	dnu = (1.0 + 2.0 * lambda - sqrt(1.0 + 4.0 * lambda)) / (2.0 * lambda);
-	nu = (float)dnu;
-	boundaryscale = (float)(1.0 / (1.0 - dnu));
-	//For Lepton2 sensor or image save
-	if ((imgSave == imgSave_create) || (leptonVersion != leptonVersion_3_Shutter))
-		postscale = (float)(pow(dnu / lambda, 2));
-	//For Lepton3 sensor
-	else
-		postscale = (float)(pow(dnu / lambda, 1));
-	//Filter horizontally along each row
-	for (y = 0; y < 120; y++) {
-		ptr = image + (160 * y);
-		ptr[0] *= boundaryscale;
-		//Filter rightwards
-		for (x = 1; x < 160; x++)
-			ptr[x] += nu * ptr[x - 1];
-		//For Lepton2 sensor or image save
-		if ((imgSave == imgSave_create) || (leptonVersion != leptonVersion_3_Shutter)) {
-			ptr[x = 159] *= boundaryscale;
-			//Filter leftwards
-			for (; x > 0; x--)
-				ptr[x - 1] += nu * ptr[x];
+/* Filter the image with a box blur filter (LP) */
+void boxFilter() {
+	int sum;
+
+	for (int y = 1; y < 119; y++) {
+		for (int x = 1; x < 159; x++) {
+			sum = 0;
+			for (int k = -1; k <= 1; k++) {
+				for (int j = -1; j <= 1; j++) {
+					sum += image[(y - j) * 160 + (x - k)];
+				}
+			}
+			image[(y * 160) + x] = (unsigned short)(sum / 9.0);
 		}
 	}
-	//Filter vertically along each column
-	for (x = 0; x < 160; x++) {
-		ptr = image + x;
-		ptr[0] *= boundaryscale;
-		//Filter downwards
-		for (i = 160; i < numpixels; i += 160)
-			ptr[i] += nu * ptr[i - 160];
-		//For Lepton2 sensor or image save
-		if ((imgSave == imgSave_create) || (leptonVersion != leptonVersion_3_Shutter)) {
-			ptr[i = numpixels - 160] *= boundaryscale;
-			//Filter upwards
-			for (; i > 0; i -= 160)
-				ptr[i - 160] += nu * ptr[i];
+}
+
+/* Filter the image with a gaussian blur filter (LP) */
+void gaussianFilter() {
+	byte gaussianKernel[3][3] = {
+		{ 1, 2, 1 },
+		{ 2, 4, 2 },
+		{ 1, 2, 1 }
+	};
+	int sum;
+
+	for (int y = 1; y < 119; y++) {
+		for (int x = 1; x < 159; x++) {
+			sum = 0;
+			for (int k = -1; k <= 1; k++) {
+				for (int j = -1; j <= 1; j++) {
+					sum += gaussianKernel[j + 1][k + 1] * image[(y - j) * 160 + (x - k)];
+				}
+			}
+			image[(y * 160) + x] = (unsigned short) (sum / 16.0);
 		}
 	}
-	for (i = 0; i < numpixels; i++) {
-		image[i] *= postscale;
-		if (image[i] > 255)
-			image[i] = 255;
-	}
-	return;
 }
 
 bool savePackage(byte line, byte segment = 0, bool save = false) {
@@ -324,13 +307,14 @@ void convertColors(bool small) {
 			image[i] = (((red & 248) | green >> 5) << 8) | ((green & 28) << 3 | blue >> 3);
 		}
 	}
-
 }
 
 /* Creates a thermal image and stores it in the array */
 void createThermalImg(bool menu) {
 	//Receive the temperatures over SPI
 	getTemperatures();
+	//Compensate calibration with object temp
+	compensateCalib();
 	//Refresh the temp points if required
 	if (pointsEnabled)
 		refreshTempPoints();
@@ -340,11 +324,21 @@ void createThermalImg(bool menu) {
 		if (menu || ((colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest)))
 			limitValues();
 	}
+	//Apply box filter when in menu
+	if(menu)
+		boxFilter();
+	//Apply gaussian filter when saving bitmap
+	else if(((imgSave == imgSave_create) && convertEnabled))
+		gaussianFilter();
+	//Apply corresponding filter in live mode
+	else {
+		if (filterType == filterType_box)
+			boxFilter();
+		else if (filterType == filterType_gaussian)
+			gaussianFilter();
+	}
 	//Scale the values
 	scaleValues();
-	//Apply filter if enabled, in menu or when saving the image to bitmap
-	if ((filterEnabled) || menu || ((imgSave == imgSave_create) && convertEnabled))
-		gaussianBlur();
 	//Convert lepton data to RGB565 colors
 	convertColors();
 }
@@ -449,6 +443,12 @@ void displayVisualImg() {
 	captureVisualImage();
 	//Get the visual image and decompress it
 	getVisualImage();
+	//Get & refresh the temp points if required
+	if (pointsEnabled) {
+		getTemperatures();
+		compensateCalib();
+		refreshTempPoints();
+	}
 	//Display on screen if created previously
 	if (imgSave != imgSave_set)
 		display.drawBitmap(0, 0, 160, 120, image, 2);
@@ -470,6 +470,11 @@ void displayCombinedImg() {
 	captureVisualImage();
 	//Receive the temperatures over SPI
 	getTemperatures();
+	//Compensate calibration with object temp
+	compensateCalib();
+	//Refresh the temp points if required
+	if (pointsEnabled)
+		refreshTempPoints();
 	//Find min and max
 	limitValues();
 	//Scale the values

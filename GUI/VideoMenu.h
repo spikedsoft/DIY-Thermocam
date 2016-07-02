@@ -158,11 +158,15 @@ void refreshCapture() {
 	//Fill image array for Lepton2 sensor
 	if (leptonVersion != leptonVersion_3_Shutter)
 		fillImageArray();
+	//Filter image - not in normal mode
+	if (videoInterval != 0) {
+		if (filterType == filterType_box)
+			boxFilter();
+		else if (filterType == filterType_gaussian)
+			gaussianFilter();
+	}
 	//Scale values
 	scaleValues();
-	//Filter image - not in normal mode
-	if (videoInterval != 0)
-		gaussianBlur();
 	//Convert lepton data to RGB565 colors
 	convertColors();
 	//Draw thermal image on screen

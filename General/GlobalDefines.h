@@ -8,8 +8,8 @@
 #define pin_touch_irq 5
 #define pin_lcd_dc 6
 #define pin_cam_si 8
-#define pin_touch_cs 9
-#define pin_flash_cs 10
+#define pin_touch_cs 9 //Only resistive touch
+#define pin_flash_cs 10 //Not in use
 #define pin_mosi 11
 #define pin_miso 12
 #define pin_sck 13
@@ -41,6 +41,11 @@
 #define tempFormat_celcius 0
 #define tempFormat_fahrenheit 1
 
+//Filter type
+#define filterType_none 0
+#define filterType_box 1
+#define filterType_gaussian 2
+
 //EEPROM registers
 #define eeprom_tempFormat 101
 #define eeprom_colorScheme 102
@@ -48,7 +53,7 @@
 #define eeprom_visualEnabled 104
 #define eeprom_massStorage 107
 #define eeprom_spotEnabled 108
-#define eeprom_filterEnabled 109
+#define eeprom_filterType 109
 #define eeprom_colorbarEnabled 110
 #define eeprom_batteryEnabled 111
 #define eeprom_timeEnabled 112
@@ -99,7 +104,7 @@
 #define cal_warmup 0
 #define cal_standard 1
 #define cal_manual 2
-#define cal_stdSlope 0.0217f
+#define cal_stdSlope 0.0217f //Standard slope value
 
 //Image save marker
 #define imgSave_disabled 0

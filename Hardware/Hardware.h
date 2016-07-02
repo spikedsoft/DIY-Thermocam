@@ -275,6 +275,11 @@ void initTouch() {
 	}
 }
 
+/* Resets the diagnostic status */
+void resetDiagnostic() {
+	diagnostic = diag_ok;
+}
+
 /* Checks for hardware issues */
 void checkDiagnostic() {
 	if (diagnostic != diag_ok) {
@@ -372,12 +377,12 @@ void readEEPROM() {
 		spotEnabled = read;
 	else
 		spotEnabled = true;
-	//Filter Enabled
-	read = EEPROM.read(eeprom_filterEnabled);
-	if ((read == false) || (read == true))
-		filterEnabled = read;
+	//Filter Type
+	read = EEPROM.read(eeprom_filterType);
+	if ((read == filterType_none) || (read == filterType_box) || (read == filterType_gaussian))
+		filterType = read;
 	else
-		filterEnabled = true;
+		filterType = filterType_box;
 	//Colorbar Enabled
 	read = EEPROM.read(eeprom_colorbarEnabled);
 	if ((read == false) || (read == true))
@@ -406,7 +411,7 @@ void readEEPROM() {
 
 /* Startup procedure for the Hardware */
 void initHardware() {
-	//Start serial
+	//Start serial at 11.5k baud, does up to 12MBit/s
 	Serial.begin(115200);
 	//Init GPIO
 	initGPIO();
@@ -416,8 +421,6 @@ void initHardware() {
 	setSyncProvider(getTeensy3Time);
 	//Init I2C
 	initI2C();
-	//Reset diagnostic status
-	diagnostic = diag_ok;
 	//Init Display
 	initDisplay();
 	//Show Boot Screen
@@ -430,9 +433,9 @@ void initHardware() {
 	initTouch();
 	//Check battery for the first time
 	checkBattery();
-	//Check Lepton HW Revision
+	//Init Lepton sensor
 	initLepton();
-	//Init the MLX90614
+	//Init Spot sensor
 	mlx90614Init();
 	//Init SD card
 	initSD();

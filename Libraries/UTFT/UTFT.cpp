@@ -119,10 +119,16 @@ void UTFT::setXY(word x1, word y1, word x2, word y2) {
 		swap(word, y1, y2)
 	}
 
-	SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
-	setAddr(x1, y1, x2, y2);
-	writecommand_last(ILI9341_RAMWR); // write to RAM
-	SPI.endTransaction();
+	if (!writeToImage) {
+		SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
+		setAddr(x1, y1, x2, y2);
+		writecommand_last(ILI9341_RAMWR); // write to RAM
+		SPI.endTransaction();
+	}
+	else {
+		imageX = x1;
+		imageY = y1;
+	}
 }
 
 void UTFT::clrXY() {
@@ -350,9 +356,13 @@ word UTFT::getBackColor() {
 }
 
 void UTFT::setPixel(word color) {
-	SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
-	writedata16_last(color);
-	SPI.endTransaction();
+	if (!writeToImage) {
+		SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
+		writedata16_last(color);
+		SPI.endTransaction();
+	}
+	else
+		imagePtr[((imageY) * 160) + imageX] = color;
 }
 
 void UTFT::drawPixel(int x, int y) {
@@ -445,6 +455,126 @@ void UTFT::drawVLine(int x, int y, int l) {
 	}
 	writedata16_last(color);
 	SPI.endTransaction();
+}
+
+// private method to return the Glyph data for an individual character in the ttf font
+bool UTFT::getCharPtr(byte c, propFont& fontChar)
+{
+	byte* tempPtr = cfont.font + 4; // point at data
+
+	do
+	{
+		fontChar.charCode = pgm_read_byte(tempPtr++);
+		fontChar.adjYOffset = pgm_read_byte(tempPtr++);
+		fontChar.width = pgm_read_byte(tempPtr++);
+		fontChar.height = pgm_read_byte(tempPtr++);
+		fontChar.xOffset = pgm_read_byte(tempPtr++);
+		fontChar.xOffset = fontChar.xOffset < 0x80 ? fontChar.xOffset : (0x100 - fontChar.xOffset);
+		fontChar.xDelta = pgm_read_byte(tempPtr++);
+		if (c != fontChar.charCode && fontChar.charCode != 0xFF)
+		{
+			if (fontChar.width != 0)
+			{
+				// packed bits
+				tempPtr += (((fontChar.width * fontChar.height) - 1) / 8) + 1;
+			}
+		}
+	} while (c != fontChar.charCode && fontChar.charCode != 0xFF);
+
+	fontChar.dataPtr = tempPtr;
+
+	return (fontChar.charCode != 0xFF);
+}
+
+// returns the string width in pixels. Useful for positions strings on the screen.
+int UTFT::getStringWidth(char* str)
+{
+	// is it a fixed width font?
+	if (cfont.x_size != 0)
+	{
+		return (strlen(str) * cfont.x_size);
+	}
+	else
+	{
+		// calculate the string width
+		int strWidth = 0;
+		while (*str != 0)
+		{
+			propFont fontChar;
+			bool found = getCharPtr(*str, fontChar);
+
+			if (found && *str == fontChar.charCode)
+			{
+				strWidth += fontChar.xDelta + 1;
+			}
+
+			str++;
+		}
+
+		return strWidth;
+	}
+}
+
+int UTFT::getFontHeight()
+{
+	return (cfont.y_size);
+}
+
+// print a ttf based character
+int UTFT::printProportionalChar(byte c, int x, int y)
+{
+	byte i, j;
+	byte ch = 0;
+	byte *tempPtr;
+
+	propFont fontChar;
+	if (!getCharPtr(c, fontChar))
+	{
+		return 0;
+	}
+
+	// fill background
+	// VGA_TRANSPARENT?
+	word fcolor = getColor();
+	if (!_transparent)
+	{
+		int fontHeight = getFontHeight();
+		setColor(getBackColor());
+		fillRect(x, y, x + fontChar.xDelta + 1, y + fontHeight);
+		setColor(fcolor);
+	}
+
+	tempPtr = fontChar.dataPtr;
+
+	if (fontChar.width != 0)
+	{
+		byte mask = 0x80;
+		for (j = 0; j < fontChar.height; j++)
+		{
+			//ch=pgm_read_byte(tempPtr++);
+			for (i = 0; i < fontChar.width; i++)
+			{
+				if (((i + (j*fontChar.width)) % 8) == 0)
+				{
+					mask = 0x80;
+					ch = pgm_read_byte(tempPtr++);
+				}
+
+				if ((ch & mask) != 0)
+				{
+					setXY(x + fontChar.xOffset + i, y + j + fontChar.adjYOffset,
+						x + fontChar.xOffset + i, y + j + fontChar.adjYOffset);
+					setPixel(fcolor);
+				}
+				else
+				{
+					//setPixel(bcolorr, bcolorg, bcolorb);
+				}
+				mask >>= 1;
+			}
+		}
+	}
+	return fontChar.xDelta;
 }
 
 void UTFT::printChar(byte c, int x, int y) {
@@ -546,6 +676,64 @@ void UTFT::rotateChar(byte c, int x, int y, int pos, int deg) {
 	clrXY();
 }
 
+int UTFT::rotatePropChar(byte c, int x, int y, int offset, int deg)
+{
+	propFont fontChar;
+
+	if (!getCharPtr(c, fontChar))
+	{
+		return 0;
+	}
+
+	byte ch = 0;
+	byte *tempPtr = fontChar.dataPtr;
+	double radian = deg * 0.0175;
+
+	// fill background
+	// VGA_TRANSPARENT?
+	word fcolor = getColor();
+
+	if (fontChar.width != 0)
+	{
+		byte mask = 0x80;
+		float cos_radian = cos(radian);
+		float sin_radian = sin(radian);
+		for (int j = 0; j < fontChar.height; j++)
+		{
+			//ch=pgm_read_byte(tempPtr++);
+			for (int i = 0; i < fontChar.width; i++)
+			{
+				if (((i + (j*fontChar.width)) % 8) == 0)
+				{
+					mask = 0x80;
+					ch = pgm_read_byte(tempPtr++);
+				}
+
+				int newX = x + ((offset + i) * cos_radian - (j + fontChar.adjYOffset)*sin_radian);
+				int newY = y + ((j + fontChar.adjYOffset) * cos_radian + (offset + i) * sin_radian);
+				if ((ch & mask) != 0)
+				{
+					setXY(newX, newY, newX, newY);
+					setPixel(fcolor);
+				}
+				else
+				{
+					if (!_transparent)
+					{
+						setXY(newX, newY, newX, newY);
+						setPixel(getBackColor());
+					}
+				}
+				mask >>= 1;
+			}
+		}
+	}
+
+	clrXY();
+
+	return fontChar.xDelta;
+}
+
 void UTFT::print(char *st, int x, int y, int deg) {
 	int stl, i;
 
@@ -556,18 +744,43 @@ void UTFT::print(char *st, int x, int y, int deg) {
 			x = (disp_x_size + 1) - (stl * cfont.x_size);
 		if (x == CENTER)
 			x = ((disp_x_size + 1) - (stl * cfont.x_size)) / 2;
-	} else {
+	}
+	else {
 		if (x == RIGHT)
 			x = (disp_y_size + 1) - (stl * cfont.x_size);
 		if (x == CENTER)
 			x = ((disp_y_size + 1) - (stl * cfont.x_size)) / 2;
 	}
 
+	int offset = 0;
 	for (i = 0; i < stl; i++)
+	{
 		if (deg == 0)
-			printChar(*st++, x + (i * (cfont.x_size)), y);
+		{
+			// DLB Added this stuff...
+			if (cfont.x_size == 0)
+			{
+				x += printProportionalChar(*st++, x, y) + 1;
+			}
+			else
+			{
+				printChar(*st++, x, y);
+				x += cfont.x_size;
+			}
+		}
 		else
-			rotateChar(*st++, x, y, i, deg);
+		{
+			// DLB Added this stuff...
+			if (cfont.x_size == 0)
+			{
+				offset += rotatePropChar(*st++, x, y, offset, deg);
+			}
+			else
+			{
+				rotateChar(*st++, x, y, i, deg);
+			}
+		}
+	}
 }
 
 void UTFT::printC(String st, int x, int y, uint32_t color) {

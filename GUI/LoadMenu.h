@@ -9,10 +9,10 @@ void displayRawData() {
 	//Fill image array for Lepton2 sensor
 	if (leptonVersion != leptonVersion_3_Shutter)
 		fillImageArray();
+	//Apply low-pass filter
+	gaussianFilter();
 	//Scale values
 	scaleValues();
-	//Apply gaussian filter
-	gaussianBlur();
 	//Convert lepton data to RGB565 colors
 	convertColors();
 	//Display on screen

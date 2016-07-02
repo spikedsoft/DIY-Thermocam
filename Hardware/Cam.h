@@ -55,31 +55,6 @@ void initCamera() {
 		changeCamRes(VC0706_640x480);
 }
 
-/* Send the capture command to the camera*/
-void captureVisualImage() {
-	cam.takePicture();
-}
-
-/* Receive the visual image from the camera and save it on the SD card */
-void saveVisualImage() {
-	uint16_t jpglen = cam.frameLength();
-	//Start alternative clockline
-	startAltClockline();
-	//Buffer to store the data
-	uint8_t *buffer;
-	while (jpglen > 0) {
-		uint8_t bytesToRead = min(jpglen, 64);
-		buffer = cam.readPicture(bytesToRead);
-		sdFile.write(buffer, bytesToRead);
-		jpglen -= bytesToRead;
-	}
-	sdFile.close();
-	//End SD Transmission
-	endAltClockline();
-	//End camera
-	cam.end();
-}
-
 /* Output function for the JPEG Decompressor - extracts the RGB565 values into the target array */
 unsigned int output_func(JDEC * jd, void * bitmap, JRECT * rect) {
 	//Help Variables
@@ -132,18 +107,45 @@ unsigned int input_func(JDEC * jd, byte* buff, unsigned int ndata) {
 	return ndata;
 }
 
+/* Send the capture command to the camera*/
+void captureVisualImage() {
+	cam.takePicture();
+}
+
+/* Receive the visual image from the camera and save it on the SD card */
+void saveVisualImage() {
+	uint8_t *buffer;
+
+	uint16_t jpglen = cam.frameLength();
+	//Start alternative clockline for the SD card
+	startAltClockline();
+	//Transfer data
+	while (jpglen > 0) {
+		uint8_t bytesToRead = min(jpglen, 64);
+		buffer = cam.readPicture(bytesToRead);
+		sdFile.write(buffer, bytesToRead);
+		jpglen -= bytesToRead;
+	}
+	sdFile.close();
+	//End SD Transmission
+	endAltClockline();
+	//End camera
+	cam.end();
+}
+
 /* Receive the image data and display it on the screen */
 void getVisualImage() {
+	uint8_t *buffer;
+
 	//Get frame length
 	uint16_t jpglen = cam.frameLength();
 	//Define array for the jpeg data
 	uint8_t* jpegData = (uint8_t*)calloc(jpglen, sizeof(uint8_t));
-	//Buffer to store the data of up to 64 byte
-	uint8_t *buffer = (uint8_t*)calloc(64, sizeof(uint8_t));
 	//Count variable
 	uint16_t counter = 0;
-	//Transfer data
+	//Store length
 	uint16_t length = jpglen;
+	//Transfer data
 	while (length > 0) {
 		uint8_t bytesToRead = min(length, 64);
 		buffer = cam.readPicture(bytesToRead);
@@ -174,4 +176,23 @@ void getVisualImage() {
 	free(jpegData);
 	//Free space for the decompressor
 	free(jdwork);
+}
+
+/* Receive the visual image and transfer it to the serial port */
+void transferVisualImage() {
+	uint8_t *buffer;
+
+	//Get frame length
+	uint16_t jpglen = cam.frameLength();
+	//Store length
+	uint16_t length = jpglen;
+	//Transfer data
+	while (length > 0) {
+		uint8_t bytesToRead = min(length, 64);
+		buffer = cam.readPicture(bytesToRead);
+		Serial.write(buffer, bytesToRead);
+		length -= bytesToRead;
+	}
+	//End transmission
+	cam.end();
 }

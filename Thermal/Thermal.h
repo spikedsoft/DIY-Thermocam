@@ -88,18 +88,9 @@ void showColorBar() {
 			count++;
 		}
 	}
-	//Get MLX90614 ambient temp
-	mlx90614Amb = mlx90614GetAmb();
-	//Calculate min and max
+	//Calculate min and max temp in celcius/fahrenheit
 	float min = calFunction(minTemp);
 	float max = calFunction(maxTemp);
-	//Check if spot temp is out of range
-	if ((agcEnabled) && (!limitsLocked)) {
-		if ((mlx90614Temp < min) && (colorScheme != colorScheme_hottest))
-			min = mlx90614Temp;
-		if ((mlx90614Temp > max) && (colorScheme != colorScheme_coldest))
-			max = mlx90614Temp;
-	}
 	//Calculate step
 	float step = (max - min) / 3.0;
 	//Draw min temp
@@ -274,8 +265,13 @@ void changeDisplayOptions(byte* pos) {
 		break;
 		//Filter
 	case 7:
-		filterEnabled = !filterEnabled;
-		EEPROM.write(eeprom_filterEnabled, filterEnabled);
+		if (filterType == filterType_box)
+			filterType = filterType_gaussian;
+		else if (filterType == filterType_gaussian)
+			filterType = filterType_none;
+		else
+			filterType = filterType_box;
+		EEPROM.write(eeprom_filterType, filterType);
 		break;
 	}
 }
@@ -317,11 +313,6 @@ void limitLock() {
 
 /* Display addition information on the screen */
 void displayInfos() {
-	///Refresh object temperature
-	mlx90614GetTemp();
-	//Convert to Fahrenheit if needed
-	if (tempFormat == tempFormat_fahrenheit)
-		mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
 	//Set text color, font and background
 	display.setColor(VGA_WHITE);
 	display.setBackColor(VGA_TRANSPARENT);
@@ -415,6 +406,12 @@ void liveMode() {
 	liveModeInit();
 	//Main Loop
 	while (true) {
+		//Check for incoming serial data
+		if ((Serial.available() > 0) && (Serial.read() == CMD_START))
+			videoConnect();
+		//Another command received, discard it
+		else if ((Serial.available() > 0))
+			Serial.read();
 		//If touch IRQ has been triggered, open menu
 		if (showMenu) {
 			if (liveMenu())

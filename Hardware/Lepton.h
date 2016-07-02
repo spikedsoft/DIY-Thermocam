@@ -13,9 +13,9 @@ void leptonBeginSPI() {
 	//Lepton3 - 40 Mhz minimum and SPI mode 0
 	if (leptonVersion == leptonVersion_3_Shutter)
 		SPI.beginTransaction(SPISettings(40000000, MSBFIRST, SPI_MODE0));
-	//Lepton2 - 30 Mhz maximum and SPI mode 0
+	//Lepton2 - 20 Mhz maximum and SPI mode 1
 	else
-		SPI.beginTransaction(SPISettings(30000000, MSBFIRST, SPI_MODE0));
+		SPI.beginTransaction(SPISettings(20000000, MSBFIRST, SPI_MODE1));
 	//Start alternative clock line, except for old HW
 	if (mlx90614Version == mlx90614Version_new)
 		startAltClockline();
@@ -147,6 +147,20 @@ void initLepton() {
 	if (leptonVersion != leptonVersion_2_NoShutter)
 		leptonRunCalibration();
 
+	//Set the calibration timer
+	calTimer = millis();
+	//Set calibration status to warmup
+	calStatus = cal_warmup;
+	//Set the calibration slope to standard
+	calSlope = cal_stdSlope;
+	//Set the compensation value to zero
+	calComp = 0;
+
+	//Activate AGC
+	agcEnabled = true;
+	//Deactivate limits Locked
+	limitsLocked = false;
+
 	//Check if SPI works
 	leptonBeginSPI();
 	do {
@@ -163,15 +177,4 @@ void initLepton() {
 		delay(1000);
 		setDiagnostic(diag_lep_data);
 	}
-	//Set the calibration timer
-	calTimer = millis();
-	//Set calibration status to warmup
-	calStatus = cal_warmup;
-	//Set the calibration slope to standard
-	calSlope = cal_stdSlope;
-
-	//Activate AGC
-	agcEnabled = true;
-	//Deactivate limits Locked
-	limitsLocked = false;
 }

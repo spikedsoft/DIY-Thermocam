@@ -18,6 +18,7 @@ UTFT_Buttons touchButtons(&display, &touch);
 Bounce buttonDebouncer(pin_button, 100);
 Bounce touchDebouncer(pin_touch_irq, 100);
 //Fonts
+extern uint8_t tinyFont[];
 extern uint8_t smallFont[];
 extern uint8_t bigFont[];
 //SD
@@ -78,7 +79,7 @@ bool spotEnabled;
 bool colorbarEnabled;
 bool pointsEnabled;
 bool storageEnabled;
-bool filterEnabled;
+byte filterType;
 bool ambientEnabled;
 
 //Calibration offset
@@ -87,6 +88,8 @@ float calOffset;
 float calSlope;
 //Calibration status
 byte calStatus;
+//Calibration compensation
+float calComp;
 //Calibration warmup timer
 long calTimer;
 

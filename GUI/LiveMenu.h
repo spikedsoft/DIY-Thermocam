@@ -761,10 +761,12 @@ void liveMenuDisplayString(int pos) {
 		break;
 		//Filter
 	case 7:
-		if (filterEnabled)
-			text = (char*) "Filter On";
+		if(filterType == filterType_box)
+			text = (char*) "Box-Filter";
+		else if(filterType == filterType_gaussian)
+			text = (char*) "Gaus-Filter";
 		else
-			text = (char*) "Filter Off";
+			text = (char*) "No Filter";
 		break;
 	}
 	liveMenuSelection(text);
@@ -860,10 +862,6 @@ bool liveMenuSelect(byte* pos) {
 		enableScreenLight();
 		return false;
 		break;
-		//Video output
-	case 8 :
-		videoConnect();
-		break;
 	}
 	return true;
 }
@@ -906,10 +904,6 @@ void liveMenuMainString(byte* pos) {
 		//Turn Display off
 	case 7:
 		text = (char*) "Display Off";
-		break;
-		//Video output
-	case 8:
-		text = (char*) "Video Out";
 		break;
 	}
 	//Draws the current selection
@@ -968,13 +962,13 @@ bool liveMenuHandler(byte* pos) {
 				if (*pos > 0)
 					*pos = *pos - 1;
 				else if (*pos == 0)
-					*pos = 8;
+					*pos = 7;
 			}
 			//FORWARD
 			else if (pressedButton == 1) {
-				if (*pos < 8)
+				if (*pos < 7)
 					*pos = *pos + 1;
-				else if (*pos == 8)
+				else if (*pos == 7)
 					*pos = 0;
 			}
 			//Change the menu name

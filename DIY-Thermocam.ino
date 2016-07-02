@@ -10,8 +10,8 @@
 */
 
 /* Current firmware version */
-#define Version "Firmware 1.20 from 25.06.2016"
-#define fwVersion 120
+#define Version "Firmware 1.21 from 02.07.2016"
+#define fwVersion 121
 
 /* Libraries */
 #include <ADC.h>
@@ -41,19 +41,21 @@
 /* Main Entry point */
 void setup()
 {
+	//Reset diagnostic status
+	resetDiagnostic();
 	//Init Hardware
 	initHardware();
 	//Check for hardware issues
 	checkDiagnostic();
 	//Do the first start setup
-	if (EEPROM.read(eeprom_firstStart) != eeprom_setValue)
+	if (checkFirstStart())
 		firstStart();
 	//Check FW upgrade
 	checkFWUpgrade();
 	//Read EEPROM settings
 	readEEPROM();
 	//Show the live mode helper
-	if (EEPROM.read(eeprom_liveHelper) != eeprom_setValue)
+	if (checkLiveModeHelper())
 		liveModeHelper();
 	//Go to the live Mode
 	liveMode();

@@ -137,6 +137,11 @@ void firstStartComplete() {
 	while (true);
 }
 
+/* Check if the live mode helper needs to be shown */
+bool checkLiveModeHelper() {
+	return EEPROM.read(eeprom_liveHelper) != eeprom_setValue;
+}
+
 /* Help screen for the first start of live mode */
 void liveModeHelper() {
 	//Array to store up to 7 lines of text
@@ -263,7 +268,7 @@ void stdEEPROMSet() {
 	mlx90614SetMin();
 	//Set spot filter settings
 	mlx90614SetFilter();
-	//Set spot emissivity to 1.0
+	//Set spot emissivity to 0.9
 	mlx90614SetEmissivity();
 	//Set device EEPROM settings
 	EEPROM.write(eeprom_spotEnabled, true);
@@ -276,11 +281,8 @@ void stdEEPROMSet() {
 	EEPROM.write(eeprom_displayMode, displayMode_thermal);
 	//Set Color Scheme to Rainbow
 	EEPROM.write(eeprom_colorScheme, colorScheme_rainbow);
-	//For Lepton3, disable filter
-	if (leptonVersion == leptonVersion_3_Shutter)
-		EEPROM.write(eeprom_filterEnabled, false);
-	else
-		EEPROM.write(eeprom_filterEnabled, true);
+	//Set filter type to box blur
+	EEPROM.write(eeprom_filterType, filterType_box);
 	//Set mass storage to false
 	EEPROM.write(eeprom_massStorage, false);
 	//Set current firmware version
@@ -311,4 +313,9 @@ void firstStart() {
 	EEPROM.write(eeprom_liveHelper, false);
 	//Show completion message
 	firstStartComplete();
+}
+
+/* Check if the first start needs to be done */
+bool checkFirstStart() {
+	return EEPROM.read(eeprom_firstStart) != eeprom_setValue;
 }

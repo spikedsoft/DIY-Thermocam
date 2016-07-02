@@ -103,6 +103,18 @@
 #define fontbyte(x) cfont.font[x]
 #define bitmapdatatype unsigned short*
 
+class propFont
+{
+public:
+	byte charCode;
+	int adjYOffset;
+	int width;
+	int height;
+	int xOffset;
+	int xDelta;
+	byte* dataPtr;
+};
+
 struct _current_font {
 	uint8_t* font;
 	uint8_t x_size;
@@ -189,6 +201,11 @@ public:
 	Please note that these functions and variables are not documented
 	and I do not provide support on how to use them.
 	*/
+
+	unsigned short* imagePtr;
+	bool writeToImage = false;
+	int imageX, imageY;
+
 	char		imgbuf[160];
 	byte __p1, __p2, __p3, __p4;
 	byte fch, fcl, bch, bcl;
@@ -207,6 +224,11 @@ public:
 	void drawHLine(int x, int y, int l);
 	void drawVLine(int x, int y, int l);
 	void printChar(byte c, int x, int y);
+	bool getCharPtr(byte c, propFont& fontChar);
+	int getStringWidth(char* str);
+	int getFontHeight();
+	int rotatePropChar(byte c, int x, int y, int offset, int deg);
+	int printProportionalChar(byte c, int x, int y);
 	void setXY(word x1, word y1, word x2, word y2);
 	void clrXY();
 	void _convert_float(char *buf, double num, int width, byte prec);

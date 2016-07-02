@@ -316,31 +316,30 @@ void mlx90614Init() {
 		//Check Filter Temp
 		if (mlx90614CheckFilter() == false) {
 			drawMessage((char*)"Spot filter invalid, rewrite..");
-			delay(1000);
+			delay(2000);
 			mlx90614SetFilter();
 			setDiagnostic(diag_spot);
 		}
 		//Check Min Temp
 		if (mlx90614CheckMin() == false) {
 			drawMessage((char*)"Spot minTemp invalid, rewrite..");
-			delay(1000);
+			delay(2000);
 			mlx90614SetMin();
 			setDiagnostic(diag_spot);
 		}
 		//Check Max Temp
 		if (mlx90614CheckMax() == false) {
 			drawMessage((char*)"Spot maxTemp invalid, rewrite..");
-			delay(1000);
+			delay(2000);
 			mlx90614SetMax();
 			setDiagnostic(diag_spot);
 		}
 		//Check Emissivity
 		if (mlx90614CheckEmissivity() == false) {
 			drawMessage((char*)"Spot emissivity invalid, rewrite..");
-			delay(1000);
+			delay(2000);
 			mlx90614SetEmissivity();
 			setDiagnostic(diag_spot);
-			return;
 		}
 		//Show message, if one of the settings had to be re-written
 		if (!checkDiagnostic(diag_spot)) {
