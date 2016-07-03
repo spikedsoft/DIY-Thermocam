@@ -241,6 +241,8 @@ void initDisplay() {
 	display.InitLCD();
 	//Set the display rotation
 	setDisplayRotation();
+	//Link display library to image array
+	display.imagePtr = image;
 	//If not returning from mass storage, check display
 	byte val = EEPROM.read(eeprom_massStorage);
 	if ((val != eeprom_massStorage) && (val != eeprom_setValue)) {
@@ -309,6 +311,23 @@ void checkFWUpgrade(){
 		EEPROM.write(eeprom_fwVersion, fwVersion);
 		while (true);
 	}
+}
+
+/* Stores the current calibration slope to EEPROM */
+void storeCalSlope() {
+	uint8_t farray[4];
+	floatToBytes(farray, (float)calSlope);
+	for (int i = 0; i < 4; i++)
+		EEPROM.write(eeprom_calSlopeBase + i, (farray[i]));
+	EEPROM.write(eeprom_calSlopeSet, eeprom_setValue);
+}
+
+/* Reads the calibration slope from EEPROM */
+void readCalSlope() {
+	uint8_t farray[4];
+	for (int i = 0; i < 4; i++)
+		farray[i] = EEPROM.read(eeprom_calSlopeBase);
+	calSlope = bytesToFloat(farray);
 }
 
 /* Reads the old settings from EEPROM */
@@ -401,6 +420,12 @@ void readEEPROM() {
 		displayMode = read;
 	else
 		displayMode = displayMode_thermal;
+	//Calibration slope
+	read = EEPROM.read(eeprom_calSlopeSet);
+	if (read == eeprom_setValue)
+		readCalSlope();
+	else
+		calSlope = cal_stdSlope;
 	//Return from Mass Storage reboot, no warmup required
 	read = EEPROM.read(eeprom_massStorage);
 	if (read == eeprom_setValue) {

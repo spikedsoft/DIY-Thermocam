@@ -115,6 +115,7 @@ bool calibrationChooser() {
 			else if (pressedButton == 1) {
 				calSlope = cal_stdSlope;
 				calStatus = cal_standard;
+				storeCalSlope();
 				return true;
 				break;
 			}

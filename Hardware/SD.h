@@ -59,7 +59,7 @@ void refreshFreeSpace() {
 	if (cardSize == 0)
 		sdInfo = "No card";
 	else
-		sdInfo = String((int)(getSDSpace() / 1024)) + "/" + String((int)(cardSize - 1)) + " MB";
+		sdInfo = String((int)(getSDSpace() / 1024)) + "/" + String((int)(cardSize - 1)) + "MB";
 }
 
 /* Timestamp set for SDFat */

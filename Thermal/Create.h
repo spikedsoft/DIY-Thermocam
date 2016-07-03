@@ -36,12 +36,13 @@ void gaussianFilter() {
 					sum += gaussianKernel[j + 1][k + 1] * image[(y - j) * 160 + (x - k)];
 				}
 			}
-			image[(y * 160) + x] = (unsigned short) (sum / 16.0);
+			image[(y * 160) + x] = (unsigned short)(sum / 16.0);
 		}
 	}
 }
 
-bool savePackage(byte line, byte segment = 0, bool save = false) {
+/* Store one package of 80 columns into RAM */
+bool savePackage(byte line, byte segment = 0) {
 	//Go through the video pixels for one video line
 	for (int column = 0; column < 80; column++) {
 		uint16_t result = (uint16_t)(leptonFrame[2 * column + 4] << 8
@@ -49,56 +50,24 @@ bool savePackage(byte line, byte segment = 0, bool save = false) {
 		if (result == 0) {
 			return false;
 		}
-		//Lepton2 Rotated (ThermocamV4)
-		if ((mlx90614Version == mlx90614Version_old) && (leptonVersion != leptonVersion_3_Shutter)) {
-			//For saving raw data, use small array
-			if (save) {
-				if (!rotationEnabled)
-					rawValues[column + (line * 80)] = result;
-				else
-					rawValues[4799 - (column + (line * 80))] = result;
+		//Lepton2
+		if (leptonVersion != leptonVersion_3_Shutter) {
+			if (((mlx90614Version == mlx90614Version_old) && (rotationEnabled == false)) ||
+				((mlx90614Version == mlx90614Version_new) && (rotationEnabled == true))) {
+				image[(line * 2 * 160) + (column * 2)] = result;
+				image[(line * 2 * 160) + (column * 2) + 1] = result;
+				image[(line * 2 * 160) + 160 + (column * 2)] = result;
+				image[(line * 2 * 160) + 160 + (column * 2) + 1] = result;
 			}
 			else {
-				if (!rotationEnabled) {
-					image[(line * 2 * 160) + (column * 2)] = result;
-					image[(line * 2 * 160) + (column * 2) + 1] = result;
-					image[(line * 2 * 160) + 160 + (column * 2)] = result;
-					image[(line * 2 * 160) + 160 + (column * 2) + 1] = result;
-				}
-				else {
-					image[19199 - ((line * 2 * 160) + (column * 2))] = result;
-					image[19199 - ((line * 2 * 160) + (column * 2) + 1)] = result;
-					image[19199 - ((line * 2 * 160) + 160 + (column * 2))] = result;
-					image[19199 - ((line * 2 * 160) + 160 + (column * 2) + 1)] = result;
-				}
-			}
-		}
-		//Lepton2 Non-Rotated
-		else if ((mlx90614Version == mlx90614Version_new) && (leptonVersion != leptonVersion_3_Shutter)) {
-			//For saving raw data, use small array
-			if (save) {
-				if (!rotationEnabled)
-					rawValues[4799 - (column + (line * 80))] = result;
-				else
-					rawValues[column + (line * 80)] = result;
-			}
-			else {
-				if (!rotationEnabled) {
-					image[19199 - ((line * 2 * 160) + (column * 2))] = result;
-					image[19199 - ((line * 2 * 160) + (column * 2) + 1)] = result;
-					image[19199 - ((line * 2 * 160) + 160 + (column * 2))] = result;
-					image[19199 - ((line * 2 * 160) + 160 + (column * 2) + 1)] = result;
-				}
-				else {
-					image[(line * 2 * 160) + (column * 2)] = result;
-					image[(line * 2 * 160) + (column * 2) + 1] = result;
-					image[(line * 2 * 160) + 160 + (column * 2)] = result;
-					image[(line * 2 * 160) + 160 + (column * 2) + 1] = result;
-				}
+				image[19199 - ((line * 2 * 160) + (column * 2))] = result;
+				image[19199 - ((line * 2 * 160) + (column * 2) + 1)] = result;
+				image[19199 - ((line * 2 * 160) + 160 + (column * 2))] = result;
+				image[19199 - ((line * 2 * 160) + 160 + (column * 2) + 1)] = result;
 			}
 		}
 		//Lepton3
-		else if (leptonVersion == leptonVersion_3_Shutter) {
+		else {
 			//Fill array non rotated
 			if (!rotationEnabled) {
 				switch (segment) {
@@ -139,34 +108,18 @@ bool savePackage(byte line, byte segment = 0, bool save = false) {
 }
 
 /* Refresh the temperature points*/
-void refreshTempPoints(bool save) {
-	//Lepton2
-	if (leptonVersion != leptonVersion_3_Shutter) {
-		for (int y = 0; y < 60; y = y + 5) {
-			for (int x = 0; x < 80; x = x + 5) {
-				if (showTemp[(x / 5) + (16 * (y / 5))] != 0) {
-					if (save)
-						showTemp[(x / 5) + (16 * (y / 5))] = rawValues[x + (y * 80)];
-					else
-						showTemp[(x / 5) + (16 * (y / 5))] = image[(x * 2) + (y * 2 * 160)];
-				}
-			}
-		}
-	}
-	//Lepton3
-	else {
-		for (int y = 0; y < 120; y = y + 10) {
-			for (int x = 0; x < 160; x = x + 10) {
-				if (showTemp[(x / 10) + (16 * (y / 10))] != 0) {
-					showTemp[(x / 10) + (16 * (y / 10))] = image[x + (y * 160)];
-				}
+void refreshTempPoints() {
+	for (int y = 0; y < 12; y++) {
+		for (int x = 0; x < 16; x++) {
+			if (showTemp[(x + (16 * y))] != 0) {
+				showTemp[(x + (16 * y))] = image[(x * 10) + (y * 10 * 160) + 805];
 			}
 		}
 	}
 }
 
 /* Get one image from the Lepton module */
-void getTemperatures(bool save) {
+void getTemperatures() {
 	byte leptonError, segmentNumbers, line;
 	//For Lepton2 sensor, get only one segment per frame
 	if (leptonVersion != leptonVersion_3_Shutter)
@@ -182,7 +135,7 @@ void getTemperatures(bool save) {
 			for (line = 0; line < 60; line++) {
 				//If line matches expectation
 				if (leptonReadFrame(line, segment)) {
-					if (!savePackage(line, segment, save)) {
+					if (!savePackage(line, segment)) {
 						//Stabilize framerate
 						delayMicroseconds(800);
 						//Raise lepton error
@@ -221,96 +174,54 @@ void getTemperatures(bool save) {
 }
 
 /* Scale the values from 0 - 255 */
-void scaleValues(bool small) {
+void scaleValues() {
 	//Calculate the scale
 	float scale = (colorElements - 1.0) / (maxTemp - minTemp);
-	//Go through rawValues array
-	if (small) {
-		for (int i = 0; i < 4800; i++) {
-			//Limit values
-			if (rawValues[i] > maxTemp)
-				rawValues[i] = maxTemp;
-			if (rawValues[i] < minTemp)
-				rawValues[i] = minTemp;
-			rawValues[i] = (rawValues[i] - minTemp) * scale;
-		}
-	}
 	//Go through image array
-	else {
-		for (int i = 0; i < 19200; i++) {
-			//Limit values
-			if (image[i] > maxTemp)
-				image[i] = maxTemp;
-			if (image[i] < minTemp)
-				image[i] = minTemp;
-			image[i] = (image[i] - minTemp) * scale;
-		}
+	for (int i = 0; i < 19200; i++) {
+		//Limit values
+		if (image[i] > maxTemp)
+			image[i] = maxTemp;
+		if (image[i] < minTemp)
+			image[i] = minTemp;
+		image[i] = (image[i] - minTemp) * scale;
 	}
 }
 
 /* Go through the array of temperatures and find min and max temp */
-void limitValues(bool small) {
+void limitValues() {
 	maxTemp = 0;
 	minTemp = 65535;
 	uint16_t temp;
-	//Go through small rawValues array
-	if (small) {
-		for (int i = 0; i < 4800; i++) {
-			//Get value
-			temp = rawValues[i];
-			//Find maximum temp
-			if (temp > maxTemp)
-				maxTemp = temp;
-			//Find minimum temp
-			if (temp < minTemp)
-				minTemp = temp;
-		}
-	}
-	//Go through big image array
-	else {
-		for (int i = 0; i < 19200; i++) {
-			//Get value
-			temp = image[i];
-			//Find maximum temp
-			if (temp > maxTemp)
-				maxTemp = temp;
-			//Find minimum temp
-			if (temp < minTemp)
-				minTemp = temp;
-		}
+	for (int i = 0; i < 19200; i++) {
+		//Get value
+		temp = image[i];
+		//Find maximum temp
+		if (temp > maxTemp)
+			maxTemp = temp;
+		//Find minimum temp
+		if (temp < minTemp)
+			minTemp = temp;
 	}
 }
 
 /* Convert the lepton values to RGB colors */
-void convertColors(bool small) {
-	//Go through the rawValues array
-	if (small) {
-		for (int i = 0; i < 4800; i++) {
-			uint16_t value = rawValues[i];
-			//Look for the corresponding RGB values
-			uint8_t red = colorMap[3 * value];
-			uint8_t green = colorMap[3 * value + 1];
-			uint8_t blue = colorMap[3 * value + 2];
-			//Convert to RGB565
-			rawValues[i] = (((red & 248) | green >> 5) << 8) | ((green & 28) << 3 | blue >> 3);
-		}
-	}
-	//Go through the image array
-	else {
-		for (int i = 0; i < 19200; i++) {
-			uint16_t value = image[i];
-			//Look for the corresponding RGB values
-			uint8_t red = colorMap[3 * value];
-			uint8_t green = colorMap[3 * value + 1];
-			uint8_t blue = colorMap[3 * value + 2];
-			//Convert to RGB565
-			image[i] = (((red & 248) | green >> 5) << 8) | ((green & 28) << 3 | blue >> 3);
-		}
+void convertColors() {
+	for (int i = 0; i < 19200; i++) {
+		uint16_t value = image[i];
+		//Look for the corresponding RGB values
+		uint8_t red = colorMap[3 * value];
+		uint8_t green = colorMap[3 * value + 1];
+		uint8_t blue = colorMap[3 * value + 2];
+		//Convert to RGB565
+		image[i] = (((red & 248) | green >> 5) << 8) | ((green & 28) << 3 | blue >> 3);
 	}
 }
 
-/* Creates a thermal image and stores it in the array */
-void createThermalImg(bool menu) {
+/* Create the combined image display */
+void createCombinedImg() {
+	//Send capture command
+	captureVisualImage();
 	//Receive the temperatures over SPI
 	getTemperatures();
 	//Compensate calibration with object temp
@@ -321,22 +232,66 @@ void createThermalImg(bool menu) {
 	//Find min and max if not in manual mode and limits not locked
 	if ((agcEnabled) && (!limitsLocked)) {
 		//Limit values if we are in the menu or not in cold/hot mode
+		if ((colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest))
+			limitValues();
+	}
+	//Scale the values
+	scaleValues();
+	//Convert lepton data to RGB565 colors
+	convertColors();
+	//Get the visual image and decompress it combined
+	getVisualImage();
+
+}
+
+/* Create the visual image display */
+void createVisualImg() {
+	//Send capture command
+	captureVisualImage();
+	//Get the visual image and decompress it
+	getVisualImage();
+	//Get & refresh the temp points if required
+	if (pointsEnabled) {
+		getTemperatures();
+		compensateCalib();
+		refreshTempPoints();
+	}
+}
+
+/* Creates a thermal image and stores it in the array */
+void createThermalImg(bool menu) {
+	//Receive the temperatures over SPI
+	getTemperatures();
+	//Compensate calibration with object temp
+	compensateCalib();
+
+	//Refresh the temp points if required
+	if (pointsEnabled)
+		refreshTempPoints();
+
+	//Find min and max if not in manual mode and limits not locked
+	if ((agcEnabled) && (!limitsLocked)) {
+		//Limit values if we are in the menu or not in cold/hot mode
 		if (menu || ((colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest)))
 			limitValues();
 	}
-	//Apply box filter when in menu
-	if(menu)
-		boxFilter();
-	//Apply gaussian filter when saving bitmap
-	else if(((imgSave == imgSave_create) && convertEnabled))
-		gaussianFilter();
-	//Apply corresponding filter in live mode
-	else {
-		if (filterType == filterType_box)
-			boxFilter();
-		else if (filterType == filterType_gaussian)
-			gaussianFilter();
+
+	//If image save
+	if (imgSave == imgSave_create) {
+		//Check the requirements for image save
+		checkImageSave();
+		//Build save filename from the current time & date
+		createSDName(saveFilename);
+		//Save the raw data
+		saveRawData(true, saveFilename);
 	}
+		
+	//Apply low-pass filter
+	if (filterType == filterType_box)
+		boxFilter();
+	else if (filterType == filterType_gaussian)
+		gaussianFilter();
+
 	//Scale the values
 	scaleValues();
 	//Convert lepton data to RGB565 colors
@@ -368,8 +323,23 @@ void getTouchPos(int* x, int* y) {
 /* Function to add or remove a measurement point */
 void tempPointFunction(bool remove) {
 	int x, y;
-	//Show thermal image
-	displayThermalImg();
+	//Create the content depending on the mode
+	switch (displayMode) {
+		//Thermal only
+	case displayMode_thermal:
+		createThermalImg();
+		break;
+		//Visual only
+	case displayMode_visual:
+		createVisualImg();
+		break;
+		//Combined
+	case displayMode_combined:
+		createCombinedImg();
+		break;
+	}
+	//Show it on the screen
+	showImage();
 	//Set text color, font and background
 	display.setColor(VGA_WHITE);
 	display.setBackColor(VGA_TRANSPARENT);
@@ -408,89 +378,6 @@ void tempPointFunction(bool remove) {
 		showTemp[(y * 16) + x] = 1;
 }
 
-/* Create and display the thermal image on screen */
-void displayThermalImg() {
-	//If the image save marker was set
-	if (imgSave == imgSave_set) {
-		//Show message on screen
-		if(!convertEnabled)
-			showMsg((char*) "Save Thermal Raw..");
-		else
-			showMsg((char*) "Save Thermal BMP..");
-		//Set marker to create image
-		imgSave = imgSave_create;
-	}
-	//Create the thermal image
-	createThermalImg();
-	//Draw thermal image on screen if created previously
-	if ((imgSave != imgSave_set) && (showMenu == false))
-		display.writeScreen(image);
-	//If the image has been created, set to save
-	if (imgSave == imgSave_create)
-		imgSave = imgSave_save;
-}
-
-/* Get and display the visual image on screen */
-void displayVisualImg() {
-	//If the image save marker was set
-	if (imgSave == imgSave_set) {
-		//Show message on screen
-		showMsg((char*) "Save Visual BMP..");
-		//Set marker to create image
-		imgSave = imgSave_create;
-	}
-	//Send capture command
-	captureVisualImage();
-	//Get the visual image and decompress it
-	getVisualImage();
-	//Get & refresh the temp points if required
-	if (pointsEnabled) {
-		getTemperatures();
-		compensateCalib();
-		refreshTempPoints();
-	}
-	//Display on screen if created previously
-	if (imgSave != imgSave_set)
-		display.drawBitmap(0, 0, 160, 120, image, 2);
-	//If the image has been created, set to save
-	if (imgSave == imgSave_create)
-		imgSave = imgSave_save;
-}
-
-/* Create and display the combined image on screen */
-void displayCombinedImg() {
-	//If the image save marker was set
-	if (imgSave == imgSave_set) {
-		//Show message on screen
-		showMsg((char*) "Save Combined BMP..");
-		//Set marker to create image
-		imgSave = imgSave_create;
-	}
-	//Send capture command
-	captureVisualImage();
-	//Receive the temperatures over SPI
-	getTemperatures();
-	//Compensate calibration with object temp
-	compensateCalib();
-	//Refresh the temp points if required
-	if (pointsEnabled)
-		refreshTempPoints();
-	//Find min and max
-	limitValues();
-	//Scale the values
-	scaleValues();
-	//Convert lepton data to RGB565 colors
-	convertColors();
-	//Get the visual image and decompress it combined
-	getVisualImage();
-	//Display on screen if created previously
-	if (imgSave != imgSave_set)
-		display.drawBitmap(0, 0, 160, 120, image, 2);
-	//If the image has been created, set to save
-	if (imgSave == imgSave_create)
-		imgSave = imgSave_save;
-}
-
 /* Clears the show temperatures array */
 void clearTemperatures() {
 	//Set all showTemps to zero
@@ -511,10 +398,7 @@ void showTemperatures() {
 				ypos = y * 20;
 				if (ypos <= 12)
 					ypos = 13;
-				display.drawPixel(xpos, ypos);
-				display.drawPixel(xpos + 1, ypos);
-				display.drawPixel(xpos, ypos + 1);
-				display.drawPixel(xpos + 1, ypos + 1);
+				display.print((char*) ".", xpos, ypos - 10);
 				xpos -= 22;
 				if (xpos < 0)
 					xpos = 0;

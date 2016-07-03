@@ -36,11 +36,11 @@ const byte *colorMap;
 int16_t colorElements;
 
 //160x120 image storage
-unsigned short* image;
-//80x60 raw values storage
-unsigned short* rawValues;
+unsigned short image[19200];
 //Array to store the printed temperatures
-uint16_t* showTemp;
+uint16_t showTemp[192];
+//Save filename 
+char saveFilename[20];
 
 //HW diagnostic information
 byte diagnostic;

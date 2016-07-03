@@ -199,7 +199,8 @@ void adjustCamFocus() {
 	//Show the camera image until touch
 	while (true) {
 		//Display visual img
-		displayVisualImg();
+		createVisualImg();
+		showImage();
 		//Show touch hint
 		display.print((char*)"Hold touch to continue", CENTER, 210);
 		//Abort if screen touched
@@ -233,7 +234,8 @@ void adjustCamAlignment() {
 	display.setBackColor(VGA_TRANSPARENT);
 	while (true) {
 		//Display combined img
-		displayCombinedImg();
+		createCombinedImg();
+		showImage();
 		//Show touch hint
 		display.print((char*)"Hold touch to continue", CENTER, 210);
 		//Abort if screen touched
@@ -245,16 +247,12 @@ void adjustCamAlignment() {
 
 /* Helps to adjust the visual camera */
 void adjustCam() {
-	//Allocate array
-	image = (unsigned short*)calloc(19200, sizeof(unsigned short));
 	//Change camera resolution to 160x120
 	changeCamRes(VC0706_160x120);
 	//Adjust the focus
 	adjustCamFocus();
 	//Adjust the alignment
 	adjustCamAlignment();
-	//Free arrays
-	free(image);
 	//Restore camera resolution to 640x480
 	changeCamRes(VC0706_640x480);
 }
@@ -285,6 +283,9 @@ void stdEEPROMSet() {
 	EEPROM.write(eeprom_filterType, filterType_box);
 	//Set mass storage to false
 	EEPROM.write(eeprom_massStorage, false);
+	//Set the calibration slope
+	calSlope = cal_stdSlope;
+	storeCalSlope();
 	//Set current firmware version
 	EEPROM.write(eeprom_fwVersion, fwVersion);
 	//Set first start marker to true

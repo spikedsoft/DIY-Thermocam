@@ -3,9 +3,6 @@
 
 #define SPICLOCK 40000000
 
-#define UTFT_VERSION 270
-#define VERSION9341 12
-
 #define LEFT 0
 #define RIGHT 9999
 #define CENTER 9998
@@ -13,7 +10,6 @@
 #define PORTRAIT 0
 #define LANDSCAPE 1
 
-//pinout defs
 #define LED 22
 #define CS 21
 #define DC 6
@@ -74,10 +70,6 @@
 #define ILI9341_GMCTRP1 0xE0
 #define ILI9341_GMCTRN1 0xE1
 
-//*********************************
-// COLORS
-//*********************************
-// VGA color palette
 #define VGA_BLACK		0x0000
 #define VGA_WHITE		0xFFFF
 #define VGA_RED			0xF800
@@ -189,18 +181,8 @@ public:
 	void lcdOn();
 	uint8_t readcommand8(uint8_t reg, uint8_t index = 0);
 	void setRotation(uint8_t m);
-	//void setContrast(char c);
 	int  getDisplayXSize();
 	int	 getDisplayYSize();
-
-	/*
-	The functions and variables below should not normally be used.
-	They have been left publicly available for use in add-on libraries
-	that might need access to the lower level functions of UTFT.
-
-	Please note that these functions and variables are not documented
-	and I do not provide support on how to use them.
-	*/
 
 	unsigned short* imagePtr;
 	bool writeToImage = false;
@@ -211,14 +193,10 @@ public:
 	byte fch, fcl, bch, bcl;
 	byte orient;
 	long disp_x_size, disp_y_size;
-	//byte display_model, display_transfer_mode, display_serial_mode;
-	//regtype *P_RS, *P_WR, *P_CS, *P_RST, *P_SDA, *P_SCL, *P_ALE;
-	//regsize B_RS, B_WR, B_CS, B_RST, B_SDA, B_SCL, B_ALE;
 	_current_font	cfont;
 	boolean _transparent;
 	uint8_t rotation;
 
-	//void LCD_Writ_Bus(char VH,char VL, byte mode);
 	void LCD_Write_DATA(char VH, char VL);
 	void setPixel(word color);
 	void drawHLine(int x, int y, int l);

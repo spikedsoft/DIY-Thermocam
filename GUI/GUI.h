@@ -43,7 +43,7 @@ void showDiagnostic() {
 	display.print((char*) "Lepton config", 50, 170);
 	display.print((char*) "Lepton data  ", 50, 190);
 	//Check spot sensor
-	if(checkDiagnostic(diag_spot))
+	if (checkDiagnostic(diag_spot))
 		display.print((char*) "OK    ", 220, 50);
 	else {
 		display.print((char*) "Failed", 220, 50);
@@ -90,6 +90,27 @@ void showDiagnostic() {
 		display.print((char*) "Failed", 220, 190);
 }
 
+/* Show the save message on the screen */
+void showSaveMessage() {
+	//Thermal only
+	if (displayMode == displayMode_thermal) {
+		if (!convertEnabled)
+			showMsg((char*) "Save Thermal Raw..");
+		else
+			showMsg((char*) "Save Thermal BMP..");
+	}
+	//Visual only
+	else if (displayMode == displayMode_visual) {
+		showMsg((char*) "Save Visual JPEG..");
+	}
+	//Combined
+	else if (displayMode == displayMode_combined) {
+		showMsg((char*) "Save Combined BMP..");
+	}
+	//Set marker to create image
+	imgSave = imgSave_create;
+}
+
 /* Draw a BigFont Text in the center of a menu*/
 void drawCenterElement(int element) {
 	display.setFont(bigFont);
@@ -125,11 +146,9 @@ void bootScreen() {
 
 /* Display the warmup message on screen*/
 void displayWarmup() {
-	display.setBackColor(VGA_TRANSPARENT);
-	display.setColor(VGA_WHITE);
 	char buffer[25];
 	sprintf(buffer, "Sensor warmup, %2ds left", (int)abs(60 - ((millis() - calTimer) / 1000)));
-	display.print(buffer, CENTER, 210);
+	display.print(buffer, 45, 200);
 }
 
 /* Display battery status in percentage */
@@ -139,7 +158,7 @@ void displayBatteryStatus() {
 	//Display it
 	if (batPercentage != -1) {
 		display.printNumI(batPercentage, 280, 0, 3, ' ');
-		display.printChar('%', 310, 0);
+		display.print((char*) "%", 310, 0);
 	}
 	else
 		display.print((char*) "USB Power", 240, 0);
@@ -147,30 +166,60 @@ void displayBatteryStatus() {
 
 /* Display the date on screen */
 void displayDate() {
-	display.printNumI(day(), 5, 0, 2, '0');
-	display.print((char*) ".", 20, 0);
-	display.printNumI(month(), 27, 0, 2, '0');
-	display.print((char*) ".", 42, 0);
-	display.printNumI(year(), 49, 0, 4);
+	//In live mode
+	if (display.writeToImage) {
+		display.printNumI(day(), 5, 0, 2, '0');
+		display.print((char*) ".", 23, 0);
+		display.printNumI(month(), 27, 0, 2, '0');
+		display.print((char*) ".", 45, 0);
+		display.printNumI(year(), 49, 0, 4);
+	}
+	//In the menu
+	else {
+		display.printNumI(day(), 5, 0, 2, '0');
+		display.print((char*) ".", 20, 0);
+		display.printNumI(month(), 27, 0, 2, '0');
+		display.print((char*) ".", 42, 0);
+		display.printNumI(year(), 49, 0, 4);
+	}
 }
 
 /* Display free space on screen*/
 void displayFreeSpace() {
-	//Old hw generation - Display FW version
-	if (mlx90614Version == mlx90614Version_old)
-		display.print((char*)Version, 200, 228);
-	//All other - Display free space on internal storage
-	else
-		display.print(sdInfo, 220, 228);
+	//In live mode
+	if (display.writeToImage) {
+		if (mlx90614Version == mlx90614Version_new)
+			display.print(sdInfo, 207, 228);
+	}
+	//In menu
+	else {
+		//Old hw generation - Display FW version
+		if (mlx90614Version == mlx90614Version_old)
+			display.print((char*)Version, 200, 228);
+		//All other - Display free space on internal storage
+		if (mlx90614Version == mlx90614Version_new)
+			display.print(sdInfo, 230, 228);
+	}
 }
 
 /* Display the current time on the screen*/
 void displayTime() {
-	display.printNumI(hour(), 5, 228, 2, '0');
-	display.print((char*) ":", 20, 228);
-	display.printNumI(minute(), 27, 228, 2, '0');
-	display.print((char*) ":", 42, 228);
-	display.printNumI(second(), 49, 228, 2, '0');
+	//In live mode
+	if (display.writeToImage) {
+		display.printNumI(hour(), 5, 228, 2, '0');
+		display.print((char*) ":", 23, 228);
+		display.printNumI(minute(), 27, 228, 2, '0');
+		display.print((char*) ":", 45, 228);
+		display.printNumI(second(), 49, 228, 2, '0');
+	}
+	//In the menu
+	else {
+		display.printNumI(hour(), 5, 228, 2, '0');
+		display.print((char*) ":", 20, 228);
+		display.printNumI(minute(), 27, 228, 2, '0');
+		display.print((char*) ":", 42, 228);
+		display.printNumI(second(), 49, 228, 2, '0');
+	}
 }
 
 /* Updates the additional information on the screen */

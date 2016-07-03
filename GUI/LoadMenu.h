@@ -2,25 +2,6 @@
 * Menu to load images and videos from the internal storage
 */
 
-/* Display the image on the screen */
-void displayRawData() {
-	//Select Color Scheme
-	selectColorScheme();
-	//Fill image array for Lepton2 sensor
-	if (leptonVersion != leptonVersion_3_Shutter)
-		fillImageArray();
-	//Apply low-pass filter
-	gaussianFilter();
-	//Scale values
-	scaleValues();
-	//Convert lepton data to RGB565 colors
-	convertColors();
-	//Display on screen
-	display.writeScreen(image);
-	//Display additional information
-	displayInfos();
-}
-
 void displayGUI(int imgCount, char* infoText) {
 	//Set text color
 	display.setColor(VGA_WHITE);
@@ -218,10 +199,13 @@ bool convertPrompt(bool infosHidden = false) {
 
 /* Convert a raw image lately to BMP */
 void convertImage(char* filename) {
+
+	//Check if the image is already there
 	strcpy(&filename[14], ".BMP");
 	startAltClockline(true);
 	bool exists = sd.exists(filename);
 	endAltClockline();
+
 	//If image is already converted, return
 	if (exists) {
 		drawMessage((char*) "Image is already converted!");
@@ -229,18 +213,20 @@ void convertImage(char* filename) {
 		strcpy(&filename[14], ".DAT");
 		return;
 	}
+
 	//If the user does not want to convert, return
 	if (!convertPrompt()) {
 		strcpy(&filename[14], ".DAT");
 		return;
 	}
-	//Convert
+
+	//Show convert message
 	drawMessage((char*) "Converting image to BMP..");
 	delay(500);
+
 	//Display on screen
 	display.writeScreen(image);
-	//Show additional information
-	displayInfos();
+
 	//Save image
 	saveDisplayImage(filename);
 	drawMessage((char*) "Image converted !");

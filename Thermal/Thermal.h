@@ -69,25 +69,24 @@ void buttonIRQ() {
 
 /* Show the color bar on screen */
 void showColorBar() {
-	//Set color
-	display.setColor(VGA_WHITE);
-	display.setBackColor(VGA_TRANSPARENT);
 	//Help variables
 	char buffer[6];
 	byte red, green, blue;
 	byte count = 0;
-	byte height = 240 - ((240 - (colorElements / 2)) / 2);
+	byte height = 120 - ((120 - (colorElements / 4)) / 2);
 	//Display color bar
 	for (int i = 0; i < (colorElements - 1); i++) {
-		if ((i % 2) == 0) {
+		if ((i % 4) == 0) {
 			red = colorMap[i * 3];
 			green = colorMap[(i * 3) + 1];
 			blue = colorMap[(i * 3) + 2];
 			display.setColor(red, green, blue);
-			display.drawLine(285, height - count, 315, height - count);
+			display.drawLine(142, height - count, 157, height - count);
 			count++;
 		}
 	}
+	//Switch color back
+	display.setColor(VGA_WHITE);
 	//Calculate min and max temp in celcius/fahrenheit
 	float min = calFunction(minTemp);
 	float max = calFunction(maxTemp);
@@ -95,27 +94,27 @@ void showColorBar() {
 	float step = (max - min) / 3.0;
 	//Draw min temp
 	sprintf(buffer, "%d", (int)round(min));
-	display.print(buffer, 260, height - 5);
+	display.print(buffer, 262, (height * 2) - 5);
 	//Draw temperatures after min before max
 	for (int i = 2; i >= 1; i--) {
 		float temp = min + (i*step);
 		sprintf(buffer, "%d", (int)round(temp));
-		display.print(buffer, 260, height - 5 - (i * (colorElements / 6)));
+		display.print(buffer, 262, (height * 2) - 5 - (i * (colorElements / 6)));
 	}
 	//Draw max temp
 	sprintf(buffer, "%d", (int)round(max));
-	display.print(buffer, 260, height - 5 - (3 * (colorElements / 6)));
+	display.print(buffer, 262, (height * 2) - 5 - (3 * (colorElements / 6)));
 }
 
 /* Show the current object temperature on screen*/
 void showSpot() {
 	//Draw the spot circle
-	display.drawCircle(160, 120, 12);
+	display.drawCircle(80, 60, 6);
 	//Draw the lines
-	display.drawHLine(136, 120, 12);
-	display.drawHLine(172, 120, 12);
-	display.drawVLine(160, 96, 12);
-	display.drawVLine(160, 132, 12);
+	display.drawLine(68, 60, 74, 60);
+	display.drawLine(86, 60, 92, 60);
+	display.drawLine(80, 48, 80, 54);
+	display.drawLine(80, 66, 80, 72);
 	//Convert to float with a special method
 	char buffer[10];
 	floatToChar(buffer, mlx90614Temp);
@@ -311,14 +310,30 @@ void limitLock() {
 	lockLimits = false;
 }
 
+/* Show the thermal/visual/combined image on the screen */
+void showImage() {
+	//Draw thermal image on screen if created previously and not in menu
+	if ((imgSave != imgSave_set) && (showMenu == false))
+		display.writeScreen(image);
+	//If the image has been created, set to save
+	if (imgSave == imgSave_create)
+		imgSave = imgSave_save;
+}
+
 /* Display addition information on the screen */
 void displayInfos() {
 	//Set text color, font and background
 	display.setColor(VGA_WHITE);
 	display.setBackColor(VGA_TRANSPARENT);
-	display.setFont(smallFont);
+	display.setFont(tinyFont);
+
+	//Set write to image, not display
+	display.writeToImage = true;
+	//Check warmup
+	checkWarmup();
+
 	//If  not saving image or video
-	if ((imgSave != imgSave_save) && (videoSave == false)) {
+	if ((imgSave != imgSave_create) && (videoSave == false)) {
 		//Show battery status in percantage
 		if (batteryEnabled)
 			displayBatteryStatus();
@@ -331,27 +346,32 @@ void displayInfos() {
 		//Show storage information
 		if (storageEnabled)
 			displayFreeSpace();
+		//Display warmup if required
+		if ((videoSave == false) && (calStatus == cal_warmup))
+			displayWarmup();
 	}
+
 	//Show the spot in the middle
 	if (spotEnabled)
 		showSpot();
 	//Show the color bar when warmup is over and if enabled, not in visual mode
-	if ((colorbarEnabled) && (calStatus > cal_warmup) && (displayMode != displayMode_visual))
+	if ((colorbarEnabled) && (calStatus != cal_warmup) && (displayMode != displayMode_visual))
 		showColorBar();
 	//Show the temperature points
 	if (pointsEnabled)
 		showTemperatures();
-	//Activate the calibration after a warmup time of 60s
-	if ((calStatus == cal_warmup) && (imgSave != imgSave_save) && (!videoSave)) {
-		if (millis() - calTimer > 60000) {
-			//Perform FFC if shutter is attached
-			if (leptonVersion != leptonVersion_2_NoShutter)
-				leptonRunCalibration();
-			calStatus = cal_standard;
-		}
-		else
-			displayWarmup();
-	}
+	//Set write back to display
+	display.writeToImage = false;
+}
+
+/* Check for serial connection */
+void checkSerial() {
+	//Check for incoming serial data
+	if ((Serial.available() > 0) && (Serial.read() == CMD_START))
+		serialConnect();
+	//Another command received, discard it
+	else if ((Serial.available() > 0))
+		Serial.read();
 }
 
 /* Init procedure for the live mode */
@@ -378,9 +398,6 @@ void liveModeInit() {
 	videoSave = false;
 	showMenu = false;
 	lockLimits = false;
-	//Allocate space
-	image = (unsigned short*)calloc(19200, sizeof(unsigned short));
-	showTemp = (uint16_t*)calloc(192, sizeof(uint16_t));
 	//Clear showTemp values
 	clearTemperatures();
 }
@@ -393,9 +410,6 @@ void liveModeExit() {
 		digitalWrite(pin_laser, LOW);
 	//Detach the interrupts
 	detachInterrupts();
-	//Deallocate space
-	free(image);
-	free(showTemp);
 	//Open the main menu
 	mainMenu();
 }
@@ -406,43 +420,52 @@ void liveMode() {
 	liveModeInit();
 	//Main Loop
 	while (true) {
-		//Check for incoming serial data
-		if ((Serial.available() > 0) && (Serial.read() == CMD_START))
-			videoConnect();
-		//Another command received, discard it
-		else if ((Serial.available() > 0))
-			Serial.read();
+		//Check for serial connection
+		checkSerial();
+
 		//If touch IRQ has been triggered, open menu
 		if (showMenu) {
 			if (liveMenu())
 				break;
 		}
-		//Show the content depending on the mode
+
+		//Check if the save message needs to be shown
+		if (imgSave == imgSave_set)
+			showSaveMessage();
+
+		//Create the content depending on the mode
 		switch (displayMode) {
-		//Thermal only
+			//Thermal only
 		case displayMode_thermal:
-			displayThermalImg();
+			createThermalImg();
 			break;
-		//Visual only
+			//Visual only
 		case displayMode_visual:
-			displayVisualImg();
+			createVisualImg();
 			break;
-		//Combined
+			//Combined
 		case displayMode_combined:
-			displayCombinedImg();
+			createCombinedImg();
 			break;
 		}
-		//Display additional information on the screen
+
+		//Display additional information
 		if (imgSave != imgSave_set)
 			displayInfos();
-		//Save the image
+
+		//Show the conten on the screen
+		showImage();
+
+		//Save the converted / visual image
 		if (imgSave == imgSave_save)
 			saveImage();
+
 		//Start the video
 		if (videoSave) {
 			if (videoModeChooser())
 				videoCapture();
 		}
+
 		//Release or lock the limits
 		if (lockLimits)
 			limitLock();

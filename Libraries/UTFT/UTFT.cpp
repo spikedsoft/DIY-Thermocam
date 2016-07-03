@@ -377,9 +377,9 @@ void UTFT::drawPixel(int x, int y) {
 }
 
 void UTFT::drawLine(int x1, int y1, int x2, int y2) {
-	if (y1 == y2)
+	if ((y1 == y2) && (!writeToImage))
 		drawHLine(x1, y1, x2 - x1);
-	else if (x1 == x2)
+	else if ((x1 == x2) && (!writeToImage))
 		drawVLine(x1, y1, y2 - y1);
 	else {
 		unsigned int dx = (x2 > x1 ? x2 - x1 : x1 - x2);
@@ -582,6 +582,11 @@ void UTFT::printChar(byte c, int x, int y) {
 	word j;
 	word temp;
 
+	if (writeToImage) {
+		x = x / 2;
+		y = y / 2;
+	}
+
 	if (!_transparent) {
 		if (orient == PORTRAIT) {
 			setXY(x, y, x + cfont.x_size - 1, y + cfont.y_size - 1);
@@ -738,6 +743,11 @@ void UTFT::print(char *st, int x, int y, int deg) {
 	int stl, i;
 
 	stl = strlen(st);
+
+	if (writeToImage) {
+		x = x / 2;
+		y = y / 2;
+	}
 
 	if (orient == PORTRAIT) {
 		if (x == RIGHT)

@@ -58,11 +58,29 @@ void clearData() {
 	clearTemperatures();
 }
 
+/* Display the image on the screen */
+void displayRawData() {
+	//Select Color Scheme
+	selectColorScheme();
+	//Apply low-pass filter
+	if (filterType == filterType_box)
+		boxFilter();
+	else if (filterType == filterType_gaussian)
+		gaussianFilter();
+	//Scale values
+	scaleValues();
+	//Convert lepton data to RGB565 colors
+	convertColors();
+	//Display additional information
+	displayInfos();
+	//Display on screen
+	display.writeScreen(image);
+}
+
 /* Loads raw data from the internal storage*/
 void loadRawData(char* filename, char* dirname) {
 	byte msb, lsb;
-	uint16_t valueCount;
-	unsigned short* valueArray;
+	uint16_t result;
 	//Switch Clock to Alternative
 	startAltClockline();
 	//Go into the video folder if video
@@ -70,16 +88,29 @@ void loadRawData(char* filename, char* dirname) {
 		sd.chdir(dirname);
 	// Open the file for reading
 	sdFile.open(filename, O_READ);
-	//For the Lepton2 sensor, use 4800 raw values
+
+	//For the Lepton2 sensor, read 4800 raw values
 	if ((sdFile.fileSize() == 9621) || (sdFile.fileSize() == 10005)) {
-		valueCount = 4800;
-		valueArray = rawValues;
+		for (int line = 0; line < 60; line++) {
+			for (int column = 0; column < 80; column++) {
+				msb = sdFile.read();
+				lsb = sdFile.read();
+				result = (((msb) << 8) + lsb);
+				image[(line * 2 * 160) + (column * 2)] = result;
+				image[(line * 2 * 160) + (column * 2) + 1] = result;
+				image[(line * 2 * 160) + 160 + (column * 2)] = result;
+				image[(line * 2 * 160) + 160 + (column * 2) + 1] = result;
+			}
+		}
 		leptonVersion = leptonVersion_2_Shutter;
 	}
-	//For the Lepton3 sensor, use 19200 raw values
+	//For the Lepton3 sensor, read 19200 raw values
 	else if ((sdFile.fileSize() == 38421) || (sdFile.fileSize() == 38805)) {
-		valueCount = 19200;
-		valueArray = image;
+		for (int i = 0; i < 19200; i++) {
+			msb = sdFile.read();
+			lsb = sdFile.read();
+			image[i] = (((msb) << 8) + lsb);
+		}
 		leptonVersion = leptonVersion_3_Shutter;
 	}
 	//Invalid data
@@ -89,12 +120,7 @@ void loadRawData(char* filename, char* dirname) {
 		endAltClockline();
 		return;
 	}
-	//Read all lepton raw values from file
-	for (int i = 0; i < valueCount; i++) {
-		msb = sdFile.read();
-		lsb = sdFile.read();
-		valueArray[i] = (((msb) << 8) + lsb);
-	}
+
 	//Read Min
 	msb = sdFile.read();
 	lsb = sdFile.read();
@@ -103,11 +129,13 @@ void loadRawData(char* filename, char* dirname) {
 	msb = sdFile.read();
 	lsb = sdFile.read();
 	maxTemp = (((msb) << 8) + lsb);
+
 	//Read object temperature
 	uint8_t farray[4];
 	for (int i = 0; i < 4; i++)
 		farray[i] = sdFile.read();
 	mlx90614Temp = bytesToFloat(farray);
+
 	//Read color scheme
 	colorScheme = sdFile.read();
 	//Read temp format
@@ -118,6 +146,7 @@ void loadRawData(char* filename, char* dirname) {
 	colorbarEnabled = sdFile.read();
 	//Read points enabled
 	pointsEnabled = sdFile.read();
+
 	//Read calibration offset
 	for (int i = 0; i < 4; i++)
 			farray[i] = sdFile.read();
@@ -126,6 +155,7 @@ void loadRawData(char* filename, char* dirname) {
 	for (int i = 0; i < 4; i++)
 		farray[i] = sdFile.read();
 	calSlope = bytesToFloat(farray);
+
 	//Read temperature points
 	clearTemperatures();
 	if ((sdFile.fileSize() == 38805) || (sdFile.fileSize() == 10005)) {
@@ -136,6 +166,7 @@ void loadRawData(char* filename, char* dirname) {
 			showTemp[i] = (((msb) << 8) + lsb);
 		}
 	}
+
 	//Close data file
 	sdFile.close();
 	//Draw thermal image on screen
@@ -798,9 +829,6 @@ void loadAlloc() {
 	hourStorage = (byte*)calloc(500, sizeof(byte));
 	minuteStorage = (byte*)calloc(500, sizeof(byte));
 	secondStorage = (byte*)calloc(500, sizeof(byte));
-	rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
-	image = (unsigned short*)calloc(19200, sizeof(unsigned short));
-	showTemp = (uint16_t*)calloc(192, sizeof(uint16_t));
 }
 
 /* De-Alloc space for the different arrays*/
@@ -811,9 +839,6 @@ void loadDeAlloc() {
 	free(hourStorage);
 	free(minuteStorage);
 	free(secondStorage);
-	free(rawValues);
-	free(image);
-	free(showTemp);
 }
 
 /* Main entry point for loading images/videos*/

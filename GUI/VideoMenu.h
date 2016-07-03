@@ -155,24 +155,19 @@ bool videoIntervalChooser() {
 
 /* Display the video capture screen contents */
 void refreshCapture() {
-	//Fill image array for Lepton2 sensor
-	if (leptonVersion != leptonVersion_3_Shutter)
-		fillImageArray();
-	//Filter image - not in normal mode
-	if (videoInterval != 0) {
-		if (filterType == filterType_box)
-			boxFilter();
-		else if (filterType == filterType_gaussian)
-			gaussianFilter();
-	}
+	//Apply low-pass filter
+	if (filterType == filterType_box)
+		boxFilter();
+	else if (filterType == filterType_gaussian)
+		gaussianFilter();
 	//Scale values
 	scaleValues();
 	//Convert lepton data to RGB565 colors
 	convertColors();
-	//Draw thermal image on screen
-	display.writeScreen(image);
 	//Display additional infos
 	displayInfos();
+	//Draw thermal image on screen
+	display.writeScreen(image);
 }
 
 /* Captures video frames in an interval */
@@ -187,6 +182,19 @@ void videoCaptureInterval(int16_t* remainingTime, uint16_t* framesCaptured, char
 		//Send capture command to camera if activated and there is enough time
 		if ((visualEnabled) && (videoInterval >= 10))
 			captureVisualImage();
+		//Receive the temperatures over SPI
+		getTemperatures();
+		//Compensate calibration with object temp
+		compensateCalib();
+		//Refresh the temp points if required
+		if (pointsEnabled)
+			refreshTempPoints();
+		//Find min and max if not in manual mode and limits not locked
+		if ((agcEnabled) && (!limitsLocked)) {
+			//Limit values if we are in the menu or not in cold/hot mode
+			if ((colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest))
+				limitValues();
+		}
 		//Save video raw frame
 		saveRawData(false, dirname, *framesCaptured);
 		refreshCapture();
@@ -234,6 +242,19 @@ void videoCaptureInterval(int16_t* remainingTime, uint16_t* framesCaptured, char
 /* Captures video frames normal */
 void videoCaptureNormal(uint16_t* framesCaptured, char* dirname) {
 	char buffer[30];
+	//Receive the temperatures over SPI
+	getTemperatures();
+	//Compensate calibration with object temp
+	compensateCalib();
+	//Refresh the temp points if required
+	if (pointsEnabled)
+		refreshTempPoints();
+	//Find min and max if not in manual mode and limits not locked
+	if ((agcEnabled) && (!limitsLocked)) {
+		//Limit values if we are in the menu or not in cold/hot mode
+		if ((colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest))
+			limitValues();
+	}
 	//Save video raw frame
 	saveRawData(false, dirname, *framesCaptured);
 	//Raise capture counter
@@ -255,8 +276,6 @@ void videoCapture() {
 	char dirname[20];
 	int16_t delayTime = videoInterval;
 	uint16_t framesCaptured = 0;
-	//Allocate space for raw values
-	rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
 	//Create folder 
 	createVideoFolder(dirname);
 	//Update display
@@ -305,8 +324,6 @@ void videoCapture() {
 		drawMessage((char*) "Video capture finished !");
 		delay(1000);
 	}
-	//Deallocate space
-	free(rawValues);
 	//Re-attach the interrupts
 	attachInterrupts();
 	//Disable mode

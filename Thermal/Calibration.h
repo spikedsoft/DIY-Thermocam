@@ -11,7 +11,7 @@ float celciusToFahrenheit(float Tc) {
 /* Function to calculate temperature out of Lepton value */
 float calFunction(uint16_t rawValue) {
 	//Calculate offset out of ambient temp when no calib is done
-	if (calStatus != cal_manual) 
+	if (calStatus != cal_manual)
 		calOffset = mlx90614Amb - (calSlope * 8192) + calComp;
 	//Calculate the temperature in Celcius out of the coefficients
 	float temp = (calSlope * rawValue) + calOffset;
@@ -39,21 +39,21 @@ uint16_t calcAverage() {
 			sum += val;
 		}
 	}
-	uint16_t avg = (uint16_t) (sum / 196.0);
+	uint16_t avg = (uint16_t)(sum / 196.0);
 	return avg;
 }
 
 /* Compensate the calibration with object temp */
 void compensateCalib() {
-	//Only apply, if agc is enabled and limits not locked
-	if ((agcEnabled) && (!limitsLocked)) {
-		///Refresh object temperature
-		mlx90614GetTemp();
-		//Convert to Fahrenheit if needed
-		if (tempFormat == tempFormat_fahrenheit)
-			mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
-		//Refresh MLX90614 ambient temp
-		mlx90614GetAmb();
+	//Refresh MLX90614 ambient temp
+	mlx90614GetAmb();
+	///Refresh object temperature
+	mlx90614GetTemp();
+	//Convert to Fahrenheit if needed
+	if (tempFormat == tempFormat_fahrenheit)
+		mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
+	//Apply compensation if AGC enabled, no limited locked and no manual calib
+	if ((agcEnabled) && (!limitsLocked) && (calStatus != cal_manual)) {
 		//Calculate min, max & average without compensation
 		calComp = 0;
 		float min = calFunction(minTemp);
@@ -71,6 +71,21 @@ void compensateCalib() {
 		if (average != 0) {
 			calComp += mlx90614Temp - calFunction(average);
 		}
+	}
+	//Calculate offset out of ambient temp when no calib is done
+	if (calStatus != cal_manual)
+		calOffset = mlx90614Amb - (calSlope * 8192) + calComp;
+}
+
+/* Checks if the calibration warmup is done */
+void checkWarmup() {
+	//Activate the calibration after a warmup time of 60s
+	if (((calStatus == cal_warmup) && (millis() - calTimer > 60000))) {
+		//Perform FFC if shutter is attached
+		if (leptonVersion != leptonVersion_2_NoShutter)
+			leptonRunCalibration();
+		//Set calibration status to standard
+		calStatus = cal_standard;
 	}
 }
 
@@ -108,33 +123,40 @@ int linreg(int n, const uint16_t x[], const float y[], float* m, float* b, float
 	if (r != NULL) {
 		*r = (sumxy - sumx * sumy / n) /
 			sqrt((sumx2 - sqr(sumx) / n) *
-				(sumy2 - sqr(sumy) / n));
+			(sumy2 - sqr(sumy) / n));
 	}
 	return 0;
 }
 
+/* Run the calibration process */
 void calibrationProcess() {
+	//Variables
 	float calMLX90614[100];
 	uint16_t calLepton[100];
-	//Variable declaration
 	float calCorrelation;
+	char result[30];
 	uint16_t average;
 	uint16_t average_old = 0;
 	float mlx90614_old = 0;
 	maxTemp = 0;
 	minTemp = 65535;
+
+	//Repeat as long as there is a good calibration
 	do {
-		display.print((char*) "Status:  0%", CENTER, 140);
 		//Show the screen
 		calibrationScreen();
 		//Reset counter to zero
 		int counter = 0;
+
 		//Perform FFC if shutter is attached
 		if (leptonVersion != leptonVersion_2_NoShutter)
 			leptonRunCalibration();
+
 		//Get 100 different calibration samples
 		while (counter < 100) {
 			long timeElapsed = millis();
+
+			//Repeat measurement as long as there is no new average
 			do {
 				//Safe delay for bad PCB routing
 				delay(10);
@@ -143,6 +165,7 @@ void calibrationProcess() {
 				average = calcAverage();
 			} while ((average == average_old) || (average == 0));
 			average_old = average;
+
 			//If the temperature changes too much, do not take that measurement
 			if (abs(mlx90614GetTemp() - mlx90614_old) < 10) {
 				//Store values
@@ -161,7 +184,8 @@ void calibrationProcess() {
 				counter++;
 			}
 			mlx90614_old = mlx90614Temp;
-			//wait at least 111ms between two measurements (9Hz)
+
+			//Wait at least 111ms between two measurements (9Hz)
 			while ((millis() - timeElapsed) < 111);
 			//If the user wants to abort
 			if (touch.touched() == true) {
@@ -172,10 +196,22 @@ void calibrationProcess() {
 				}
 			}
 		}
-		//Calculate the calibration formula
+
+		//Calculate the calibration formula with least square fit
 		linreg(100, calLepton, calMLX90614, &calSlope, &calOffset, &calCorrelation);
+		//Set calibration to manual
 		calStatus = cal_manual;
+		//Set compensation to zero
+		calComp = 0;
+
+		//Show the result
+		sprintf(result, "Slope: %1.4f, offset: %.1f", calSlope, calOffset);
+		drawMessage(result);
+		delay(2000);
+
+		//In case the calibration was not good, ask to repeat
 		if (calCorrelation < 0.5) {
+			//If the user does not want to repeat, discard
 			if (!calibrationRepeat()) {
 				calSlope = cal_stdSlope;
 				calStatus = cal_standard;
@@ -183,13 +219,21 @@ void calibrationProcess() {
 			}
 		}
 	} while (calCorrelation < 0.5);
+
+	//Save to EEPROM
+	storeCalSlope();
+	//Show message
+	drawMessage((char*) "Calibration written to EEPROM!");
+	delay(1000);
+
+	//Restore old font
 	display.setFont(smallFont);
 }
 
 /* Calibration */
 bool calibrate() {
 	//Still in warmup
-	if((millis() - calTimer) < 300000){
+	if ((millis() - calTimer) < 300000) {
 		drawMessage((char*) "Please wait 5 minutes after startup!");
 		delay(1500);
 		return false;

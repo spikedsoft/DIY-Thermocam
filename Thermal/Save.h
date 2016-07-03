@@ -3,7 +3,7 @@
 */
 
 /* Creates a filename from the current time & date */
-void createSDName(char* filename, bool folder = false) {
+void createSDName(char* filename, bool folder) {
 	char buffer[5];
 	//Year
 	itoa(year(), buffer, 10);
@@ -58,6 +58,24 @@ void createSDName(char* filename, bool folder = false) {
 			strncpy(&filename[12], buffer, 2);
 		else
 			strcpy(&filename[12], buffer);
+	}
+}
+
+/* Checks the requirements for image save */
+void checkImageSave() {
+	//Old hardware - init SD card
+	if (mlx90614Version == mlx90614Version_old) {
+		if (!checkSDCard()) {
+			imgSave = imgSave_disabled;
+			return;
+		}
+	}
+
+	//Check if there is at least 1MB of space left
+	if (getSDSpace() < 1000) {
+		showMsg((char*) "Int. space full!");
+		imgSave = imgSave_disabled;
+		return;
 	}
 }
 
@@ -218,24 +236,6 @@ void saveDisplayImage(char* filename, char* dirname) {
 
 /* Saves images to the internal storage */
 void saveImage() {
-	//Filename
-	char filename[20];
-
-	//Old hardware
-	if (mlx90614Version == mlx90614Version_old) {
-		if (!checkSDCard()) {
-			imgSave = imgSave_disabled;
-			return;
-		}
-	}
-
-	//Check if there is at least 1MB of space left
-	if (getSDSpace() < 1000) {
-		showMsg((char*) "Int. space full!");
-		imgSave = imgSave_disabled;
-		return;
-	}
-
 	//Detach the interrupts
 	detachInterrupts();
 
@@ -243,28 +243,15 @@ void saveImage() {
 	if ((visualEnabled == true) && (displayMode == displayMode_thermal))
 		captureVisualImage();
 
-	//Build filename from the current time & date
-	createSDName(filename);
-
-	//Save Raw file when in Thermal mode
-	if (displayMode == displayMode_thermal) {
-		//Allocate space for raw values
-		rawValues = (unsigned short*)calloc(4800, sizeof(unsigned short));
-		//Save Raw Values
-		saveRawData(true, filename);
-		//Deallocate space again
-		free(rawValues);
-	}
-
 	//Save Bitmap image if activated or in visual / combined mode
 	if ((convertEnabled == true) || (displayMode == displayMode_visual) || (displayMode == displayMode_combined)) {
-		saveDisplayImage(filename);
+		saveDisplayImage(saveFilename);
 	}
-		
+
 	//Eventually save optical image
-	if ((visualEnabled == true) && (displayMode == displayMode_thermal)){
+	if ((visualEnabled == true) && (displayMode == displayMode_thermal)) {
 		//Create file
-		createJPGFile(filename);
+		createJPGFile(saveFilename);
 		//Display message
 		showMsg((char*) "Save Visual JPG..");
 		//Save visual image
@@ -274,11 +261,11 @@ void saveImage() {
 	//Show Message on screen
 	if (((visualEnabled == true) || (convertEnabled)) && (displayMode == displayMode_thermal))
 		showMsg((char*) "All saved!", true);
-	else if(displayMode == displayMode_thermal)
+	else if (displayMode == displayMode_thermal)
 		showMsg((char*) "Thermal Raw saved!");
-	else if(displayMode == displayMode_visual)
+	else if (displayMode == displayMode_visual)
 		showMsg((char*) "Visual BMP saved!");
-	else if(displayMode == displayMode_combined)
+	else if (displayMode == displayMode_combined)
 		showMsg((char*) "Combined BMP saved!");
 
 	//Disable image save marker
@@ -314,19 +301,6 @@ void frameFilename(char* filename, uint16_t count) {
 	filename[2] = '0' + count / 100 % 10;
 	filename[3] = '0' + count / 10 % 10;
 	filename[4] = '0' + count % 10;
-}
-
-/* Fills the image array with the raw values */
-void fillImageArray() {
-	//Fill image array
-	for (int y = 0; y < 60; y++) {
-		for (int x = 0; x < 80; x++) {
-			image[(y * 2 * 160) + (x * 2)] = rawValues[(y * 80) + x];
-			image[(y * 2 * 160) + (x * 2) + 1] = rawValues[(y * 80) + x];
-			image[(y * 2 * 160) + 160 + (x * 2)] = rawValues[(y * 80) + x];
-			image[(y * 2 * 160) + 160 + (x * 2) + 1] = rawValues[(y * 80) + x];
-		}
-	}
 }
 
 /* Proccess video frames */
@@ -369,27 +343,8 @@ void proccessVideoFrames(uint16_t framesCaptured, char* dirname) {
 
 /* Saves raw data for an image or an video frame */
 void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
-	uint16_t valueCount;
-	unsigned short* valueArray;
-	//For the Lepton2 sensor, use 4800 raw values
-	if (leptonVersion != leptonVersion_3_Shutter) {
-		valueCount = 4800;
-		valueArray = rawValues;
-	}
-	//For the Lepton3 sensor, use 19200 raw values
-	else {
-		valueCount = 19200;
-		valueArray = image;
-	}
-	//Get temperatures
-	getTemperatures(true);
-	//Limit the raw values from FLIR Lepton
-	if ((agcEnabled) && (!limitsLocked) && (colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest)) {
-		if (leptonVersion == leptonVersion_3_Shutter)
-			limitValues();
-		else
-			limitValues(true);
-	}
+	uint16_t result;
+
 	//Start SD
 	startAltClockline(true);
 	//Create filename for image
@@ -404,21 +359,37 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 		sd.chdir(name);
 		sdFile.open(filename, O_RDWR | O_CREAT | O_AT_END);
 	}
-	//Write the lepton raw values
-	for (int i = 0; i < valueCount; i++) {
-		sdFile.write((valueArray[i] & 0xFF00) >> 8);
-		sdFile.write(valueArray[i] & 0x00FF);
+
+	//For the Lepton2 sensor, write 4800 raw values
+	if (leptonVersion != leptonVersion_3_Shutter) {
+		for (int line = 0; line < 60; line++) {
+			for (int column = 0; column < 80; column++) {
+				result = image[(line * 2 * 160) + (column * 2)];
+				sdFile.write((result & 0xFF00) >> 8);
+				sdFile.write(result & 0x00FF);
+			}
+		}
 	}
+	//For the Lepton3 sensor, write 19200 raw values
+	else {
+		for (int i = 0; i < 19200; i++) {
+			sdFile.write((image[i] & 0xFF00) >> 8);
+			sdFile.write(image[i] & 0x00FF);
+		}
+	}
+
 	//Write min and max
 	sdFile.write((minTemp & 0xFF00) >> 8);
 	sdFile.write(minTemp & 0x00FF);
 	sdFile.write((maxTemp & 0xFF00) >> 8);
 	sdFile.write(maxTemp & 0x00FF);
+
 	//Write the object temp 
 	uint8_t farray[4];
 	floatToBytes(farray, mlx90614Temp);
 	for (int i = 0; i < 4; i++)
 		sdFile.write(farray[i]);
+
 	//Write the color scheme
 	sdFile.write(colorScheme);
 	//Write the temperature format
@@ -435,10 +406,8 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 		sdFile.write((byte)0);
 	else
 		sdFile.write(pointsEnabled);
+
 	//Write calibration offset
-	//Calculate offset out of ambient temp when no calib is done
-	if (calStatus != cal_manual)
-		calOffset = mlx90614Amb - (calSlope * 8192);
 	floatToBytes(farray, (float)calOffset);
 	for (int i = 0; i < 4; i++)
 		sdFile.write(farray[i]);
@@ -446,20 +415,13 @@ void saveRawData(bool isImage, char* name, uint16_t framesCaptured) {
 	floatToBytes(farray, (float)calSlope);
 	for (int i = 0; i < 4; i++)
 		sdFile.write(farray[i]);
-	//Write temperature points if enabled
-	if (pointsEnabled) {
-		refreshTempPoints(true);
-		for (int i = 0; i < 192; i++) {
-			sdFile.write((showTemp[i] & 0xFF00) >> 8);
-			sdFile.write(showTemp[i] & 0x00FF);
-		}
+
+	//Write temperature points
+	for (int i = 0; i < 192; i++) {
+		sdFile.write((showTemp[i] & 0xFF00) >> 8);
+		sdFile.write(showTemp[i] & 0x00FF);
 	}
-	else {
-		//Write dummy data if not enabled
-		for (int i = 0; i < 384; i++) {
-			sdFile.write((byte)0);
-		}
-	}
+
 	//Close the file
 	sdFile.close();
 	//Switch Clock back to Standard

@@ -151,8 +151,6 @@ void initLepton() {
 	calTimer = millis();
 	//Set calibration status to warmup
 	calStatus = cal_warmup;
-	//Set the calibration slope to standard
-	calSlope = cal_stdSlope;
 	//Set the compensation value to zero
 	calComp = 0;
 

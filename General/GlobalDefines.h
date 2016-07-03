@@ -43,8 +43,9 @@
 
 //Filter type
 #define filterType_none 0
-#define filterType_box 1
-#define filterType_gaussian 2
+#define filterType_gaussian 1
+#define filterType_box 2
+
 
 //EEPROM registers
 #define eeprom_tempFormat 101
@@ -62,6 +63,8 @@
 #define eeprom_storageEnabled 115
 #define eeprom_rotationEnabled 116
 #define eeprom_displayMode 117
+#define eeprom_calSlopeSet 130
+#define eeprom_calSlopeBase 131 //4 Byte (131-134)
 #define eeprom_firstStart 150
 #define eeprom_liveHelper 151
 #define eeprom_fwVersion 250
@@ -104,7 +107,7 @@
 #define cal_warmup 0
 #define cal_standard 1
 #define cal_manual 2
-#define cal_stdSlope 0.0217f //Standard slope value
+#define cal_stdSlope 0.0402f //Standard slope value
 
 //Image save marker
 #define imgSave_disabled 0
