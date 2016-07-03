@@ -326,7 +326,7 @@ void storeCalSlope() {
 void readCalSlope() {
 	uint8_t farray[4];
 	for (int i = 0; i < 4; i++)
-		farray[i] = EEPROM.read(eeprom_calSlopeBase);
+		farray[i] = EEPROM.read(eeprom_calSlopeBase + i);
 	calSlope = bytesToFloat(farray);
 }
 

@@ -135,6 +135,50 @@ void leptonCheckVersion() {
 	}
 }
 
+/* Set the shutter operation to manual */
+void leptonSetShutterMode(bool automatic)
+{
+	//Read command
+	Wire.beginTransmission(0x2A);
+	Wire.write(0x00);
+	Wire.write(0x04);
+	Wire.write(0x02);
+	Wire.write(((0x3C) & 0xfc) | ((0x3C >> 2) & 0x3));
+	//Read old FFC package first
+	while (leptonReadReg(0x2) & 0x01);
+	int payload_length = leptonReadReg(0x6);
+	Wire.requestFrom(0x2A, payload_length);
+	byte package[32];
+	for (byte i = 0; i < payload_length; i++)
+	{
+		package[i] = Wire.read();
+	}
+	//Alter the second bit to set FFC to manual
+	package[1] = automatic;
+	//Transmit the new package
+	Wire.beginTransmission(0x2A);
+	Wire.write(0x00);
+	Wire.write(0x08);
+	for (int i = 0; i < 32; i++) {
+		Wire.write(package[i]);
+	}
+	Wire.endTransmission();
+	//Package length, use 4 here
+	Wire.beginTransmission(0x2A);
+	Wire.write(0x00);
+	Wire.write(0x06);
+	Wire.write(0x00);
+	Wire.write(0x04);
+	Wire.endTransmission();
+	//Module and command ID
+	Wire.beginTransmission(0x2A);
+	Wire.write(0x00);
+	Wire.write(0x04);
+	Wire.write(0x02);
+	Wire.write(0x3D);
+	Wire.endTransmission();
+}
+
 /* Check which hardware revision of the FLIR Lepton is connected */
 void initLepton() {
 	//Short delay

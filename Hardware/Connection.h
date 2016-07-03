@@ -10,26 +10,31 @@
 /* Defines */
 
 //Start & Stop command
-#define CMD_START		'S'
-#define CMD_END			'E'
+#define CMD_START       'S'
+#define CMD_END	        'E'
 
 //Serial terminal commands
-#define CMD_RAWLIMITS	'l'
-#define CMD_RAWDATA		'd'
-#define CMD_CONFIGDATA	'c'
-#define CMD_VISUALIMG	'v'
-#define CMD_CALIBDATA	'a'
-#define CMD_SPOTTEMP	's'
-#define CMD_SETTIME		't'
+#define CMD_RAWLIMITS   'l'
+#define CMD_RAWDATA     'd'
+#define CMD_CONFIGDATA  'c'
+#define CMD_VISUALIMG   'v'
+#define CMD_CALIBDATA   'a'
+#define CMD_SPOTTEMP    's'
+#define CMD_SETTIME     't'
+#define CMD_TEMPPOINTS  'p'
+#define CMD_TOGGLELASER 'o'
+#define CMD_ACTSHUTTER  'h'
+#define CMD_AUTOSHUTTER 'u'
+#define CMD_MANSHUTTER  'm'
 
 //Serial frame commands
-#define CMD_RAWFRAME	'R'
-#define CMD_COLORFRAME	'C'
+#define CMD_RAWFRAME    'R'
+#define CMD_COLORFRAME  'C'
 //Types of frame responses
-#define FRAME_CAPTURE	'K'
-#define FRAME_STARTVID	'L'
-#define FRAME_STOPVID	'M'
-#define FRAME_NORMAL	'N'
+#define FRAME_CAPTURE   'K'
+#define FRAME_STARTVID  'L'
+#define FRAME_STOPVID   'M'
+#define FRAME_NORMAL    'N'
 
 /* Variables */
 
@@ -170,6 +175,14 @@ void setTime() {
 	Serial.write(false);
 }
 
+/* Send the temperature points */
+void sendTempPoints() {
+	for (int i = 0; i < 192; i++) {
+		Serial.write((showTemp[i] & 0xFF00) >> 8);
+		Serial.write(showTemp[i] & 0x00FF);
+	}
+}
+
 /* Sends a raw frame */
 void sendFrame(bool color) {
 	Serial.write(sendCmd);
@@ -196,10 +209,7 @@ void sendFrame(bool color) {
 		//Send calibration data
 		sendCalibrationData();
 		//Send temperature points
-		for (int i = 0; i < 192; i++) {
-			Serial.write((showTemp[i] & 0xFF00) >> 8);
-			Serial.write(showTemp[i] & 0x00FF);
-		}
+		sendTempPoints();
 	}
 	//Switch back to send frame the next time
 	else
@@ -240,6 +250,26 @@ bool serialHandler() {
 		//Change time
 	case CMD_SETTIME:
 		setTime();
+		break;
+		//Send temperature points
+	case CMD_TEMPPOINTS:
+		sendTempPoints();
+		break;
+		//Toggle laser
+	case CMD_TOGGLELASER:
+		toggleLaser();
+		break;
+		//Activate shutter
+	case CMD_ACTSHUTTER:
+		leptonRunCalibration();
+		break;
+		//Manual shutter mode
+	case CMD_MANSHUTTER:
+		leptonSetShutterMode(false);
+		break;
+		//Auto shutter mode
+	case CMD_AUTOSHUTTER:
+		leptonSetShutterMode(true);
 		break;
 		//Get raw frame
 	case CMD_RAWFRAME:
