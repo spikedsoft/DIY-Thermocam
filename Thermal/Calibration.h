@@ -54,23 +54,15 @@ void compensateCalib() {
 		mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
 	//Apply compensation if AGC enabled, no limited locked and no manual calib
 	if ((agcEnabled) && (!limitsLocked) && (calStatus != cal_manual)) {
-		//Calculate min, max & average without compensation
-		calComp = 0;
+		//Calculate min & max
 		float min = calFunction(minTemp);
 		float max = calFunction(maxTemp);
-		//If spot temp is lower than current minimum, lower minimum
-		if ((mlx90614Temp < min) && (colorScheme != colorScheme_hottest)) {
+		//If spot temp is lower than current minimum by 2 degree, lower minimum
+		if ((mlx90614Temp < (min - 1)) && (colorScheme != colorScheme_hottest))
 			calComp = mlx90614Temp - min;
-		}
-		//If spot temp is higher tha current maximum, raise maximum
-		else if ((mlx90614Temp > max) && (colorScheme != colorScheme_coldest)) {
+		//If spot temp is higher than current maximum by 2 degree, raise maximum
+		else if ((mlx90614Temp > (max + 1)) && (colorScheme != colorScheme_coldest))
 			calComp = mlx90614Temp - max;
-		}
-		//Compensate by average temp
-		float average = calcAverage();
-		if (average != 0) {
-			calComp += mlx90614Temp - calFunction(average);
-		}
 	}
 	//Calculate offset out of ambient temp when no calib is done
 	if (calStatus != cal_manual)

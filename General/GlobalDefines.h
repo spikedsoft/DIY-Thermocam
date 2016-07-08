@@ -46,6 +46,10 @@
 #define filterType_gaussian 1
 #define filterType_box 2
 
+//Shutter mode
+#define shutterMode_manual 0
+#define shutterMode_auto 1
+#define shutterMode_none 2
 
 //EEPROM registers
 #define eeprom_tempFormat 101

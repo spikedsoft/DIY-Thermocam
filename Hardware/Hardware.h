@@ -254,7 +254,7 @@ void initDisplay() {
 			setDiagnostic(diag_display);
 	}
 	//Clear flag
-	if(val == eeprom_massStorage)
+	if (val == eeprom_massStorage)
 		EEPROM.write(eeprom_massStorage, 0);
 }
 
@@ -297,10 +297,20 @@ void checkDiagnostic() {
 }
 
 /* Checks if a FW upgrade has been done */
-void checkFWUpgrade(){
+void checkFWUpgrade() {
 	byte eepromVersion = EEPROM.read(eeprom_fwVersion);
 	//Show message after firmware upgrade
 	if (eepromVersion != fwVersion) {
+		//Upgrade from old Thermocam-V4 firmware
+		if ((mlx90614Version == mlx90614Version_old) && (eeprom_liveHelper != eeprom_setValue)) {
+			//Clear EEPROM
+			for (unsigned int i = 0; i < EEPROM.length(); i++)
+				EEPROM.write(i, 0);
+			//Show message and wait
+			drawMessage((char*)"FW update completed, pls restart!");
+			EEPROM.write(eeprom_fwVersion, fwVersion);
+			while (true);
+		}
 		//Upgrade
 		if (fwVersion > eepromVersion)
 			drawMessage((char*)"FW update completed, pls restart!");

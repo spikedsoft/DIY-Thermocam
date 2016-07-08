@@ -453,8 +453,8 @@ void liveMode() {
 		if (imgSave != imgSave_set)
 			displayInfos();
 
-		//Show the conten on the screen
-		showImage();
+		//Show the content on the screen
+			showImage();
 
 		//Save the converted / visual image
 		if (imgSave == imgSave_save)

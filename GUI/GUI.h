@@ -194,8 +194,10 @@ void displayFreeSpace() {
 	//In menu
 	else {
 		//Old hw generation - Display FW version
-		if (mlx90614Version == mlx90614Version_old)
-			display.print((char*)Version, 200, 228);
+		if (mlx90614Version == mlx90614Version_old) {
+			display.print((char*)"Firmware ", 220, 228);
+			display.printNumI(fwVersion, 290, 228);
+		}
 		//All other - Display free space on internal storage
 		if (mlx90614Version == mlx90614Version_new)
 			display.print(sdInfo, 230, 228);

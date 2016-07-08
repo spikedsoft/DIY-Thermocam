@@ -146,6 +146,11 @@ void getTemperatures() {
 				//Reset if the expected line does not match the answer
 				else {
 					if (leptonError == 255) {
+						//If show menu was entered
+						if (showMenu) {
+							leptonEndSPI();
+							return;
+						}	
 						//Reset segment
 						segment = 1;
 						//Reset lepton error

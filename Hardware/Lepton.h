@@ -188,8 +188,13 @@ void initLepton() {
 	leptonCheckVersion();
 
 	//Perform FFC if shutter is attached
-	if (leptonVersion != leptonVersion_2_NoShutter)
+	if (leptonVersion != leptonVersion_2_NoShutter) {
+		shutterMode = shutterMode_auto;
 		leptonRunCalibration();
+	}
+	//No shutter attached
+	else
+		shutterMode = shutterMode_none;
 
 	//Set the calibration timer
 	calTimer = millis();

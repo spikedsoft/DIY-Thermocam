@@ -54,6 +54,8 @@ byte leptonVersion;
 bool tempFormat;
 //Laser state
 bool laserEnabled;
+//Shutter modus
+bool shutterMode;
 //Display mode
 byte displayMode;
 //Variables for color calculation

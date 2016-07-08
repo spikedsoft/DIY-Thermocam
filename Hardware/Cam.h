@@ -75,7 +75,10 @@ unsigned int output_func(JDEC * jd, void * bitmap, JRECT * rect) {
 				greenV = (pixel & 0x7E0) >> 3;
 				blueV = (pixel & 0x1F) << 3;
 				//Get the thermal image color
-				pixel = image[x + (y * 160)];
+				if (mlx90614Version == mlx90614Version_old)
+					pixel = image[(159 - x) + (y * 160)];
+				else
+					pixel = image[x + (y * 160)];
 				//And extract the RGB values out of it
 				redT = (pixel & 0xF800) >> 8;
 				greenT = (pixel & 0x7E0) >> 3;
@@ -85,12 +88,20 @@ unsigned int output_func(JDEC * jd, void * bitmap, JRECT * rect) {
 				green = greenT * 0.5 + greenV * 0.5;
 				blue = blueT * 0.5 + blueV * 0.5;
 				//Set image to that calculated RGB value
-				image[x + (y * 160)] = (((red & 248) | green >> 5) << 8)
+				if(mlx90614Version == mlx90614Version_old)
+					image[(159 - x) + (y * 160)] = (((red & 248) | green >> 5) << 8)
+					| ((green & 28) << 3 | blue >> 3);
+				else
+					image[x + (y * 160)] = (((red & 248) | green >> 5) << 8)
 					| ((green & 28) << 3 | blue >> 3);
 			}
 			//Write into the array if combined not activated
-			else
-				image[x + (y * 160)] = bmp[i++];
+			else {
+				if (mlx90614Version == mlx90614Version_old)
+					image[(159 - x) + (y * 160)] = bmp[i++];
+				else
+					image[x + (y * 160)] = bmp[i++];
+			}
 		}
 	}
 	return 1;

@@ -10,31 +10,34 @@
 /* Defines */
 
 //Start & Stop command
-#define CMD_START       'S'
-#define CMD_END	        'E'
+#define CMD_START         100
+#define CMD_END	          200
 
 //Serial terminal commands
-#define CMD_RAWLIMITS   'l'
-#define CMD_RAWDATA     'd'
-#define CMD_CONFIGDATA  'c'
-#define CMD_VISUALIMG   'v'
-#define CMD_CALIBDATA   'a'
-#define CMD_SPOTTEMP    's'
-#define CMD_SETTIME     't'
-#define CMD_TEMPPOINTS  'p'
-#define CMD_TOGGLELASER 'o'
-#define CMD_ACTSHUTTER  'h'
-#define CMD_AUTOSHUTTER 'u'
-#define CMD_MANSHUTTER  'm'
+#define CMD_RAWLIMITS     110
+#define CMD_RAWDATA       111
+#define CMD_CONFIGDATA    112
+#define CMD_VISUALIMG     113
+#define CMD_CALIBDATA     114
+#define CMD_SPOTTEMP      115
+#define CMD_SETTIME       116
+#define CMD_TEMPPOINTS    117
+#define CMD_LASERTOGGLE   118
+#define CMD_LASERSTATE    119
+#define CMD_SHUTTERRUN    120
+#define CMD_SHUTTERAUTO   121
+#define CMD_SHUTTERMANUAL 122
+#define CMD_SHUTTERSTATE  123
+#define CMD_BATTERYSTATUS 124
 
 //Serial frame commands
-#define CMD_RAWFRAME    'R'
-#define CMD_COLORFRAME  'C'
+#define CMD_RAWFRAME      150
+#define CMD_COLORFRAME    151
 //Types of frame responses
-#define FRAME_CAPTURE   'K'
-#define FRAME_STARTVID  'L'
-#define FRAME_STOPVID   'M'
-#define FRAME_NORMAL    'N'
+#define FRAME_CAPTURE     180
+#define FRAME_STARTVID    181
+#define FRAME_STOPVID     182
+#define FRAME_NORMAL      183
 
 /* Variables */
 
@@ -157,7 +160,12 @@ void changeColorScheme() {
 
 /* Sets the time */
 void setTime() {
-	while (!Serial.available());
+	//Wait for time string, maximum 1 second
+	uint32_t timer = millis();
+	while (!Serial.available() && ((millis() - timer) < 1000));
+	//If there was no timestring
+	if (Serial.available() == 0)
+		return;
 	//Read time
 	String dateIn = Serial.readString();
 	//Check if valid
@@ -167,12 +175,7 @@ void setTime() {
 			getInt(dateIn.substring(8, 10)), getInt(dateIn.substring(5, 7)), getInt(dateIn.substring(0, 4)));
 		//Set the RTC
 		Teensy3Clock.set(now());
-		//Send success
-		Serial.write(true);
-		return;
 	}
-	//Send error
-	Serial.write(false);
 }
 
 /* Send the temperature points */
@@ -181,6 +184,21 @@ void sendTempPoints() {
 		Serial.write((showTemp[i] & 0xFF00) >> 8);
 		Serial.write(showTemp[i] & 0x00FF);
 	}
+}
+
+/* Send the laser state */
+void sendLaserState() {
+	Serial.write(laserEnabled);
+}
+
+/* Send the shutter mode */
+void sendShutterMode() {
+	Serial.write(shutterMode);
+}
+
+/* Send the battery status in percentage */
+void sendBatteryStatus() {
+	Serial.write(batPercentage);
 }
 
 /* Sends a raw frame */
@@ -223,15 +241,15 @@ bool serialHandler() {
 
 	//Decide what to do
 	switch (recCmd) {
-		//Get raw limits
+		//Send raw limits
 	case CMD_RAWLIMITS:
 		sendRawLimits();
 		break;
-		//Get raw data
+		//Send raw data
 	case CMD_RAWDATA:
 		sendRawData();
 		break;
-		//Get config data
+		//Send config data
 	case CMD_CONFIGDATA:
 		sendConfigData();
 		break;
@@ -250,32 +268,54 @@ bool serialHandler() {
 		//Change time
 	case CMD_SETTIME:
 		setTime();
+		//Send ACK
+		Serial.write(CMD_SETTIME);
 		break;
 		//Send temperature points
 	case CMD_TEMPPOINTS:
 		sendTempPoints();
 		break;
 		//Toggle laser
-	case CMD_TOGGLELASER:
+	case CMD_LASERTOGGLE:
 		toggleLaser();
+		//Send ACK
+		Serial.write(CMD_LASERTOGGLE);
 		break;
-		//Activate shutter
-	case CMD_ACTSHUTTER:
+		//Send laser state
+	case CMD_LASERSTATE:
+		sendLaserState();
+		break;
+		//Run the shutter
+	case CMD_SHUTTERRUN:
 		leptonRunCalibration();
+		//Send ACK
+		Serial.write(CMD_SHUTTERRUN);
 		break;
-		//Manual shutter mode
-	case CMD_MANSHUTTER:
+		//Set shutter mode to manual
+	case CMD_SHUTTERMANUAL:
 		leptonSetShutterMode(false);
+		//Send ACK
+		Serial.write(CMD_SHUTTERMANUAL);
 		break;
-		//Auto shutter mode
-	case CMD_AUTOSHUTTER:
+		//Set shutter mode to auto
+	case CMD_SHUTTERAUTO:
 		leptonSetShutterMode(true);
+		//Send ACK
+		Serial.write(CMD_SHUTTERAUTO);
 		break;
-		//Get raw frame
+		//Send the shutter mode
+	case CMD_SHUTTERSTATE:
+		sendShutterMode();
+		break;
+		//Send battery status
+	case CMD_BATTERYSTATUS:
+		sendBatteryStatus();
+		break;
+		//Send raw frame
 	case CMD_RAWFRAME:
 		sendFrame(false);
 		break;
-		//Get color frame
+		//Send color frame
 	case CMD_COLORFRAME:
 		sendFrame(true);
 		break;
@@ -369,8 +409,18 @@ void serialConnect() {
 	//Disable screen backlight
 	disableScreenLight();
 
+	//Turn laser off if enabled
+	if (laserEnabled)
+		toggleLaser();
+
+	//Send ACK for Start
+	Serial.write(CMD_START);
+
 	//Go to the serial output
 	serialOutput();
+
+	//Send ACK for End
+	Serial.write(CMD_END);
 
 	//Re-Enable display backlight
 	enableScreenLight();
@@ -387,6 +437,14 @@ void serialConnect() {
 		changeCamRes(VC0706_640x480);
 	else
 		changeCamRes(VC0706_160x120);
+
+	//Turn laser off if enabled
+	if (laserEnabled)
+		toggleLaser();
+
+	//Switch back to auto shutter if manual used
+	if (shutterMode == shutterMode_manual)
+		leptonSetShutterMode(true);
 
 	//Re-Enable interrupts
 	attachInterrupts();

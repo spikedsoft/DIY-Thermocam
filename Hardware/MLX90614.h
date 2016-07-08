@@ -304,15 +304,8 @@ void mlx90614Init() {
 	//Get MLX90614Version
 	uint16_t filter = mlx90614Receive(mlx90614_Filter);
 	mlx90614Version = (filter >> 13) & 1;
-	//Check if version is valid
-	if ((mlx90614Version != mlx90614Version_old) && (mlx90614Version != mlx90614Version_new)) {
-		drawMessage((char*)"Unsupported spot sensor !");
-		delay(2000);
-		setDiagnostic(diag_spot);
-		return;
-	}
-	//If first start has been completed before, do checks
-	if (EEPROM.read(eeprom_firstStart) == eeprom_setValue) {
+	//If first start has been completed before and there are no other error, do checks
+	if ((EEPROM.read(eeprom_firstStart) == eeprom_setValue) && (diagnostic == diag_ok)) {
 		//Check Filter Temp
 		if (mlx90614CheckFilter() == false) {
 			drawMessage((char*)"Spot filter invalid, rewrite..");
