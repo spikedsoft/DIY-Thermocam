@@ -10,7 +10,7 @@
 */
 
 /* Current firmware version */
-#define Version "Firmware 1.23 from 08.07.2016"
+#define Version "Firmware 1.23 from 09.07.2016"
 #define fwVersion 123
 
 /* Libraries */

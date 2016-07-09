@@ -117,10 +117,13 @@ void leptonCheckVersion() {
 		setDiagnostic(diag_lep_conf);
 		return;
 	}
+	//Transfer the new package
+	Wire.beginTransmission(0x2A);
 	while (leptonReadReg(0x2) & 0x01);
 	Wire.requestFrom(0x2A, leptonReadReg(0x6));
 	char leptonhw[33];
 	Wire.readBytes(leptonhw, 32);
+	Wire.endTransmission();
 	//Detected Lepton2 Shuttered
 	if (strstr(leptonhw, "05-060") != NULL) {
 		leptonVersion = leptonVersion_2_Shutter;
@@ -138,44 +141,42 @@ void leptonCheckVersion() {
 /* Set the shutter operation to manual */
 void leptonSetShutterMode(bool automatic)
 {
-	//Read command
-	Wire.beginTransmission(0x2A);
-	Wire.write(0x00);
-	Wire.write(0x04);
-	Wire.write(0x02);
-	Wire.write(((0x3C) & 0xfc) | ((0x3C >> 2) & 0x3));
-	//Read old FFC package first
-	while (leptonReadReg(0x2) & 0x01);
-	int payload_length = leptonReadReg(0x6);
-	Wire.requestFrom(0x2A, payload_length);
-	byte package[32];
-	for (byte i = 0; i < payload_length; i++)
-	{
-		package[i] = Wire.read();
-	}
-	//Alter the second bit to set FFC to manual
-	package[1] = automatic;
-	//Transmit the new package
+	//If there is no shutter, do not do anything
+	if (shutterMode == shutterMode_none)
+		return;
+
+	//To-do: Implement set shutter mode over I2C
+
+	//Set shutter mode
+	if (automatic)
+		shutterMode = shutterMode_auto;
+	else
+		shutterMode = shutterMode_manual;
+}
+
+/* Set the radiometry mode (not used) */
+void leptonRadSet(bool enable)
+{
+	//Enable or disable radiometry
 	Wire.beginTransmission(0x2A);
 	Wire.write(0x00);
 	Wire.write(0x08);
-	for (int i = 0; i < 32; i++) {
-		Wire.write(package[i]);
-	}
+	Wire.write(0x00);
+	Wire.write(enable);
 	Wire.endTransmission();
-	//Package length, use 4 here
+	//Data length
 	Wire.beginTransmission(0x2A);
 	Wire.write(0x00);
 	Wire.write(0x06);
 	Wire.write(0x00);
-	Wire.write(0x04);
+	Wire.write(0x02);
 	Wire.endTransmission();
-	//Module and command ID
+	//RAD module with OEM bit and command
 	Wire.beginTransmission(0x2A);
 	Wire.write(0x00);
 	Wire.write(0x04);
-	Wire.write(0x02);
-	Wire.write(0x3D);
+	Wire.write(0x4E);
+	Wire.write(0x11);
 	Wire.endTransmission();
 }
 
