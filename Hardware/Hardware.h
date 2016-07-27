@@ -323,21 +323,34 @@ void checkFWUpgrade() {
 	}
 }
 
-/* Stores the current calibration slope to EEPROM */
-void storeCalSlope() {
+/* Stores the current calibration to EEPROM */
+void storeCalibration() {
 	uint8_t farray[4];
+	//Store slope
 	floatToBytes(farray, (float)calSlope);
 	for (int i = 0; i < 4; i++)
 		EEPROM.write(eeprom_calSlopeBase + i, (farray[i]));
 	EEPROM.write(eeprom_calSlopeSet, eeprom_setValue);
+	//Store offset
+	floatToBytes(farray, (float)calOffset);
+	for (int i = 0; i < 4; i++)
+		EEPROM.write(eeprom_calOffsetBase + i, (farray[i]));
+	EEPROM.write(eeprom_calOffsetSet, eeprom_setValue);
 }
 
 /* Reads the calibration slope from EEPROM */
-void readCalSlope() {
+void readCalibration() {
 	uint8_t farray[4];
+	//Read slope
 	for (int i = 0; i < 4; i++)
 		farray[i] = EEPROM.read(eeprom_calSlopeBase + i);
 	calSlope = bytesToFloat(farray);
+	//Read offset
+	if (EEPROM.read(eeprom_calOffsetSet) == eeprom_setValue) {
+		for (int i = 0; i < 4; i++)
+			farray[i] = EEPROM.read(eeprom_calOffsetBase + i);
+		calOffset = bytesToFloat(farray);
+	}
 }
 
 /* Reads the old settings from EEPROM */
@@ -433,7 +446,7 @@ void readEEPROM() {
 	//Calibration slope
 	read = EEPROM.read(eeprom_calSlopeSet);
 	if (read == eeprom_setValue)
-		readCalSlope();
+		readCalibration();
 	else
 		calSlope = cal_stdSlope;
 	//Return from Mass Storage reboot, no warmup required

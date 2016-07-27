@@ -16,7 +16,7 @@ void liveMenuBackground() {
 /* Draws the title in the live menu */
 void liveMenuTitle(char* title) {
 	display.setFont(bigFont);
-	display.setBackColor(126, 126, 126);
+	display.setBackColor(127, 127, 127);
 	display.setColor(VGA_WHITE);
 	display.print(title, CENTER, 14);
 }
@@ -33,21 +33,32 @@ void liveMenuSelection(char* selection) {
 }
 
 /* Calibration*/
-void calibrationScreen() {
-	//Title & Background
-	liveMenuBackground();
-	liveMenuTitle((char*)"Calibrating..");
-	display.setColor(VGA_WHITE);
-	display.setBackColor(153, 162, 163);
-	display.setFont(smallFont);
-	display.print((char*)"Point the camera to different", CENTER, 63);
-	display.print((char*)"hot and cold object in the area.", CENTER, 96);
-	touchButtons.deleteAllButtons();
-	touchButtons.setTextFont(bigFont);
-	touchButtons.addButton(90, 188, 140, 40, (char*) "Abort");
-	touchButtons.drawButtons();
-	display.setFont(bigFont);
-	display.print((char*) "Status:  0%", CENTER, 140);
+void calibrationScreen(bool firstStart) {
+	//Normal mode
+	if (firstStart == false) {
+		liveMenuBackground();
+		liveMenuTitle((char*)"Calibrating..");
+		display.setColor(VGA_WHITE);
+		display.setBackColor(153, 162, 163);
+		display.setFont(smallFont);
+		display.print((char*)"Point the camera to different", CENTER, 63);
+		display.print((char*)"hot and cold object in the area.", CENTER, 96);
+		touchButtons.deleteAllButtons();
+		touchButtons.setTextFont(bigFont);
+		touchButtons.addButton(90, 188, 140, 40, (char*) "Abort");
+		touchButtons.drawButtons();
+		display.setFont(bigFont);
+		display.print((char*) "Status:  0%", CENTER, 140);
+	}	
+	//First start
+	else {
+		display.fillScr(127, 127, 127);
+		display.setFont(bigFont);
+		display.setBackColor(127, 127, 127);
+		display.setColor(VGA_WHITE);
+		display.print((char*) "Calibrating..", CENTER, 100);
+		display.print((char*) "Status:  0%", CENTER, 140);
+	}
 }
 
 /* Calibration Repeat Choose */
@@ -114,8 +125,9 @@ bool calibrationChooser() {
 			//DELETE
 			else if (pressedButton == 1) {
 				calSlope = cal_stdSlope;
+				calOffset = mlx90614Amb - (calSlope * 8192) + calComp;
 				calStatus = cal_standard;
-				storeCalSlope();
+				storeCalibration();
 				return true;
 				break;
 			}
@@ -182,7 +194,7 @@ void hotColdChooserHandler() {
 			}
 			//Prepare the preview image
 			delay(10);
-			if(pressedButton != 0)
+			if (pressedButton != 0)
 				createThermalImg();
 			//Display the preview image
 			display.drawBitmap(80, 40, 160, 120, image, 1);
@@ -578,7 +590,7 @@ void liveMenuColorString(int pos) {
 bool changeColor() {
 	//Save the current position inside the menu
 	byte changeColorPos = colorScheme;
-	redraw:
+redraw:
 	//Background
 	liveMenuBackground();
 	//Title
@@ -598,7 +610,7 @@ bool changeColor() {
 			//SELECT
 			if (pressedButton == 3) {
 				//If hot or cold chosen and still in warmup
-				if (((changeColorPos == colorScheme_coldest) || (changeColorPos == colorScheme_hottest)) && (calStatus == cal_warmup)){
+				if (((changeColorPos == colorScheme_coldest) || (changeColorPos == colorScheme_hottest)) && (calStatus == cal_warmup)) {
 					drawMessage((char*) "Please wait for sensor warmup!");
 					delay(1500);
 					goto redraw;
@@ -670,7 +682,7 @@ bool changeMode() {
 			//SELECT
 			if (pressedButton == 3) {
 				//Change camera resolution
-				if(changeDisplayMode == displayMode_thermal)
+				if (changeDisplayMode == displayMode_thermal)
 					changeCamRes(VC0706_640x480);
 				else
 					changeCamRes(VC0706_160x120);
@@ -762,9 +774,9 @@ void liveMenuDisplayString(int pos) {
 		break;
 		//Filter
 	case 7:
-		if(filterType == filterType_box)
+		if (filterType == filterType_box)
 			text = (char*) "Box-Filter";
-		else if(filterType == filterType_gaussian)
+		else if (filterType == filterType_gaussian)
 			text = (char*) "Gaus-Filter";
 		else
 			text = (char*) "No Filter";

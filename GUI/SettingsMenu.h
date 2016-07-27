@@ -740,6 +740,83 @@ void rotateDisplayMenu(bool firstStart = false) {
 	}
 }
 
+/* Helps to adjust the focus */
+void adjustCamFocus() {
+	String text[7];
+	//Hint screen for the live mode #1 
+	text[0] = "Adjust focus";
+	text[1] = "This wizard will help you";
+	text[2] = "to adjust the focus of your";
+	text[3] = "visual camera. Rotate the lense";
+	text[4] = "of the camera module, until";
+	text[5] = "the shown image is really sharp.";
+	text[6] = "Then touch the screen to continue.";
+	infoScreen(text);
+	//Set text color
+	display.setFont(smallFont);
+	display.setColor(VGA_WHITE);
+	display.setBackColor(VGA_TRANSPARENT);
+	//Show the camera image until touch
+	while (true) {
+		//Display visual img
+		createVisualImg();
+		showImage();
+		//Show touch hint
+		display.print((char*)"Hold touch to continue", CENTER, 210);
+		//Abort if screen touched
+		if (touch.touched())
+			break;
+	}
+}
+
+/* Helps to adjust the alignment to the thermal image */
+void adjustCamAlignment() {
+	String text[7];
+	//Hint screen for the live mode #1 
+	text[0] = "Adjust alignment";
+	text[1] = "In the next step, you can";
+	text[2] = "check and improve the alignment";
+	text[3] = "of the visual to the thermal image.";
+	text[4] = "Use some of the beveled washers and";
+	text[5] = "put them between the Lepton module and";
+	text[6] = "PCB to adjust the vertical alignment.";
+	infoScreen(text);
+	//Wait until touch release
+	while (touch.touched());
+	//Show the combined image until touch
+	combinedDecomp = true;
+	//Change color scheme
+	colorMap = colorMap_rainbow;
+	colorElements = 256;
+	//Set text color
+	display.setFont(smallFont);
+	display.setColor(VGA_WHITE);
+	display.setBackColor(VGA_TRANSPARENT);
+	while (true) {
+		//Display combined img
+		createCombinedImg();
+		showImage();
+		//Show touch hint
+		display.print((char*)"Hold touch to continue", CENTER, 210);
+		//Abort if screen touched
+		if (touch.touched())
+			break;
+	}
+	combinedDecomp = false;
+}
+
+/* Helps to adjust the visual camera */
+void adjustCam() {
+	//Change camera resolution to 160x120
+	changeCamRes(VC0706_160x120);
+	//Adjust the focus
+	adjustCamFocus();
+	//Adjust the alignment
+	adjustCamAlignment();
+	//Restore camera resolution to 640x480
+	changeCamRes(VC0706_640x480);
+}
+
 /* Adjust the visual camera menu */
 void adjustVisualCamMenu() {
 	//Title & Background

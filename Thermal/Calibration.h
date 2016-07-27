@@ -76,8 +76,12 @@ void checkWarmup() {
 		//Perform FFC if shutter is attached
 		if (leptonVersion != leptonVersion_2_NoShutter)
 			leptonRunCalibration();
-		//Set calibration status to standard
-		calStatus = cal_standard;
+		//Set calibration status to standard for new HW
+		if (mlx90614Version == mlx90614Version_new)
+			calStatus = cal_standard;
+		//Set calibration status to manual for old HW
+		else if(mlx90614Version == mlx90614Version_old)
+			calStatus = cal_manual;
 	}
 }
 
@@ -121,7 +125,7 @@ int linreg(int n, const uint16_t x[], const float y[], float* m, float* b, float
 }
 
 /* Run the calibration process */
-void calibrationProcess() {
+void calibrationProcess(bool firstStart) {
 	//Variables
 	float calMLX90614[100];
 	uint16_t calLepton[100];
@@ -136,7 +140,7 @@ void calibrationProcess() {
 	//Repeat as long as there is a good calibration
 	do {
 		//Show the screen
-		calibrationScreen();
+		calibrationScreen(firstStart);
 		//Reset counter to zero
 		int counter = 0;
 
@@ -179,8 +183,8 @@ void calibrationProcess() {
 
 			//Wait at least 111ms between two measurements (9Hz)
 			while ((millis() - timeElapsed) < 111);
-			//If the user wants to abort
-			if (touch.touched() == true) {
+			//If the user wants to abort and is not in first start
+			if ((touch.touched() == true) && (firstStart == false)) {
 				int pressedButton = touchButtons.checkButtons(true);
 				//Abort
 				if (pressedButton == 0) {
@@ -196,15 +200,15 @@ void calibrationProcess() {
 		//Set compensation to zero
 		calComp = 0;
 
-		//Show the result
-		sprintf(result, "Slope: %1.4f, offset: %.1f", calSlope, calOffset);
-		drawMessage(result);
-		delay(2000);
-
 		//In case the calibration was not good, ask to repeat
 		if (calCorrelation < 0.5) {
+			//When in first start mode
+			if (firstStart) {
+				drawMessage((char*) "Bad calibration, try again!");
+				delay(1000);
+			}
 			//If the user does not want to repeat, discard
-			if (!calibrationRepeat()) {
+			else if (!calibrationRepeat()) {
 				calSlope = cal_stdSlope;
 				calStatus = cal_standard;
 				break;
@@ -212,12 +216,18 @@ void calibrationProcess() {
 		}
 	} while (calCorrelation < 0.5);
 
-	//Save to EEPROM
-	storeCalSlope();
-	//Show message
-	drawMessage((char*) "Calibration written to EEPROM!");
-	delay(1000);
+	//Show the result
+	sprintf(result, "Slope: %1.4f, offset: %.1f", calSlope, calOffset);
+	drawMessage(result);
+	delay(2000);
 
+	//Save calibration to EEPROM
+	storeCalibration();
+	//Show message if not in first start menu
+	if (firstStart == false) {
+		drawMessage((char*) "Calibration written to EEPROM!");
+		delay(1000);
+	}
 	//Restore old font
 	display.setFont(smallFont);
 }
@@ -225,8 +235,8 @@ void calibrationProcess() {
 /* Calibration */
 bool calibrate() {
 	//Still in warmup
-	if ((millis() - calTimer) < 300000) {
-		drawMessage((char*) "Please wait 5 minutes after startup!");
+	if (calStatus == cal_warmup) {
+		drawMessage((char*) "Please wait for sensor warmup!");
 		delay(1500);
 		return false;
 	}

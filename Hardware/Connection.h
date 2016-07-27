@@ -29,6 +29,8 @@
 #define CMD_SHUTTERMANUAL 122
 #define CMD_SHUTTERSTATE  123
 #define CMD_BATTERYSTATUS 124
+#define CMD_SETCALSLOPE   125
+#define CMD_SETCALOFFSET  126
 
 //Serial frame commands
 #define CMD_RAWFRAME      150
@@ -178,6 +180,28 @@ void setTime() {
 	}
 }
 
+/* Sets the calibration offset */
+void setCalOffset() {
+	uint8_t farray[4];
+	//Read calibration offset
+	for (int i = 0; i < 4; i++)
+		farray[i] = Serial.read();
+	calOffset = bytesToFloat(farray);
+	//Store to EEPROM
+	storeCalibration();
+}
+
+/* Sets the calibration slope */
+void setCalSlope() {
+	uint8_t farray[4];
+	//Read calibration slope
+	for (int i = 0; i < 4; i++)
+		farray[i] = Serial.read();
+	calSlope = bytesToFloat(farray);
+	//Store to EEPROM
+	storeCalibration();
+}
+
 /* Send the temperature points */
 void sendTempPoints() {
 	for (int i = 0; i < 192; i++) {
@@ -310,6 +334,18 @@ bool serialHandler() {
 		//Send battery status
 	case CMD_BATTERYSTATUS:
 		sendBatteryStatus();
+		break;
+		//Set calibration offset
+	case CMD_SETCALOFFSET:
+		setCalOffset();
+		//Send ACK
+		Serial.write(CMD_SETCALOFFSET);
+		break;
+		//Set calibration slope
+	case CMD_SETCALSLOPE:
+		setCalSlope();
+		//Send ACK
+		Serial.write(CMD_SETCALSLOPE);
 		break;
 		//Send raw frame
 	case CMD_RAWFRAME:

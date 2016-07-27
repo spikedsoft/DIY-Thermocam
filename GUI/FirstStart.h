@@ -21,7 +21,7 @@ void welcomeScreen() {
 }
 
 /* Shows an info screen during the first start procedure */
-void infoScreen(String* text, bool Continue = true) {
+void infoScreen(String* text, bool Continue) {
 	display.fillScr(127, 127, 127);
 	display.setBackColor(127, 127, 127);
 	display.setFont(bigFont);
@@ -78,21 +78,6 @@ void tempFormatScreen() {
 	tempFormatMenu(true);
 }
 
-/* Setting screen for the display rotation */
-void dispRotationScreen() {
-	String text[7];
-	text[0] = "Set Disp. rotation";
-	text[1] = "In the next screen, you can";
-	text[2] = "enable the display rotation.";
-	text[3] = "Activate this option for a ";
-	text[4] = "180 degree rotated view, for";
-	text[5] = "example when you mount the";
-	text[6] = "device under a drone.";
-	infoScreen(text);
-	//Display rotation
-	rotateDisplayMenu(true);
-}
-
 /* Setting screen for the convert image option */
 void convertImageScreen() {
 	String text[7];
@@ -121,6 +106,21 @@ void visualImageScreen() {
 	infoScreen(text);
 	//Visual image
 	visualImageMenu(true);
+}
+
+/* Setting screen for the calibration procedure */
+void calibrationScreen() {
+	String text[7];
+	text[0] = "Calibration process";
+	text[1] = "For the raw-to-absolute temp con-";
+	text[2] = "version, you have to do a calibration";
+	text[3] = "first. Point the device to different ";
+	text[4] = "hot and cold objects slowly, so that";
+	text[5] = "the objects cover both the spot sensor";
+	text[6] = "and the LWIR sensor at once.";
+	infoScreen(text);
+	//Calibration procedure
+	calibrationProcess(true);
 }
 
 /* Show the first start complete screen */
@@ -180,82 +180,6 @@ void adjustCamComplete() {
 	while (true);
 }
 
-/* Helps to adjust the focus */
-void adjustCamFocus() {
-	String text[7];
-	//Hint screen for the live mode #1 
-	text[0] = "Adjust focus";
-	text[1] = "This wizard will help you";
-	text[2] = "to adjust the focus of your";
-	text[3] = "visual camera. Rotate the lense";
-	text[4] = "of the camera module, until";
-	text[5] = "the shown image is really sharp.";
-	text[6] = "Then touch the screen to continue.";
-	infoScreen(text);
-	//Set text color
-	display.setFont(smallFont);
-	display.setColor(VGA_WHITE);
-	display.setBackColor(VGA_TRANSPARENT);
-	//Show the camera image until touch
-	while (true) {
-		//Display visual img
-		createVisualImg();
-		showImage();
-		//Show touch hint
-		display.print((char*)"Hold touch to continue", CENTER, 210);
-		//Abort if screen touched
-		if (touch.touched())
-			break;
-	}
-}
-
-/* Helps to adjust the alignment to the thermal image */
-void adjustCamAlignment() {
-	String text[7];
-	//Hint screen for the live mode #1 
-	text[0] = "Adjust alignment";
-	text[1] = "In the next step, you can";
-	text[2] = "check and improve the alignment";
-	text[3] = "of the visual to the thermal image.";
-	text[4] = "Use some of the beveled washers and";
-	text[5] = "put them between the Lepton module and";
-	text[6] = "PCB to adjust the vertical alignment.";
-	infoScreen(text);
-	//Wait until touch release
-	while (touch.touched());
-	//Show the combined image until touch
-	combinedDecomp = true;
-	//Change color scheme
-	colorMap = colorMap_rainbow;
-	colorElements = 256;
-	//Set text color
-	display.setFont(smallFont);
-	display.setColor(VGA_WHITE);
-	display.setBackColor(VGA_TRANSPARENT);
-	while (true) {
-		//Display combined img
-		createCombinedImg();
-		showImage();
-		//Show touch hint
-		display.print((char*)"Hold touch to continue", CENTER, 210);
-		//Abort if screen touched
-		if (touch.touched())
-			break;
-	}
-	combinedDecomp = false;
-}
-
-/* Helps to adjust the visual camera */
-void adjustCam() {
-	//Change camera resolution to 160x120
-	changeCamRes(VC0706_160x120);
-	//Adjust the focus
-	adjustCamFocus();
-	//Adjust the alignment
-	adjustCamAlignment();
-	//Restore camera resolution to 640x480
-	changeCamRes(VC0706_640x480);
-}
 
 /* Set the EEPROM values to default for the first time */
 void stdEEPROMSet() {
@@ -269,6 +193,7 @@ void stdEEPROMSet() {
 	//Set spot emissivity to 0.9
 	mlx90614SetEmissivity();
 	//Set device EEPROM settings
+	EEPROM.write(eeprom_rotationEnabled, false);
 	EEPROM.write(eeprom_spotEnabled, true);
 	EEPROM.write(eeprom_colorbarEnabled, true);
 	EEPROM.write(eeprom_batteryEnabled, false);
@@ -280,16 +205,15 @@ void stdEEPROMSet() {
 	//Set Color Scheme to Rainbow
 	EEPROM.write(eeprom_colorScheme, colorScheme_rainbow);
 	//Set filter type to box blur
-	EEPROM.write(eeprom_filterType, filterType_box);
+	EEPROM.write(eeprom_filterType, filterType_gaussian);
 	//Set mass storage to false
 	EEPROM.write(eeprom_massStorage, false);
-	//Set the calibration slope
-	calSlope = cal_stdSlope;
-	storeCalSlope();
 	//Set current firmware version
 	EEPROM.write(eeprom_fwVersion, fwVersion);
 	//Set first start marker to true
 	EEPROM.write(eeprom_firstStart, eeprom_setValue);
+	//Set live helper to false to show it the next time
+	EEPROM.write(eeprom_liveHelper, false);
 }
 
 /* First start setup*/
@@ -300,18 +224,14 @@ void firstStart() {
 	timeDateScreen();
 	//Hint screen for temperature format setting
 	tempFormatScreen();
-	//Hint screen for display rotation setting
-	dispRotationScreen();
 	//Hint screen for the convert image settings
 	convertImageScreen();
 	//Hint screen for the visual image settings
 	visualImageScreen();
-	//Adjust camera wizard
-	adjustCam();
+	//Do the first time calibration
+	calibrationScreen();
 	//Set EEPROM values
 	stdEEPROMSet();
-	//Set live helper to false to show it the next time
-	EEPROM.write(eeprom_liveHelper, false);
 	//Show completion message
 	firstStartComplete();
 }
