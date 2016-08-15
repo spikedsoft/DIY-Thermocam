@@ -183,6 +183,9 @@ public:
 	void setRotation(uint8_t m);
 	int  getDisplayXSize();
 	int	 getDisplayYSize();
+	
+	void writeRect2BPP(int16_t x, int16_t y, int16_t w, int16_t h, const uint8_t *pixels, const uint16_t * palette);
+	void writeRect4BPP(int16_t x, int16_t y, int16_t w, int16_t h, const uint8_t *pixels, const uint16_t * palette);
 
 	unsigned short* imagePtr;
 	bool writeToImage = false;
@@ -222,6 +225,8 @@ public:
 		writecommand_last(ILI9341_SLPOUT);
 		SPI.endTransaction();
 	}
+
+	
 
 	// Read Pixel at x,y and get back 16-bit packed color
 	uint16_t readPixel(int16_t x, int16_t y)

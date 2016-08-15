@@ -223,8 +223,8 @@ void convertColors() {
 	}
 }
 
-/* Create the combined image display */
-void createCombinedImg() {
+/* Create the visual or combined image display */
+void createVisCombImg() {
 	//Send capture command
 	captureVisualImage();
 	//Receive the temperatures over SPI
@@ -246,21 +246,6 @@ void createCombinedImg() {
 	convertColors();
 	//Get the visual image and decompress it combined
 	getVisualImage();
-
-}
-
-/* Create the visual image display */
-void createVisualImg() {
-	//Send capture command
-	captureVisualImage();
-	//Get the visual image and decompress it
-	getVisualImage();
-	//Get & refresh the temp points if required
-	if (pointsEnabled) {
-		getTemperatures();
-		compensateCalib();
-		refreshTempPoints();
-	}
 }
 
 /* Creates a thermal image and stores it in the array */
@@ -281,15 +266,9 @@ void createThermalImg(bool menu) {
 			limitValues();
 	}
 
-	//If image save
-	if (imgSave == imgSave_create) {
-		//Check the requirements for image save
-		checkImageSave();
-		//Build save filename from the current time & date
-		createSDName(saveFilename);
-		//Save the raw data
+	//If image save, save the raw data
+	if (imgSave == imgSave_create) 
 		saveRawData(true, saveFilename);
-	}
 		
 	//Apply low-pass filter
 	if (filterType == filterType_box)
@@ -328,23 +307,16 @@ void getTouchPos(int* x, int* y) {
 /* Function to add or remove a measurement point */
 void tempPointFunction(bool remove) {
 	int x, y;
-	//Create the content depending on the mode
-	switch (displayMode) {
-		//Thermal only
-	case displayMode_thermal:
+
+	//Create thermal image
+	if (displayMode == displayMode_thermal)
 		createThermalImg();
-		break;
-		//Visual only
-	case displayMode_visual:
-		createVisualImg();
-		break;
-		//Combined
-	case displayMode_combined:
-		createCombinedImg();
-		break;
-	}
+	//Create visual or combined image
+	else
+		createVisCombImg();
 	//Show it on the screen
 	showImage();
+
 	//Set text color, font and background
 	display.setColor(VGA_WHITE);
 	display.setBackColor(VGA_TRANSPARENT);

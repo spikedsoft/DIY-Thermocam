@@ -331,11 +331,8 @@ void storeCalibration() {
 	for (int i = 0; i < 4; i++)
 		EEPROM.write(eeprom_calSlopeBase + i, (farray[i]));
 	EEPROM.write(eeprom_calSlopeSet, eeprom_setValue);
-	//Store offset
-	floatToBytes(farray, (float)calOffset);
-	for (int i = 0; i < 4; i++)
-		EEPROM.write(eeprom_calOffsetBase + i, (farray[i]));
-	EEPROM.write(eeprom_calOffsetSet, eeprom_setValue);
+	//Set calibration to manual
+	calStatus = cal_manual;
 }
 
 /* Reads the calibration slope from EEPROM */
@@ -345,12 +342,6 @@ void readCalibration() {
 	for (int i = 0; i < 4; i++)
 		farray[i] = EEPROM.read(eeprom_calSlopeBase + i);
 	calSlope = bytesToFloat(farray);
-	//Read offset
-	if (EEPROM.read(eeprom_calOffsetSet) == eeprom_setValue) {
-		for (int i = 0; i < 4; i++)
-			farray[i] = EEPROM.read(eeprom_calOffsetBase + i);
-		calOffset = bytesToFloat(farray);
-	}
 }
 
 /* Reads the old settings from EEPROM */

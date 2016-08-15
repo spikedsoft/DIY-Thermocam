@@ -69,8 +69,6 @@
 #define eeprom_displayMode 117
 #define eeprom_calSlopeSet 130
 #define eeprom_calSlopeBase 131 //4 Byte (131-134)
-#define eeprom_calOffsetSet 135
-#define eeprom_calOffsetBase 136 //4 Byte (136-139)
 #define eeprom_firstStart 150
 #define eeprom_liveHelper 151
 #define eeprom_fwVersion 250

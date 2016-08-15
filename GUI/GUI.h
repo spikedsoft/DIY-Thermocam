@@ -2,6 +2,8 @@
 * Main Methods to display the Graphical-User-Interface
 */
 
+#include "Bitmaps.h"
+
 /* Draw a message on the screen */
 void drawMessage(char* message) {
 	display.fillScr(127, 127, 127);
@@ -134,11 +136,12 @@ void bootScreen() {
 	touchButtons.setTextFont(smallFont);
 	display.setFont(smallFont);
 	//Draw Screen
-	display.fillScr(127, 127, 127);
+	display.fillScr(255, 255, 255);
 	display.setFont(bigFont);
-	display.setBackColor(127, 127, 127);
-	display.setColor(VGA_WHITE);
-	display.print((char*) "Booting..", CENTER, 110);
+	display.setBackColor(255, 255, 255);
+	display.setColor(VGA_BLACK);
+	display.writeRect4BPP(90, 35, 140, 149, logoBitmap, logoColors);
+	display.print((char*) "Booting", CENTER, 194);
 	display.setFont(smallFont);
 	display.print((char*)"DIY-Thermocam", CENTER, 10);
 	display.print((char*)Version, CENTER, 220);

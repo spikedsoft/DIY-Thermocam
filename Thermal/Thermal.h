@@ -430,24 +430,23 @@ void liveMode() {
 		}
 
 		//Check if the save message needs to be shown
-		if (imgSave == imgSave_set)
-			showSaveMessage();
-
-		//Create the content depending on the mode
-		switch (displayMode) {
-			//Thermal only
-		case displayMode_thermal:
-			createThermalImg();
-			break;
-			//Visual only
-		case displayMode_visual:
-			createVisualImg();
-			break;
-			//Combined
-		case displayMode_combined:
-			createCombinedImg();
-			break;
+		if (imgSave == imgSave_set) {
+			//Check the requirements for image save
+			checkImageSave();
+			if (imgSave != imgSave_disabled) {
+				//Build save filename from the current time & date
+				createSDName(saveFilename);
+				//Show save message
+				showSaveMessage();
+			}
 		}
+			
+		//Create thermal image
+		if (displayMode == displayMode_thermal)
+			createThermalImg();
+		//Create visual or combined image
+		else
+			createVisCombImg();
 
 		//Display additional information
 		if (imgSave != imgSave_set)

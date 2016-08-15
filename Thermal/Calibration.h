@@ -15,11 +15,6 @@ float calFunction(uint16_t rawValue) {
 		calOffset = mlx90614Amb - (calSlope * 8192) + calComp;
 	//Calculate the temperature in Celcius out of the coefficients
 	float temp = (calSlope * rawValue) + calOffset;
-	//Limit to minimum and maximum value
-	if (temp > 200)
-		temp = 200;
-	if (temp < -40)
-		temp = -40;
 	//Convert to Fahrenheit if needed
 	if (tempFormat == tempFormat_fahrenheit)
 		temp = celciusToFahrenheit(temp);
@@ -52,8 +47,8 @@ void compensateCalib() {
 	//Convert to Fahrenheit if needed
 	if (tempFormat == tempFormat_fahrenheit)
 		mlx90614Temp = celciusToFahrenheit(mlx90614Temp);
-	//Apply compensation if AGC enabled, no limited locked and no manual calib
-	if ((agcEnabled) && (!limitsLocked) && (calStatus != cal_manual)) {
+	//Apply compensation if AGC enabled, no limited locked and standard calib
+	if ((agcEnabled) && (!limitsLocked) && (calStatus == cal_standard)) {
 		//Calculate min & max
 		float min = calFunction(minTemp);
 		float max = calFunction(maxTemp);
@@ -65,7 +60,7 @@ void compensateCalib() {
 			calComp = mlx90614Temp - max;
 	}
 	//Calculate offset out of ambient temp when no calib is done
-	if (calStatus != cal_manual)
+	if (calStatus != cal_standard)
 		calOffset = mlx90614Amb - (calSlope * 8192) + calComp;
 }
 
@@ -80,7 +75,7 @@ void checkWarmup() {
 		if (mlx90614Version == mlx90614Version_new)
 			calStatus = cal_standard;
 		//Set calibration status to manual for old HW
-		else if(mlx90614Version == mlx90614Version_old)
+		else
 			calStatus = cal_manual;
 	}
 }

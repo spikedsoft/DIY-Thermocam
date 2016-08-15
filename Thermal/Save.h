@@ -244,9 +244,8 @@ void saveImage() {
 		captureVisualImage();
 
 	//Save Bitmap image if activated or in visual / combined mode
-	if ((convertEnabled == true) || (displayMode == displayMode_visual) || (displayMode == displayMode_combined)) {
+	if ((convertEnabled == true) || (displayMode == displayMode_visual) || (displayMode == displayMode_combined))
 		saveDisplayImage(saveFilename);
-	}
 
 	//Eventually save optical image
 	if ((visualEnabled == true) && (displayMode == displayMode_thermal)) {
@@ -328,6 +327,8 @@ void proccessVideoFrames(uint16_t framesCaptured, char* dirname) {
 		loadRawData(filename, dirname);
 		//Display Raw Data
 		displayRawData();
+		//Set font size to small
+		display.setFont(smallFont);
 		//Show the image number
 		sprintf(buffer, "%5d / %-5d", count + 1, framesCaptured);
 		display.setColor(VGA_WHITE);

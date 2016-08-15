@@ -53,18 +53,18 @@ int getLipoPerc(float vol) {
 /* Measure the battery voltage and convert it to percent */
 void checkBattery(bool start = false) {
 	//Read battery voltage
-	float vBat = (batMeasure->analogRead(pin_bat_measure) * 1.47 * 3.3) / batMeasure->getMaxValue(ADC_0) + 0.25;
+	float vBat = (batMeasure->analogRead(pin_bat_measure) * 1.5 * 3.3) / batMeasure->getMaxValue(ADC_0);
 	//Check if the USB is connected
-	float vUSB = (batMeasure->analogRead(pin_usb_measure) * 1.47 * 3.3) / batMeasure->getMaxValue(ADC_0);
+	float vUSB = (batMeasure->analogRead(pin_usb_measure) * 1.5 * 3.3) / batMeasure->getMaxValue(ADC_0);
 	//If the battery gauge is not working
-	if ((vBat == -1) && (vUSB <= 4.0)) {
+	if ((vBat == -1) && (vUSB <= 1.0)) {
 		drawMessage((char*) "Battery gauge is not working!");
 		delay(1000);
 		setDiagnostic(diag_bat);
 	}
 	//If not connected, add some value to correct it
-	if (vUSB <= 4.0)
-		vBat += 0.1;
+	if (vUSB <= 1.0)
+		vBat += 0.05;
 	//Calculate the percentage
 	batPercentage = getLipoPerc(vBat);
 }

@@ -183,6 +183,43 @@ void UTFT::fillRect(int x1, int y1, int x2, int y2) {
 	SPI.endTransaction();
 }
 
+void UTFT::writeRect4BPP(int16_t x, int16_t y, int16_t w, int16_t h, const uint8_t *pixels, const uint16_t * palette)
+{
+	SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
+	setAddr(x, y, x + w - 1, y + h - 1);
+	writecommand_cont(ILI9341_RAMWR);
+	for (y = h; y>0; y--) {
+		for (x = w; x>2; x -= 2) {
+			writedata16_cont(palette[((*pixels) >> 4) & 0xF]);
+			writedata16_cont(palette[(*pixels++) & 0xF]);
+		}
+		writedata16_cont(palette[((*pixels) >> 4) & 0xF]);
+		writedata16_last(palette[(*pixels++) & 0xF]);
+	}
+	SPI.endTransaction();
+}
+
+void UTFT::writeRect2BPP(int16_t x, int16_t y, int16_t w, int16_t h, const uint8_t *pixels, const uint16_t * palette)
+{
+	SPI.beginTransaction(SPISettings(SPICLOCK, MSBFIRST, SPI_MODE0));
+	setAddr(x, y, x + w - 1, y + h - 1);
+	writecommand_cont(ILI9341_RAMWR);
+	for (y = h; y>0; y--) {
+		for (x = w; x>4; x -= 4) {
+			//unrolled loop might be faster?
+			writedata16_cont(palette[((*pixels) >> 6) & 0x3]);
+			writedata16_cont(palette[((*pixels) >> 4) & 0x3]);
+			writedata16_cont(palette[((*pixels) >> 2) & 0x3]);
+			writedata16_cont(palette[(*pixels++) & 0x3]);
+		}
+		writedata16_cont(palette[((*pixels) >> 6) & 0x3]);
+		writedata16_cont(palette[((*pixels) >> 4) & 0x3]);
+		writedata16_cont(palette[((*pixels) >> 2) & 0x3]);
+		writedata16_last(palette[(*pixels++) & 0x3]);
+	}
+	SPI.endTransaction();
+}
+
 void UTFT::drawRoundRect(int x1, int y1, int x2, int y2) {
 	if (x1 > x2) {
 		swap(int, x1, x2);

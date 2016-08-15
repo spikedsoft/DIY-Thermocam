@@ -759,7 +759,7 @@ void adjustCamFocus() {
 	//Show the camera image until touch
 	while (true) {
 		//Display visual img
-		createVisualImg();
+		createVisCombImg();
 		showImage();
 		//Show touch hint
 		display.print((char*)"Hold touch to continue", CENTER, 210);
@@ -794,7 +794,7 @@ void adjustCamAlignment() {
 	display.setBackColor(VGA_TRANSPARENT);
 	while (true) {
 		//Display combined img
-		createCombinedImg();
+		createVisCombImg();
 		showImage();
 		//Show touch hint
 		display.print((char*)"Hold touch to continue", CENTER, 210);

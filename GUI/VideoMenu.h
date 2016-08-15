@@ -175,35 +175,25 @@ void videoCaptureInterval(int16_t* remainingTime, uint16_t* framesCaptured, char
 	//Measure time it takes to display everything
 	long measure = millis();
 	char buffer[30];
-	if ((*remainingTime == 0) || (*framesCaptured == 0)) {
-		//Show save message
-		if (*framesCaptured != 0)
-			showMsg((char*)"Saving frame..");
+
+	//If there is no more time or the first frame, capture it
+	if ((*remainingTime == 0) || (*framesCaptured == 0)){
+
 		//Send capture command to camera if activated and there is enough time
 		if ((visualEnabled) && (videoInterval >= 10))
 			captureVisualImage();
-		//Receive the temperatures over SPI
-		getTemperatures();
-		//Compensate calibration with object temp
-		compensateCalib();
-		//Refresh the temp points if required
-		if (pointsEnabled)
-			refreshTempPoints();
-		//Find min and max if not in manual mode and limits not locked
-		if ((agcEnabled) && (!limitsLocked)) {
-			//Limit values if we are in the menu or not in cold/hot mode
-			if ((colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest))
-				limitValues();
-		}
+
 		//Save video raw frame
 		saveRawData(false, dirname, *framesCaptured);
+
+		//Refresh capture
 		refreshCapture();
+		//Display title
+		display.setFont(bigFont);
+		display.print((char*) "Interval capture", CENTER, 20);
+
 		//Save visual image if activated
 		if ((visualEnabled) && (videoInterval >= 10)) {
-			//Display message
-			display.setFont(bigFont);
-			display.print((char*) "Interval capture", CENTER, 20);
-			showMsg((char*) "Save Visual..");
 			//Create filename to save data
 			char filename[] = "00000.JPG";
 			frameFilename(filename, *framesCaptured);
@@ -214,12 +204,24 @@ void videoCaptureInterval(int16_t* remainingTime, uint16_t* framesCaptured, char
 			//Reset counter
 			int16_t elapsed = (millis() - measure) / 1000;
 			*remainingTime = videoInterval - elapsed;
+			//Display message
+			sprintf(buffer, "Saving thermal + visual now!");
+			display.setFont(smallFont);
+			display.print(buffer, CENTER, 210);
 		}
-		else
+		else {
 			*remainingTime = videoInterval;
+			//Display message
+			sprintf(buffer, "Saving thermal frame now!");
+			display.setFont(smallFont);
+			display.print(buffer, CENTER, 210);
+		}
+			
 		//Raise capture counter
 		*framesCaptured = *framesCaptured + 1;
 	}
+
+	//Show waiting time
 	else {
 		//Refresh display content
 		refreshCapture();
@@ -230,31 +232,19 @@ void videoCaptureInterval(int16_t* remainingTime, uint16_t* framesCaptured, char
 		sprintf(buffer, "Saving next frame in %d second(s)", *remainingTime);
 		display.setFont(smallFont);
 		display.print(buffer, CENTER, 210);
+		//Wait rest of the time
+		measure = millis() - measure;
+		if (measure < 1000)
+			delay(1000 - measure);
+		//Decrease remaining time by one
+		*remainingTime -= 1;
 	}
-	//Wait rest of the time
-	measure = millis() - measure;
-	if (measure < 1000)
-		delay(1000 - measure);
-	//Decrease remaining time by one
-	*remainingTime -= 1;
 }
 
 /* Captures video frames normal */
 void videoCaptureNormal(uint16_t* framesCaptured, char* dirname) {
 	char buffer[30];
-	//Receive the temperatures over SPI
-	getTemperatures();
-	//Compensate calibration with object temp
-	compensateCalib();
-	//Refresh the temp points if required
-	if (pointsEnabled)
-		refreshTempPoints();
-	//Find min and max if not in manual mode and limits not locked
-	if ((agcEnabled) && (!limitsLocked)) {
-		//Limit values if we are in the menu or not in cold/hot mode
-		if ((colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest))
-			limitValues();
-	}
+	
 	//Save video raw frame
 	saveRawData(false, dirname, *framesCaptured);
 	//Raise capture counter
@@ -287,11 +277,27 @@ void videoCapture() {
 	display.setBackColor(VGA_TRANSPARENT);
 	//Main loop
 	while (videoSave) {
+
 		//Touch - turn display on or off
 		if (!digitalRead(pin_touch_irq)) {
 			digitalWrite(pin_lcd_backlight, !(checkScreenLight()));
 			while (!digitalRead(pin_touch_irq));
 		}
+
+		//Receive the temperatures over SPI
+		getTemperatures();
+		//Compensate calibration with object temp
+		compensateCalib();
+		//Refresh the temp points if required
+		if (pointsEnabled)
+			refreshTempPoints();
+		//Find min and max if not in manual mode and limits not locked
+		if ((agcEnabled) && (!limitsLocked)) {
+			//Limit values if we are in the menu or not in cold/hot mode
+			if ((colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest))
+				limitValues();
+		}
+
 		//Normal  mode
 		if (videoInterval == 0)
 			videoCaptureNormal(&framesCaptured, dirname);
@@ -299,6 +305,7 @@ void videoCapture() {
 		else {
 			videoCaptureInterval(&delayTime, &framesCaptured, dirname);
 		}
+
 		//Maximum amount of frames reached or disk space out, return
 		if ((framesCaptured == 65535) || (getSDSpace() < 1000)) {
 			drawMessage((char*) "Not enough space, abort!");
@@ -309,7 +316,7 @@ void videoCapture() {
 	if (!checkScreenLight())
 		enableScreenLight();
 	//Post processing for interval videos if enabled
-	if ((framesCaptured > 0)  && (videoInterval != 0)) {
+	if ((framesCaptured > 0) && (videoInterval != 0)) {
 		videoSave = true;
 		//Ask the user if he wants to convert that video
 		if (convertPrompt(true)) {
@@ -317,9 +324,11 @@ void videoCapture() {
 			delay(1000);
 			//Attach the Button interrupt
 			attachInterrupt(pin_button, buttonIRQ, RISING);
+			//Process video frames
 			proccessVideoFrames(framesCaptured, dirname);
 		}
 	}
+	//Show finished message
 	else {
 		drawMessage((char*) "Video capture finished !");
 		delay(1000);
