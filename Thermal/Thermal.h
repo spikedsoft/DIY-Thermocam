@@ -24,10 +24,23 @@ void touchIRQ() {
 			while ((!digitalRead(pin_touch_irq)) && (endTime <= 1000))
 				endTime = millis() - startTime;
 		}
+
 		endTime = millis() - startTime;
 		//Short press - show menu
 		if (endTime < 1000)
+		{
+			/*	TS_Point touchPoint = touch.getPoint();
+			if (touchPoint.x < 50 && touchPoint.y < 50)
+			{
+			detachInterrupts();
+			toggleLaser();
+			}
+			else
+			{
 			showMenu = true;
+			}*/
+			showMenu = true;
+		}
 		//Long press - lock or release limits
 		else {
 			detachInterrupts();
@@ -81,7 +94,7 @@ void showColorBar() {
 			green = colorMap[(i * 3) + 1];
 			blue = colorMap[(i * 3) + 2];
 			display.setColor(red, green, blue);
-			display.drawLine(142, height - count, 157, height - count);
+			display.drawLine(149, height - count, 157, height - count);
 			count++;
 		}
 	}
@@ -94,16 +107,16 @@ void showColorBar() {
 	float step = (max - min) / 3.0;
 	//Draw min temp
 	sprintf(buffer, "%d", (int)round(min));
-	display.print(buffer, 262, (height * 2) - 5);
+	display.print(buffer, 270, (height * 2) - 5);
 	//Draw temperatures after min before max
 	for (int i = 2; i >= 1; i--) {
 		float temp = min + (i*step);
 		sprintf(buffer, "%d", (int)round(temp));
-		display.print(buffer, 262, (height * 2) - 5 - (i * (colorElements / 6)));
+		display.print(buffer, 270, (height * 2) - 5 - (i * (colorElements / 6)));
 	}
 	//Draw max temp
 	sprintf(buffer, "%d", (int)round(max));
-	display.print(buffer, 262, (height * 2) - 5 - (3 * (colorElements / 6)));
+	display.print(buffer, 270, (height * 2) - 5 - (3 * (colorElements / 6)));
 }
 
 /* Show the current object temperature on screen*/
@@ -360,6 +373,10 @@ void displayInfos() {
 	//Show the temperature points
 	if (pointsEnabled)
 		showTemperatures();
+	if (displayMinMaxPoints & displayMinMaxPoints_min)
+		showMinPoint();
+	if (displayMinMaxPoints & displayMinMaxPoints_max)
+		showMaxPoint();
 	//Set write back to display
 	display.writeToImage = false;
 }
@@ -440,7 +457,7 @@ void liveMode() {
 				showSaveMessage();
 			}
 		}
-			
+
 		//Create thermal image
 		if (displayMode == displayMode_thermal)
 			createThermalImg();
@@ -453,7 +470,7 @@ void liveMode() {
 			displayInfos();
 
 		//Show the content on the screen
-			showImage();
+		showImage();
 
 		//Save the converted / visual image
 		if (imgSave == imgSave_save)

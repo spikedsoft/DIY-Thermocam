@@ -49,7 +49,7 @@ void calibrationScreen(bool firstStart) {
 		touchButtons.drawButtons();
 		display.setFont(bigFont);
 		display.print((char*) "Status:  0%", CENTER, 140);
-	}	
+	}
 	//First start
 	else {
 		display.fillScr(127, 127, 127);
@@ -719,6 +719,75 @@ bool changeMode() {
 	}
 }
 
+/* Switch the current display mode menu item */
+static void _displayMinMaxPointsString(int pos) {
+	char* text = (char*) "";
+	switch (pos) {
+	case 0:
+		text = (char*) "None";
+		break;
+	case 1:
+		text = (char*) "Coldest";
+		break;
+	case 2:
+		text = (char*) "Hottest";
+		break;
+	case 3:
+		text = (char*) "Both";
+		break;
+	}
+	liveMenuSelection(text);
+}
+
+static bool _displayMinMaxPointsOptions()
+{
+	//Save the current position inside the menu
+	byte changeDisplayMinMaxPoints = displayMinMaxPoints;
+	//Background
+	liveMenuBackground();
+	//Title
+	liveMenuTitle((char*) "Cold/Hot-Spot");
+	//Remove Exit button
+	touchButtons.deleteButton(4);
+	touchButtons.drawButtons();
+	//Border
+	display.setColor(255, 106, 0);
+	display.drawRect(65, 57, 257, 111);
+	//Draw the current item
+	_displayMinMaxPointsString(changeDisplayMinMaxPoints);
+	while (true) {
+		//Touch screen pressed
+		if (touch.touched() == true) {
+			int pressedButton = touchButtons.checkButtons(true);
+			//SELECT
+			if (pressedButton == 3) {
+				displayMinMaxPoints = changeDisplayMinMaxPoints;
+				EEPROM.write(eeprom_displayMinMaxPoints, displayMinMaxPoints);
+				return true;
+			}
+			//BACK
+			if (pressedButton == 2)
+				return false;
+			//BACKWARD
+			else if (pressedButton == 0) {
+				if (changeDisplayMinMaxPoints > 0)
+					changeDisplayMinMaxPoints--;
+				else if (changeDisplayMinMaxPoints == 0)
+					changeDisplayMinMaxPoints = 3;
+			}
+			//FORWARD
+			else if (pressedButton == 1) {
+				if (changeDisplayMinMaxPoints < 3)
+					changeDisplayMinMaxPoints++;
+				else if (changeDisplayMinMaxPoints == 3)
+					changeDisplayMinMaxPoints = 0;
+			}
+			//Change the menu name
+			_displayMinMaxPointsString(changeDisplayMinMaxPoints);
+		}
+	}
+}
+
 /* Switch the current display option item */
 void liveMenuDisplayString(int pos) {
 	char* text = (char*) "";
@@ -781,7 +850,18 @@ void liveMenuDisplayString(int pos) {
 		else
 			text = (char*) "No Filter";
 		break;
+	case 8:
+		if (displayMinMaxPoints == displayMinMaxPoints_none)
+			text = (char*) "None";
+		else if (displayMinMaxPoints == displayMinMaxPoints_min)
+			text = (char*) "Coldest";
+		else if (displayMinMaxPoints == displayMinMaxPoints_max)
+			text = (char*) "Hottest";
+		else
+			text = (char*) "Both";
+		break;
 	}
+
 	liveMenuSelection(text);
 }
 
@@ -821,13 +901,13 @@ bool displayOptions() {
 				if (displayOptionsPos > 0)
 					displayOptionsPos--;
 				else if (displayOptionsPos == 0)
-					displayOptionsPos = 7;
+					displayOptionsPos = 8;
 			}
 			//FORWARD
 			else if (pressedButton == 1) {
-				if (displayOptionsPos < 7)
+				if (displayOptionsPos < 8)
 					displayOptionsPos++;
-				else if (displayOptionsPos == 7)
+				else if (displayOptionsPos == 8)
 					displayOptionsPos = 0;
 			}
 			//Change the menu name
@@ -875,6 +955,8 @@ bool liveMenuSelect(byte* pos) {
 		enableScreenLight();
 		return false;
 		break;
+	case 8:
+		return _displayMinMaxPointsOptions();
 	}
 	return true;
 }
@@ -917,6 +999,10 @@ void liveMenuMainString(byte* pos) {
 		//Turn Display off
 	case 7:
 		text = (char*) "Display Off";
+		break;
+		//Display min/max position
+	case 8:
+		text = (char *) "C/H Spot";
 		break;
 	}
 	//Draws the current selection
@@ -975,13 +1061,13 @@ bool liveMenuHandler(byte* pos) {
 				if (*pos > 0)
 					*pos = *pos - 1;
 				else if (*pos == 0)
-					*pos = 7;
+					*pos = 8;
 			}
 			//FORWARD
 			else if (pressedButton == 1) {
-				if (*pos < 7)
+				if (*pos < 8)
 					*pos = *pos + 1;
-				else if (*pos == 7)
+				else if (*pos == 8)
 					*pos = 0;
 			}
 			//Change the menu name

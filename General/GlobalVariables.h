@@ -37,6 +37,8 @@ int16_t colorElements;
 
 //160x120 image storage
 unsigned short image[19200];
+int image_pos_mintemp;
+int image_pos_maxtemp;
 //Array to store the printed temperatures
 uint16_t showTemp[192];
 //Save filename 
@@ -81,7 +83,9 @@ bool spotEnabled;
 bool colorbarEnabled;
 bool pointsEnabled;
 bool storageEnabled;
+bool minAndMaxPointsEnabled;
 byte filterType;
+byte displayMinMaxPoints;
 bool ambientEnabled;
 
 //Calibration offset

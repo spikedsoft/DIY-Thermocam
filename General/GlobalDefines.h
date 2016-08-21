@@ -46,6 +46,13 @@
 #define filterType_gaussian 1
 #define filterType_box 2
 
+//Display Min/Max Points
+#define displayMinMaxPoints_none 0
+#define displayMinMaxPoints_min 1
+#define displayMinMaxPoints_max 2
+#define displayMinMaxPoints_both 3
+
+
 //Shutter mode
 #define shutterMode_manual 0
 #define shutterMode_auto 1
@@ -71,6 +78,7 @@
 #define eeprom_calSlopeBase 131 //4 Byte (131-134)
 #define eeprom_firstStart 150
 #define eeprom_liveHelper 151
+#define eeprom_displayMinMaxPoints 152
 #define eeprom_fwVersion 250
 #define eeprom_setValue 200
 

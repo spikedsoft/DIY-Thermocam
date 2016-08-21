@@ -150,7 +150,7 @@ void getTemperatures() {
 						if (showMenu) {
 							leptonEndSPI();
 							return;
-						}	
+						}
 						//Reset segment
 						segment = 1;
 						//Reset lepton error
@@ -176,6 +176,27 @@ void getTemperatures() {
 	}
 	//End Lepton SPI
 	leptonEndSPI();
+}
+
+void findMinMaxPositions()
+{
+	unsigned short min, max;
+	min = USHRT_MAX;
+	max = 0;
+
+	for (int i = 0; i < 19200; i++)
+	{
+		if (image[i] < min)
+		{
+			image_pos_mintemp = i;
+			min = image[i];
+		}
+		if (image[i] > max)
+		{
+			image_pos_maxtemp = i;
+			max = image[i];
+		}
+	}
 }
 
 /* Scale the values from 0 - 255 */
@@ -240,6 +261,8 @@ void createVisCombImg() {
 		if ((colorScheme != colorScheme_coldest) && (colorScheme != colorScheme_hottest))
 			limitValues();
 	}
+	//Find the minimum and maximum pixels in the image
+	findMinMaxPositions();
 	//Scale the values
 	scaleValues();
 	//Convert lepton data to RGB565 colors
@@ -267,15 +290,17 @@ void createThermalImg(bool menu) {
 	}
 
 	//If image save, save the raw data
-	if (imgSave == imgSave_create) 
+	if (imgSave == imgSave_create)
 		saveRawData(true, saveFilename);
-		
+
 	//Apply low-pass filter
 	if (filterType == filterType_box)
 		boxFilter();
 	else if (filterType == filterType_gaussian)
 		gaussianFilter();
 
+	//Find the minimum and maximum pixels in the image
+	findMinMaxPositions();
 	//Scale the values
 	scaleValues();
 	//Convert lepton data to RGB565 colors
@@ -386,4 +411,44 @@ void showTemperatures() {
 			}
 		}
 	}
+}
+
+static void _displayMinMaxPoint(int pixelIndex, const char *str)
+{
+	int x, y;
+	x = (pixelIndex % 160) * 2;
+	y = (pixelIndex / 160) * 2;
+
+	if (y > 240)
+		y = 240;
+
+	word savedColor = display.getColor();
+	word pixelColor = display.readPixel(x<3 ? x + 3 : x - 3, y);
+	unsigned int pixelColorSum = ((pixelColor >> 8) & 0xF8) + ((pixelColor >> 3) & 0xFC) + (pixelColor << 3);
+	unsigned int pixelColorAvg = pixelColorSum / 3;
+	if (pixelColorAvg > 0xf8)
+		display.setColor(0);
+	else
+		display.setColor(0xff, 0xff, 0xff);
+
+	display.drawLine(x / 2, y / 2, x / 2, y / 2);
+
+	x += 4;
+	if (x >= 310)
+		x -= 10;
+	if (y > 230)
+		y = 230;
+
+	display.print(str, x, y);
+	display.setColor(savedColor);
+}
+
+void showMinPoint()
+{
+	_displayMinMaxPoint(image_pos_mintemp, (const char *)"C");
+}
+
+void showMaxPoint()
+{
+	_displayMinMaxPoint(image_pos_maxtemp, (const char *)"H");
 }
