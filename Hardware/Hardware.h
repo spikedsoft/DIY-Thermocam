@@ -434,6 +434,14 @@ void readEEPROM() {
 		displayMode = read;
 	else
 		displayMode = displayMode_thermal;
+
+	//Min/Max Points
+	read = EEPROM.read(eeprom_displayMinMaxPoints);
+	if ((read == displayMinMaxPoints_none) || (read == displayMinMaxPoints_min) || (read == displayMinMaxPoints_max) || (read == displayMinMaxPoints_both))
+		displayMinMaxPoints = read;
+	else
+		displayMinMaxPoints = displayMinMaxPoints_none;
+
 	//Calibration slope
 	read = EEPROM.read(eeprom_calSlopeSet);
 	if (read == eeprom_setValue)
